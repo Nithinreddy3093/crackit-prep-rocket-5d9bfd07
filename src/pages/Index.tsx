@@ -14,7 +14,8 @@ import {
   Lightbulb,
   Target,
   Cpu,
-  PieChart
+  PieChart,
+  ArrowRight
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
