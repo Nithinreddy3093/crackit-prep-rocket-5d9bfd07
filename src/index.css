@@ -1,84 +1,81 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 260 30% 98%;
+    --foreground: 260 10% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 260 10% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 260 10% 8%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 260 84% 55%;
+    --primary-foreground: 260 10% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217 100% 67%;
+    --secondary-foreground: 260 10% 8%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 260 10% 92%;
+    --muted-foreground: 260 5% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 244 100% 70%;
+    --accent-foreground: 260 10% 8%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 260 10% 90%;
+    --input: 260 10% 90%;
+    --ring: 260 84% 55%;
 
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 260 25% 10%;
+    --foreground: 260 10% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 260 25% 12%;
+    --card-foreground: 260 10% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 260 25% 12%;
+    --popover-foreground: 260 10% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 260 84% 55%;
+    --primary-foreground: 260 10% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 217 100% 67%;
+    --secondary-foreground: 260 10% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 260 20% 18%;
+    --muted-foreground: 260 10% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 244 100% 70%;
+    --accent-foreground: 260 10% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 260 20% 20%;
+    --input: 260 20% 20%;
+    --ring: 260 84% 55%;
+    
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -96,6 +93,70 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-poppins font-semibold;
+  }
+}
+
+@layer components {
+  .crackit-gradient-bg {
+    @apply bg-gradient-to-br from-crackit-800 to-crackit-600;
+  }
+  
+  .crackit-card {
+    @apply bg-white dark:bg-card rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300;
+  }
+  
+  .crackit-button {
+    @apply bg-crackit-600 hover:bg-crackit-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200;
+  }
+  
+  .crackit-input {
+    @apply border border-border bg-background rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-crackit-500 focus:border-transparent transition-all;
+  }
+
+  .crackit-divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-crackit-300 to-transparent my-6;
+  }
+  
+  .crackit-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+}
+
+.font-inter {
+  font-family: 'Inter', sans-serif;
+}
+
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Crack effect - CSS only solution */
+.crack-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.crack-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, transparent 45%, rgba(139, 92, 246, 0.8) 47%, rgba(139, 92, 246, 0.8) 53%, transparent 55%, transparent);
+  opacity: 0;
+  transform: scaleX(0) rotate(-5deg);
+  transform-origin: center;
+  transition: transform 0.4s ease, opacity 0.3s ease;
+}
+
+.crack-active .crack-line::after {
+  opacity: 1;
+  transform: scaleX(1) rotate(-5deg);
 }
