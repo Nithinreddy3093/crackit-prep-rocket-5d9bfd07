@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Video, FileText, Code, ExternalLink, Star } from 'lucide-react';
+import { BookOpen, Video, FileText, Code, ExternalLink, Star, StarOff, Clock } from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
 
 export interface ResourceProps {
   id: string;
@@ -16,9 +17,13 @@ export interface ResourceProps {
   ratings?: number;
   isFavorite?: boolean;
   createdAt: string;
+  readTime?: string;
 }
 
 const ResourceCard = ({ resource }: { resource: ResourceProps }) => {
+  const [isFavorite, setIsFavorite] = useState(resource.isFavorite || false);
+  const [currentRating, setCurrentRating] = useState(resource.ratings || 0);
+
   const getIcon = () => {
     switch (resource.type) {
       case 'article':
@@ -49,6 +54,28 @@ const ResourceCard = ({ resource }: { resource: ResourceProps }) => {
     }
   };
 
+  const handleToggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    toast({
+      title: !isFavorite ? "Added to favorites" : "Removed from favorites",
+      description: !isFavorite 
+        ? `${resource.title} has been added to your favorites.` 
+        : `${resource.title} has been removed from your favorites.`,
+      variant: "default",
+    });
+  };
+
+  const handleRate = () => {
+    // Simulate rating increment (in a real app, this would call an API)
+    const newRating = currentRating + 1;
+    setCurrentRating(newRating);
+    toast({
+      title: "Thanks for your rating!",
+      description: `You've successfully rated ${resource.title}.`,
+      variant: "default",
+    });
+  };
+
   return (
     <Card className="h-full flex flex-col bg-darkBlue-800 border-darkBlue-700 hover:border-darkBlue-600 transition-all duration-200">
       <CardHeader className="pb-2">
@@ -59,20 +86,45 @@ const ResourceCard = ({ resource }: { resource: ResourceProps }) => {
               {resource.level}
             </Badge>
           </div>
-          {resource.ratings && (
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleToggleFavorite}
+              className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-darkBlue-700 transition-colors"
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              {isFavorite ? (
+                <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+              ) : (
+                <Star className="h-5 w-5 text-gray-400 hover:text-yellow-400" />
+              )}
+            </button>
             <div className="flex items-center">
-              <Star className="h-4 w-4 text-yellow-400" />
-              <span className="ml-1 text-sm text-gray-300">{resource.ratings}</span>
+              <button 
+                onClick={handleRate}
+                className="flex items-center gap-1 px-2 py-1 rounded-full hover:bg-darkBlue-700 transition-colors"
+                aria-label="Rate this resource"
+              >
+                <Star className="h-4 w-4 text-yellow-400" />
+                <span className="text-sm text-gray-300">{currentRating}</span>
+              </button>
             </div>
-          )}
+          </div>
         </div>
         <CardTitle className="text-xl text-white mt-2">{resource.title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-sm text-gray-300 line-clamp-3">{resource.description}</p>
-        <Badge variant="secondary" className="mt-4 bg-darkBlue-700 text-gray-300 hover:bg-darkBlue-600">
-          {resource.topic}
-        </Badge>
+        <div className="flex flex-wrap gap-2 mt-4">
+          <Badge variant="secondary" className="bg-darkBlue-700 text-gray-300 hover:bg-darkBlue-600">
+            {resource.topic}
+          </Badge>
+          {resource.readTime && (
+            <Badge variant="outline" className="bg-transparent border-gray-600 text-gray-300 flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {resource.readTime}
+            </Badge>
+          )}
+        </div>
       </CardContent>
       <CardFooter className="pt-2 flex justify-between">
         <p className="text-xs text-gray-400">

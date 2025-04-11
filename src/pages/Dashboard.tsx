@@ -48,24 +48,45 @@ import {
   FileText,
   Video
 } from 'lucide-react';
-import TopicCard from '@/components/TopicCard';
 import { cn } from '@/lib/utils';
+import { toast } from "@/components/ui/use-toast";
+
+// Import the new components
+import RecentActivity, { ActivityItem } from '@/components/dashboard/RecentActivity';
+import UpcomingQuizzes, { QuizItem } from '@/components/dashboard/UpcomingQuizzes';
+import AiRecommendations from '@/components/dashboard/AiRecommendations';
+import PopularTopics from '@/components/dashboard/PopularTopics';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Mock recent activities
-  const recentActivities = [
+  // Helper function to show a welcome toast
+  React.useEffect(() => {
+    // Only show welcome toast once per session
+    const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
+    if (!hasSeenWelcome) {
+      setTimeout(() => {
+        toast({
+          title: `Welcome back, ${user?.name}!`,
+          description: "Your dashboard has been updated with new features.",
+          variant: "default",
+        });
+        sessionStorage.setItem('hasSeenWelcome', 'true');
+      }, 1000);
+    }
+  }, [user]);
+
+  // Mock data
+  const recentActivities: ActivityItem[] = [
     { id: 1, type: 'quiz', name: 'Data Structures Quiz', score: '8/10', date: '2025-04-10', topic: 'DSA' },
     { id: 2, type: 'resource', name: 'Database Normalization Article', date: '2025-04-08', topic: 'DBMS' },
     { id: 3, type: 'quiz', name: 'Operating Systems Quiz', score: '7/10', date: '2025-04-05', topic: 'OS' },
     { id: 4, type: 'resource', name: 'Algorithm Complexity Video', date: '2025-04-03', topic: 'DSA' },
   ];
 
-  // Mock upcoming quizzes
-  const upcomingQuizzes = [
+  const upcomingQuizzes: QuizItem[] = [
     { id: 1, name: 'Advanced Data Structures', date: '2025-04-15', timeEstimate: '30 min' },
     { id: 2, name: 'SQL Query Optimization', date: '2025-04-18', timeEstimate: '25 min' },
     { id: 3, name: 'Process Scheduling Algorithms', date: '2025-04-20', timeEstimate: '20 min' },
@@ -85,6 +106,24 @@ const Dashboard = () => {
     { id: 2, name: 'SQL & Database Management', issueDate: '2025-02-15', score: '85%' },
   ];
 
+  // Mock saved resources
+  const savedResources = [
+    { id: 1, title: 'Database Normalization Explained', type: 'Video', topic: 'DBMS', savedOn: 'April 8, 2025', url: '#' },
+    { id: 2, title: 'Advanced Algorithm Techniques', type: 'Article', topic: 'DSA', savedOn: 'April 5, 2025', url: '#' },
+    { id: 3, title: 'Memory Management in OS', type: 'Course', topic: 'OS', savedOn: 'April 2, 2025', url: '#' },
+  ];
+
+  // Handler for starting a study session
+  const startStudySession = () => {
+    toast({
+      title: "Study Session Started",
+      description: "Your focused study session has been initiated.",
+      variant: "default",
+    });
+    // In a real app, this would redirect to a study session page or start a timer
+    navigate('/topics');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -103,10 +142,10 @@ const Dashboard = () => {
               </div>
               <div className="mt-4 md:mt-0 flex gap-3">
                 <Button 
-                  onClick={() => navigate('/topics')}
+                  onClick={startStudySession}
                   className="bg-primary hover:bg-primary/90 text-white"
                 >
-                  Take a Quiz
+                  Start Study Session
                 </Button>
                 <Button 
                   onClick={() => navigate('/resources')}
@@ -135,240 +174,20 @@ const Dashboard = () => {
               <TabsContent value="overview" className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Recent Activity Card */}
-                  <Card className="md:col-span-2 bg-darkBlue-800 border-darkBlue-700">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl text-white">Recent Activity</CardTitle>
-                        <Activity className="h-5 w-5 text-primary" />
-                      </div>
-                      <CardDescription className="text-gray-400">
-                        Your latest quizzes and resources
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {recentActivities.map((activity) => (
-                          <div key={activity.id} className="flex items-start space-x-4 p-3 rounded-lg bg-darkBlue-700/50 hover:bg-darkBlue-700 transition-colors">
-                            <div className={cn(
-                              "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center",
-                              activity.type === 'quiz' ? "bg-primary/20" : "bg-accent/20"
-                            )}>
-                              {activity.type === 'quiz' ? 
-                                <ListChecks className="h-5 w-5 text-primary" /> : 
-                                <BookOpen className="h-5 w-5 text-accent" />
-                              }
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-white truncate">
-                                {activity.name}
-                              </p>
-                              <div className="flex items-center mt-1">
-                                <Badge className="mr-2 text-xs bg-darkBlue-600 text-gray-300">
-                                  {activity.topic}
-                                </Badge>
-                                <p className="text-xs text-gray-400">
-                                  {new Date(activity.date).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                            {activity.score && (
-                              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary">
-                                {activity.score}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full text-primary hover:bg-darkBlue-700"
-                        onClick={() => setActiveTab("progress")}
-                      >
-                        View All Activity
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                  <RecentActivity 
+                    activities={recentActivities} 
+                    onViewAllActivity={() => setActiveTab("progress")} 
+                  />
                   
                   {/* Upcoming Quizzes Card */}
-                  <Card className="bg-darkBlue-800 border-darkBlue-700">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-xl text-white">Upcoming Quizzes</CardTitle>
-                        <Clock className="h-5 w-5 text-primary" />
-                      </div>
-                      <CardDescription className="text-gray-400">
-                        Recommended for you
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {upcomingQuizzes.map((quiz) => (
-                          <div key={quiz.id} className="p-3 rounded-lg bg-darkBlue-700/50 hover:bg-darkBlue-700 transition-colors">
-                            <p className="text-sm font-medium text-white truncate">{quiz.name}</p>
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 text-gray-400 mr-1" />
-                                <p className="text-xs text-gray-400">{quiz.timeEstimate}</p>
-                              </div>
-                              <Button size="sm" variant="ghost" className="h-7 text-primary hover:bg-primary/10">
-                                Start
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full text-primary hover:bg-darkBlue-700"
-                        onClick={() => navigate('/topics')}
-                      >
-                        View All Topics
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                  <UpcomingQuizzes quizzes={upcomingQuizzes} />
                 </div>
                 
                 {/* AI Recommendations */}
-                <Card className="bg-darkBlue-800 border-darkBlue-700">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-xl text-white">AI Recommendations</CardTitle>
-                      <Brain className="h-5 w-5 text-primary" />
-                    </div>
-                    <CardDescription className="text-gray-400">
-                      Personalized based on your performance
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="p-5 rounded-xl bg-darkBlue-700/50 border border-darkBlue-600">
-                        <div className="flex items-center mb-4">
-                          <div className="bg-primary/10 p-3 rounded-lg mr-4">
-                            <Target className="h-6 w-6 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-white">Focus Areas</h3>
-                            <p className="text-sm text-gray-400">Based on your quiz results</p>
-                          </div>
-                        </div>
-                        <ul className="space-y-2 mb-4">
-                          <li className="text-gray-300 text-sm flex items-center">
-                            <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                            Database Normalization concepts need attention
-                          </li>
-                          <li className="text-gray-300 text-sm flex items-center">
-                            <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-                            Process Scheduling algorithms need review
-                          </li>
-                          <li className="text-gray-300 text-sm flex items-center">
-                            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                            Strong understanding of array and string algorithms
-                          </li>
-                        </ul>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full border-darkBlue-600 text-primary hover:bg-primary/10"
-                        >
-                          Start Focused Practice
-                        </Button>
-                      </div>
-                      
-                      <div className="p-5 rounded-xl bg-darkBlue-700/50 border border-darkBlue-600">
-                        <div className="flex items-center mb-4">
-                          <div className="bg-primary/10 p-3 rounded-lg mr-4">
-                            <BookOpen className="h-6 w-6 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-white">Recommended Resources</h3>
-                            <p className="text-sm text-gray-400">Curated for your needs</p>
-                          </div>
-                        </div>
-                        <div className="space-y-3 mb-4">
-                          <div className="flex items-start p-3 bg-darkBlue-700 rounded-lg hover:bg-darkBlue-600 transition-colors">
-                            <div className="flex-1">
-                              <p className="text-white text-sm font-medium">Database Normalization Simplified</p>
-                              <p className="text-gray-400 text-xs mt-1 flex items-center">
-                                Video tutorial • 15 minutes
-                              </p>
-                            </div>
-                            <Button size="sm" variant="ghost" className="h-8 text-primary hover:bg-primary/10" asChild>
-                              <a href="#" className="flex items-center">
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          </div>
-                          <div className="flex items-start p-3 bg-darkBlue-700 rounded-lg hover:bg-darkBlue-600 transition-colors">
-                            <div className="flex-1">
-                              <p className="text-white text-sm font-medium">OS Scheduling Algorithms Explained</p>
-                              <p className="text-gray-400 text-xs mt-1 flex items-center">
-                                Article • 8 min read
-                              </p>
-                            </div>
-                            <Button size="sm" variant="ghost" className="h-8 text-primary hover:bg-primary/10" asChild>
-                              <a href="#" className="flex items-center">
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          </div>
-                        </div>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="w-full border-darkBlue-600 text-primary hover:bg-primary/10"
-                          onClick={() => navigate('/resources')}
-                        >
-                          View All Resources
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <AiRecommendations />
 
                 {/* Popular Topics */}
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-white">Popular Topics</h2>
-                    <Button 
-                      onClick={() => navigate('/topics')}
-                      variant="link" 
-                      className="text-primary hover:text-primary/90 flex items-center"
-                    >
-                      View All
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <TopicCard
-                      title="Data Structures & Algorithms"
-                      icon={<Code className="w-6 h-6" />}
-                      description="Arrays, Linked Lists, Trees, Graphs, Sorting and Searching Algorithms."
-                      bgColor="bg-gradient-to-br from-darkBlue-700 to-darkBlue-600"
-                      to="/topics/dsa"
-                    />
-                    <TopicCard
-                      title="Database Management"
-                      icon={<Database className="w-6 h-6" />}
-                      description="SQL, Normalization, Transactions, RDBMS concepts and queries."
-                      bgColor="bg-gradient-to-br from-blue-700 to-blue-600"
-                      to="/topics/dbms"
-                    />
-                    <TopicCard
-                      title="Operating Systems"
-                      icon={<Cpu className="w-6 h-6" />}
-                      description="Process Management, Memory Management, File Systems, Scheduling."
-                      bgColor="bg-gradient-to-br from-darkBlue-800 to-blue-900"
-                      to="/topics/os"
-                    />
-                  </div>
-                </div>
+                <PopularTopics />
               </TabsContent>
               
               {/* Progress Tab */}
@@ -460,6 +279,13 @@ const Dashboard = () => {
                       <Button 
                         variant="outline" 
                         className="w-full border-darkBlue-600 text-primary hover:bg-primary/10"
+                        onClick={() => {
+                          toast({
+                            title: "Full History",
+                            description: "Your complete activity history is being loaded.",
+                            variant: "default",
+                          });
+                        }}
                       >
                         View Full History
                       </Button>
@@ -500,45 +326,21 @@ const Dashboard = () => {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          <TableRow className="border-darkBlue-700">
-                            <TableCell className="font-medium text-white">Database Normalization Explained</TableCell>
-                            <TableCell className="text-gray-300">Video</TableCell>
-                            <TableCell className="text-gray-300">DBMS</TableCell>
-                            <TableCell className="text-gray-300">April 8, 2025</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" className="h-8 text-primary hover:bg-primary/10" asChild>
-                                <a href="#" className="flex items-center">
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow className="border-darkBlue-700">
-                            <TableCell className="font-medium text-white">Advanced Algorithm Techniques</TableCell>
-                            <TableCell className="text-gray-300">Article</TableCell>
-                            <TableCell className="text-gray-300">DSA</TableCell>
-                            <TableCell className="text-gray-300">April 5, 2025</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" className="h-8 text-primary hover:bg-primary/10" asChild>
-                                <a href="#" className="flex items-center">
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                          <TableRow className="border-darkBlue-700">
-                            <TableCell className="font-medium text-white">Memory Management in OS</TableCell>
-                            <TableCell className="text-gray-300">Course</TableCell>
-                            <TableCell className="text-gray-300">OS</TableCell>
-                            <TableCell className="text-gray-300">April 2, 2025</TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="sm" className="h-8 text-primary hover:bg-primary/10" asChild>
-                                <a href="#" className="flex items-center">
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            </TableCell>
-                          </TableRow>
+                          {savedResources.map(resource => (
+                            <TableRow key={resource.id} className="border-darkBlue-700">
+                              <TableCell className="font-medium text-white">{resource.title}</TableCell>
+                              <TableCell className="text-gray-300">{resource.type}</TableCell>
+                              <TableCell className="text-gray-300">{resource.topic}</TableCell>
+                              <TableCell className="text-gray-300">{resource.savedOn}</TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="ghost" size="sm" className="h-8 text-primary hover:bg-primary/10" asChild>
+                                  <a href={resource.url} className="flex items-center" target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-4 w-4" />
+                                  </a>
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
                         </TableBody>
                       </Table>
                     </CardContent>
@@ -632,7 +434,18 @@ const Dashboard = () => {
                                 </div>
                               </div>
                             </div>
-                            <Button variant="ghost" size="sm" className="h-8 text-primary hover:bg-primary/10">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 text-primary hover:bg-primary/10"
+                              onClick={() => {
+                                toast({
+                                  title: "Certificate Details",
+                                  description: `Viewing details for ${cert.name}`,
+                                  variant: "default",
+                                });
+                              }}
+                            >
                               View
                             </Button>
                           </div>
