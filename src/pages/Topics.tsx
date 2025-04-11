@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -13,8 +14,10 @@ import {
   Cpu, 
   Brain, 
   BarChart, 
-  PieChart 
+  PieChart,
+  ArrowRight
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Sample topic data
 const topicData = {
@@ -96,12 +99,29 @@ const topicData = {
 };
 
 const Topics: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   const { topicId } = useParams<{ topicId?: string }>();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
-  const [score, setScore] = useState(0);
+  const [correctQuestions, setCorrectQuestions] = useState<number[]>([]);
+  const [incorrectQuestions, setIncorrectQuestions] = useState<number[]>([]);
+
+  useEffect(() => {
+    // Reset state when topic changes
+    setCurrentQuestion(0);
+    setQuizCompleted(false);
+    setCorrectQuestions([]);
+    setIncorrectQuestions([]);
+  }, [topicId]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && topicId) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, topicId, navigate]);
 
   // If a specific topic is selected, show the quiz
   if (topicId && topicData[topicId as keyof typeof topicData]) {
@@ -109,54 +129,29 @@ const Topics: React.FC = () => {
     const questions = topic.questions;
     
     if (quizCompleted) {
-      // Sample feedback data
-      const feedback = {
-        score: score,
-        totalQuestions: questions.length,
-        strengths: [
-          "Understanding of time complexity analysis",
-          "Knowledge of sorting algorithms"
-        ],
-        weaknesses: [
-          "Memory management concepts in data structures",
-          "Advanced graph algorithms"
-        ],
-        recommendations: [
-          {
-            title: "Advanced Data Structures Explained Simply",
-            type: "video" as const,
-            link: "https://www.youtube.com/watch?v=RBSGKlAvoiM"
-          },
-          {
-            title: "Graph Algorithms for Technical Interviews",
-            type: "article" as const,
-            link: "https://www.geeksforgeeks.org/graph-data-structure-and-algorithms/"
-          },
-          {
-            title: "Practice Questions on Memory-Efficient Data Structures",
-            type: "practice" as const,
-            link: "https://leetcode.com/tag/heap-priority-queue/"
-          }
-        ]
-      };
-      
       return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-background">
           <Navbar />
           <main className="flex-grow py-12">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="mb-8">
                 <button
                   onClick={() => navigate('/topics')}
-                  className="text-crackit-600 dark:text-crackit-400 font-medium flex items-center hover:underline"
+                  className="text-primary font-medium flex items-center hover:underline"
                 >
                   ← Back to Topics
                 </button>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-4">{topic.title} Quiz</h1>
-                <p className="text-gray-600 dark:text-gray-300 mt-2">{topic.description}</p>
+                <h1 className="text-3xl font-bold text-foreground mt-4">{topic.title} Quiz</h1>
+                <p className="text-muted-foreground mt-2">{topic.description}</p>
               </div>
               
-              <QuizFeedback {...feedback} />
+              <QuizFeedback 
+                score={correctQuestions.length}
+                totalQuestions={questions.length}
+                correctQuestions={correctQuestions}
+                incorrectQuestions={incorrectQuestions}
+                topic={topic.title}
+              />
             </div>
           </main>
           <Footer />
@@ -165,19 +160,19 @@ const Topics: React.FC = () => {
     }
     
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-background">
         <Navbar />
         <main className="flex-grow py-12">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-8">
               <button
                 onClick={() => navigate('/topics')}
-                className="text-crackit-600 dark:text-crackit-400 font-medium flex items-center hover:underline"
+                className="text-primary font-medium flex items-center hover:underline"
               >
                 ← Back to Topics
               </button>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mt-4">{topic.title} Quiz</h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">{topic.description}</p>
+              <h1 className="text-3xl font-bold text-foreground mt-4">{topic.title} Quiz</h1>
+              <p className="text-muted-foreground mt-2">{topic.description}</p>
             </div>
             
             <QuizCard
@@ -186,17 +181,18 @@ const Topics: React.FC = () => {
               correctAnswer={questions[currentQuestion].correctAnswer}
               explanation={questions[currentQuestion].explanation}
               onNextQuestion={() => {
-                if (questions[currentQuestion].correctAnswer === 2) {
-                  setScore(score + 1);
-                }
                 setCurrentQuestion(currentQuestion + 1);
               }}
-              onCompleted={() => {
+              onCompleted={(correct, incorrect) => {
+                setCorrectQuestions(correct);
+                setIncorrectQuestions(incorrect);
                 setQuizCompleted(true);
               }}
               isLastQuestion={currentQuestion === questions.length - 1}
               currentQuestion={currentQuestion + 1}
               totalQuestions={questions.length}
+              correctQuestions={correctQuestions}
+              incorrectQuestions={incorrectQuestions}
             />
           </div>
         </main>
@@ -207,13 +203,32 @@ const Topics: React.FC = () => {
 
   // Otherwise, show the topics list
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-grow py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {!isAuthenticated && (
+            <div className="mb-10 p-6 rounded-xl bg-darkBlue-900/30 border border-darkBlue-800">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">Sign in to track your progress</h2>
+                  <p className="text-muted-foreground">Create an account to save your results and get personalized recommendations.</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button onClick={() => navigate('/login')} className="bg-primary hover:bg-primary/90">
+                    Sign In
+                  </Button>
+                  <Button onClick={() => navigate('/signup')} variant="outline" className="border-border text-primary">
+                    Sign Up
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Topics</h1>
-            <p className="mt-4 text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            <h1 className="text-4xl font-bold text-foreground">Topics</h1>
+            <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
               Choose a topic to test your knowledge and identify areas for improvement
             </p>
           </div>
@@ -221,17 +236,17 @@ const Topics: React.FC = () => {
           <div className="mb-8 flex flex-col sm:flex-row gap-4">
             <div className="relative flex-grow">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <Search className="h-5 w-5 text-muted-foreground" />
               </div>
               <input
                 type="text"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-crackit-500 focus:border-crackit-500"
+                className="block w-full pl-10 pr-3 py-2 border border-border rounded-md bg-background text-foreground focus:ring-primary focus:border-primary"
                 placeholder="Search topics..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button variant="outline" className="flex items-center gap-2">
+            <Button variant="outline" className="flex items-center gap-2 border-border text-foreground hover:bg-muted">
               <Filter className="h-4 w-4" />
               Filter
             </Button>
@@ -240,12 +255,13 @@ const Topics: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div 
               onClick={() => navigate('/topics/dsa')}
-              className="bg-gradient-to-br from-crackit-700 to-crackit-600 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+              className="bg-gradient-to-br from-darkBlue-700 to-darkBlue-600 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div className="text-white bg-white/20 p-3 rounded-lg">
                   <Code className="w-6 h-6" />
                 </div>
+                <ArrowRight className="text-white/70 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" />
               </div>
               <h3 className="mt-4 text-xl font-semibold text-white">Data Structures & Algorithms</h3>
               <p className="mt-2 text-white/80 text-sm">Arrays, Linked Lists, Trees, Graphs, Sorting and Searching Algorithms.</p>
@@ -267,6 +283,7 @@ const Topics: React.FC = () => {
                 <div className="text-white bg-white/20 p-3 rounded-lg">
                   <Database className="w-6 h-6" />
                 </div>
+                <ArrowRight className="text-white/70 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" />
               </div>
               <h3 className="mt-4 text-xl font-semibold text-white">Database Management</h3>
               <p className="mt-2 text-white/80 text-sm">SQL, Normalization, Transactions, RDBMS concepts and queries.</p>
@@ -282,12 +299,13 @@ const Topics: React.FC = () => {
 
             <div 
               onClick={() => navigate('/topics/os')}
-              className="bg-gradient-to-br from-green-700 to-green-600 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+              className="bg-gradient-to-br from-darkBlue-800 to-blue-900 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <div className="text-white bg-white/20 p-3 rounded-lg">
                   <Cpu className="w-6 h-6" />
                 </div>
+                <ArrowRight className="text-white/70 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" />
               </div>
               <h3 className="mt-4 text-xl font-semibold text-white">Operating Systems</h3>
               <p className="mt-2 text-white/80 text-sm">Process Management, Memory Management, File Systems, Scheduling.</p>
@@ -301,11 +319,12 @@ const Topics: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-700 to-orange-600 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+            <div className="bg-gradient-to-br from-amber-700 to-amber-600 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
               <div className="flex items-center justify-between">
                 <div className="text-white bg-white/20 p-3 rounded-lg">
                   <Brain className="w-6 h-6" />
                 </div>
+                <ArrowRight className="text-white/70 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" />
               </div>
               <h3 className="mt-4 text-xl font-semibold text-white">Aptitude & Reasoning</h3>
               <p className="mt-2 text-white/80 text-sm">Numerical Ability, Logical Reasoning, Verbal Ability, Data Interpretation.</p>
@@ -324,6 +343,7 @@ const Topics: React.FC = () => {
                 <div className="text-white bg-white/20 p-3 rounded-lg">
                   <BarChart className="w-6 h-6" />
                 </div>
+                <ArrowRight className="text-white/70 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" />
               </div>
               <h3 className="mt-4 text-xl font-semibold text-white">Computer Networks</h3>
               <p className="mt-2 text-white/80 text-sm">TCP/IP, OSI Model, Routing, Network Security, Protocols.</p>
@@ -337,11 +357,12 @@ const Topics: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-700 to-purple-600 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+            <div className="bg-gradient-to-br from-darkBlue-700 to-indigo-600 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
               <div className="flex items-center justify-between">
                 <div className="text-white bg-white/20 p-3 rounded-lg">
                   <PieChart className="w-6 h-6" />
                 </div>
+                <ArrowRight className="text-white/70 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" />
               </div>
               <h3 className="mt-4 text-xl font-semibold text-white">System Design</h3>
               <p className="mt-2 text-white/80 text-sm">Architecture Patterns, Scalability, APIs, Database Design, Caching.</p>

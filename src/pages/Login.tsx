@@ -18,10 +18,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 
-const SignUp = () => {
-  const { signup, isLoading } = useAuth();
+const Login = () => {
+  const { login, isLoading } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
   });
@@ -33,7 +32,7 @@ const SignUp = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signup(formData.name, formData.email, formData.password);
+    await login(formData.email, formData.password);
   };
 
   return (
@@ -44,37 +43,23 @@ const SignUp = () => {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">
-              Create your account
+              Welcome back
             </h1>
             <p className="text-muted-foreground">
-              Start your journey to interview success with Crackit
+              Sign in to continue your learning journey with Crackit
             </p>
           </div>
           
           <Card className="w-full bg-card text-card-foreground">
             <CardHeader>
-              <CardTitle>Sign Up</CardTitle>
+              <CardTitle>Sign In</CardTitle>
               <CardDescription>
-                Enter your information to create an account
+                Enter your credentials to access your account
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      placeholder="John Doe"
-                      value={formData.name}
-                      onChange={handleChange}
-                      disabled={isLoading}
-                      required
-                      className="bg-background"
-                    />
-                  </div>
-                  
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -93,8 +78,8 @@ const SignUp = () => {
                   <div className="grid gap-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="password">Password</Label>
-                      <Link to="/password-tips" className="text-xs text-primary hover:text-primary/90">
-                        Password tips
+                      <Link to="/forgot-password" className="text-xs text-primary hover:text-primary/90">
+                        Forgot password?
                       </Link>
                     </div>
                     <Input
@@ -111,7 +96,7 @@ const SignUp = () => {
                   </div>
                   
                   <Button className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-                    {isLoading ? "Creating Account..." : "Create Account"}
+                    {isLoading ? "Signing In..." : "Sign In"}
                   </Button>
                 </div>
               </form>
@@ -138,21 +123,11 @@ const SignUp = () => {
                 </Button>
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col items-center space-y-2 text-center">
+            <CardFooter className="flex justify-center text-center">
               <div className="text-sm text-muted-foreground">
-                By creating an account, you agree to our{" "}
-                <Link to="/terms" className="underline text-primary hover:text-primary/90">
-                  Terms of Service
-                </Link>
-                {" "}and{" "}
-                <Link to="/privacy" className="underline text-primary hover:text-primary/90">
-                  Privacy Policy
-                </Link>
-              </div>
-              <div className="text-sm">
-                Already have an account?{" "}
-                <Link to="/login" className="font-medium text-primary hover:text-primary/90">
-                  Sign in
+                Don't have an account?{" "}
+                <Link to="/signup" className="font-medium text-primary hover:text-primary/90">
+                  Sign up
                 </Link>
               </div>
             </CardFooter>
@@ -165,4 +140,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default Login;
