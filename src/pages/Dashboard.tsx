@@ -44,7 +44,9 @@ import {
   Activity,
   Clock,
   Trophy,
-  ExternalLink
+  ExternalLink,
+  FileText,
+  Video
 } from 'lucide-react';
 import TopicCard from '@/components/TopicCard';
 import { cn } from '@/lib/utils';
