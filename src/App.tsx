@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
@@ -14,9 +14,29 @@ import Topics from "./pages/Topics";
 import About from "./pages/About";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
+import Resources from "./pages/Resources";
 import LogoAnimation from "./components/LogoAnimation";
 
 const queryClient = new QueryClient();
+
+// Protected route wrapper component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+        <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+      </div>
+    </div>;
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
+};
 
 const App = () => {
   const [showAnimation, setShowAnimation] = useState(true);
@@ -63,7 +83,16 @@ const App = () => {
               <Route path="/topics/:topicId" element={<Topics />} />
               <Route path="/about" element={<About />} />
               <Route path="/pricing" element={<Pricing />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/resources" element={
+                <ProtectedRoute>
+                  <Resources />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
