@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "@/components/ui/use-toast";
+import { Button } from '@/components/ui/button';
 
 // Import refactored components
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
