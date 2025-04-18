@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -78,55 +79,61 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
       <Navbar />
       <main className="flex-grow">
-        {/* Welcome Section */}
+        {/* Welcome Section with new styling */}
         <WelcomeSection userName={user?.name || 'User'} />
         
-        {/* Dashboard Tabs */}
+        {/* Dashboard Tabs with updated styling */}
         <section className="py-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-4 w-full max-w-xl mx-auto mb-8">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="progress">Progress</TabsTrigger>
-                <TabsTrigger value="resources">Resources</TabsTrigger>
-                <TabsTrigger value="achievements">Achievements</TabsTrigger>
+              <TabsList className="grid grid-cols-4 w-full max-w-xl mx-auto mb-8 bg-white/5 backdrop-blur-md border border-white/10">
+                <TabsTrigger value="overview" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">Overview</TabsTrigger>
+                <TabsTrigger value="progress" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">Progress</TabsTrigger>
+                <TabsTrigger value="resources" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">Resources</TabsTrigger>
+                <TabsTrigger value="achievements" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">Achievements</TabsTrigger>
               </TabsList>
               
-              {/* Overview Tab */}
-              <TabsContent value="overview" className="space-y-8">
+              {/* Tab contents with glass-card styling */}
+              <TabsContent value="overview" className="space-y-8 animate-fade-in-up">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Recent Activity Card */}
-                  <RecentActivity 
-                    activities={recentActivities} 
-                    onViewAllActivity={() => setActiveTab("progress")} 
-                  />
+                  <div className="glass-card p-6">
+                    <RecentActivity 
+                      activities={recentActivities} 
+                      onViewAllActivity={() => setActiveTab("progress")} 
+                    />
+                  </div>
                   
-                  {/* Upcoming Quizzes Card */}
-                  <UpcomingQuizzes quizzes={upcomingQuizzes} />
+                  <div className="glass-card p-6">
+                    <UpcomingQuizzes quizzes={upcomingQuizzes} />
+                  </div>
                 </div>
                 
-                {/* AI Recommendations */}
-                <AiRecommendations />
+                <div className="glass-card p-6">
+                  <AiRecommendations />
+                </div>
 
-                {/* Popular Topics */}
-                <PopularTopics />
+                <div className="glass-card p-6">
+                  <PopularTopics />
+                </div>
               </TabsContent>
               
-              {/* Progress Tab */}
-              <TabsContent value="progress">
-                <div className="space-y-8">
+              {/* Progress Tab Content */}
+              <TabsContent value="progress" className="space-y-8 animate-fade-in-up">
+                <div className="glass-card p-6">
                   <StudyStats performanceStats={performanceStats} />
+                </div>
+                <div className="glass-card p-6">
                   <ActivityHistory activities={recentActivities} />
                 </div>
               </TabsContent>
               
-              {/* Resources Tab */}
-              <TabsContent value="resources">
-                <div className="space-y-6">
-                  <div className="flex justify-between items-center">
+              {/* Resources Tab Content */}
+              <TabsContent value="resources" className="space-y-8 animate-fade-in-up">
+                <div className="glass-card p-6">
+                  <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-white">Your Learning Resources</h2>
                     <Button 
                       onClick={() => navigate('/resources')}
@@ -137,14 +144,18 @@ const Dashboard = () => {
                   </div>
                   
                   <SavedResources resources={savedResources} />
-                  <RecentlyViewed />
+                  <div className="mt-8">
+                    <RecentlyViewed />
+                  </div>
                 </div>
               </TabsContent>
               
-              {/* Achievements Tab */}
-              <TabsContent value="achievements">
-                <div className="space-y-8">
+              {/* Achievements Tab Content */}
+              <TabsContent value="achievements" className="space-y-8 animate-fade-in-up">
+                <div className="glass-card p-6">
                   <Certificates certificates={certificates} />
+                </div>
+                <div className="glass-card p-6">
                   <Badges />
                 </div>
               </TabsContent>

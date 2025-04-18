@@ -1,42 +1,66 @@
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  @apply min-h-screen bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700;
 }
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+  @apply h-8 transition-all duration-300 hover:opacity-80;
 }
 
 .card {
-  padding: 2em;
+  @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-lg 
+         transition-all duration-300 hover:shadow-xl hover:border-blue-500/20;
 }
 
-.read-the-docs {
-  color: #888;
+.glass-card {
+  @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl 
+         shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300;
+}
+
+.glass-card:hover {
+  @apply shadow-[0_8px_32px_rgba(59,130,246,0.15)] border-blue-500/30;
+}
+
+.content-section {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+}
+
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent;
+}
+
+.nav-link {
+  @apply relative text-gray-300 hover:text-white transition-colors duration-200;
+}
+
+.nav-link::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-0 h-0.5 bg-blue-500 transition-all duration-300;
+}
+
+.nav-link:hover::after {
+  @apply w-full;
+}
+
+.button-glow {
+  @apply relative overflow-hidden;
+}
+
+.button-glow::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 transition-opacity duration-300;
+}
+
+.button-glow:hover::before {
+  @apply opacity-100;
+}
+
+@keyframes floating {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.float-animation {
+  animation: floating 3s ease-in-out infinite;
 }
