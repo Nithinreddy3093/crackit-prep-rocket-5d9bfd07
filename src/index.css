@@ -1,8 +1,9 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -37,6 +38,7 @@
   body {
     @apply bg-background text-foreground antialiased font-inter;
     font-feature-settings: "rlig" 1, "calt" 1;
+    scroll-behavior: smooth;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -46,7 +48,7 @@
 
 @layer components {
   .glass-panel {
-    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl;
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-xl shadow-lg;
   }
   
   .gradient-border {
@@ -66,6 +68,49 @@
   .hover-card {
     @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
   }
+  
+  .topic-card {
+    @apply relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-xl;
+  }
+  
+  .topic-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br opacity-90 -z-10;
+  }
+  
+  .topic-card:hover::before {
+    @apply opacity-100;
+  }
+  
+  .resource-card {
+    @apply bg-darkBlue-800/70 backdrop-blur-sm border border-darkBlue-700/50 rounded-xl shadow-lg 
+           transition-all duration-300 hover:shadow-xl hover:border-blue-500/30 overflow-hidden;
+  }
+  
+  .quiz-option {
+    @apply relative p-3 rounded-lg border border-darkBlue-700 bg-darkBlue-800/50 
+           transition-all duration-200 hover:bg-darkBlue-700/80 cursor-pointer;
+  }
+  
+  .quiz-option.selected {
+    @apply border-blue-500 bg-blue-900/20;
+  }
+  
+  .quiz-option.correct {
+    @apply border-green-500 bg-green-900/20;
+  }
+  
+  .quiz-option.incorrect {
+    @apply border-red-500 bg-red-900/20;
+  }
+  
+  .animate-float {
+    animation: floating 3s ease-in-out infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 .font-inter {
@@ -76,7 +121,19 @@
   font-family: 'Poppins', sans-serif;
 }
 
-/* Crack effect - CSS only solution */
+/* Animations */
+@keyframes floating {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Enhanced Crack effect */
 .crack-line {
   position: relative;
   overflow: hidden;
@@ -89,14 +146,59 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, transparent 45%, rgba(0, 102, 255, 0.8) 47%, rgba(0, 102, 255, 0.8) 53%, transparent 55%, transparent);
+  background: linear-gradient(90deg, transparent, transparent 45%, rgba(59, 130, 246, 0.8) 47%, rgba(59, 130, 246, 0.8) 53%, transparent 55%, transparent);
   opacity: 0;
   transform: scaleX(0) rotate(-5deg);
   transform-origin: center;
-  transition: transform 0.4s ease, opacity 0.3s ease;
+  transition: transform 0.5s ease-out, opacity 0.3s ease;
 }
 
 .crack-active .crack-line::after {
   opacity: 1;
   transform: scaleX(1) rotate(-5deg);
+}
+
+/* Quiz animation */
+.quiz-enter {
+  animation: quizEnter 0.5s forwards;
+}
+
+@keyframes quizEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading animation */
+.loading-dots div {
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+
+.loading-dots div:nth-child(1) {
+  animation: loading-dots 0.6s infinite;
+}
+
+.loading-dots div:nth-child(2) {
+  animation: loading-dots 0.6s infinite 0.2s;
+}
+
+.loading-dots div:nth-child(3) {
+  animation: loading-dots 0.6s infinite 0.4s;
+}
+
+@keyframes loading-dots {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
 }

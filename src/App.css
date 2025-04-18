@@ -22,7 +22,7 @@
 }
 
 .content-section {
-  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16;
 }
 
 .gradient-text {
@@ -55,6 +55,7 @@
   @apply opacity-100;
 }
 
+/* Enhanced floating animation */
 @keyframes floating {
   0% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
@@ -63,4 +64,68 @@
 
 .float-animation {
   animation: floating 3s ease-in-out infinite;
+}
+
+/* Glowing effect */
+.glow {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+}
+
+.glow-text {
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+/* Animated badge */
+.badge-pulse {
+  animation: badge-pulse 2s infinite;
+}
+
+@keyframes badge-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* Topic card hover effect */
+.topic-card-content {
+  transition: transform 0.3s ease;
+}
+
+.topic-card:hover .topic-card-content {
+  transform: translateY(-5px);
+}
+
+/* Quiz feedback animations */
+.quiz-correct-answer {
+  animation: correct-answer 0.5s ease-in-out;
+}
+
+.quiz-wrong-answer {
+  animation: wrong-answer 0.5s ease-in-out;
+}
+
+@keyframes correct-answer {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes wrong-answer {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Enhanced resource card */
+.resource-card .resource-icon {
+  transition: transform 0.3s ease;
+}
+
+.resource-card:hover .resource-icon {
+  transform: scale(1.15);
 }

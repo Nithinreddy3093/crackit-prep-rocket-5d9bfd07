@@ -25,8 +25,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (isLoading) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-        <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent animate-pulse-slow flex items-center justify-center">
+        <div className="w-3 h-3 bg-white rounded-full"></div>
       </div>
     </div>;
   }
@@ -57,6 +57,10 @@ const App = () => {
     } else {
       // Set a flag in localStorage so we don't show the animation again on refresh
       localStorage.setItem('hasSeenAnimation', 'true');
+      
+      // For testing purposes, you can comment out the line above and uncomment this
+      // to always show the animation (for development)
+      // localStorage.removeItem('hasSeenAnimation');
     }
   }, []);
 
