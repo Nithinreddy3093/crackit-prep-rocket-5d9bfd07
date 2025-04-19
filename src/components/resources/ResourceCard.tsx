@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ExternalLink, BookOpen, Video, FileText } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -80,16 +79,16 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
           </Badge>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-2 mt-4">
           {links.map((link, index) => (
             <a 
               key={index}
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="block text-sm text-primary hover:underline flex items-center"
+              className="block text-sm text-primary hover:underline flex items-center group"
             >
-              <ExternalLink className="h-3 w-3 mr-1" />
+              <ExternalLink className="h-3 w-3 mr-2 transition-transform group-hover:translate-x-1" />
               {link.title}
             </a>
           ))}

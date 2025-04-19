@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -13,10 +12,10 @@ const About = () => {
       
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="py-16 bg-gradient-to-br from-crackit-900 to-crackit-700 text-white">
+        <section className="py-16 bg-gradient-to-br from-background to-accent/5">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl sm:text-5xl font-bold mb-6">About Crackit</h1>
-            <p className="text-xl max-w-3xl mx-auto text-crackit-100">
+            <p className="text-xl max-w-3xl mx-auto text-muted-foreground">
               We're on a mission to help students and professionals ace technical interviews
               through personalized learning and focused practice.
             </p>
@@ -79,6 +78,51 @@ const About = () => {
                   We help you stay motivated by showing your improvement over time through detailed
                   analytics and progress tracking.
                 </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        {/* Updated About Crackit Section */}
+        <section className="py-16 bg-gradient-to-br from-background to-accent/5">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-3xl font-bold text-foreground mb-8">About Crackit</h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                We're on a mission to help students and professionals ace technical interviews
+                through personalized learning and focused practice.
+              </p>
+              
+              <div className="space-y-6 text-left bg-card p-6 rounded-lg shadow-sm">
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">👨‍💻 Founder</h3>
+                  <p className="text-muted-foreground">Marthala Nithin Reddy</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-foreground">📞 Contact</h3>
+                  <p className="text-muted-foreground">📱 Phone: +91 7093569420</p>
+                  <p className="text-muted-foreground">
+                    📧 Email: {' '}
+                    <a 
+                      href="mailto:marthalanithinreddy3093@gmail.com" 
+                      className="text-primary hover:underline"
+                    >
+                      marthalanithinreddy3093@gmail.com
+                    </a>
+                  </p>
+                  <p className="text-muted-foreground">
+                    🔗 LinkedIn: {' '}
+                    <a 
+                      href="https://linkedin.com/in/nithin-marthala" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      linkedin.com/in/nithin-marthala
+                    </a>
+                  </p>
+                </div>
               </div>
             </div>
           </div>
