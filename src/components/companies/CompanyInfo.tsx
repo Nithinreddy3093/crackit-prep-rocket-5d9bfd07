@@ -2,6 +2,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface CompanyData {
   name: string;
@@ -34,17 +35,117 @@ const companyData: Record<string, CompanyData> = {
       'Strong problem-solving skills',
       'Good communication skills'
     ]
+  },
+  tcs: {
+    name: 'Tata Consultancy Services (TCS)',
+    description: 'TCS is an Indian multinational information technology services and consulting company headquartered in Mumbai, offering a wide range of software and IT solutions globally.',
+    topics: [
+      'Quantitative Aptitude',
+      'Programming Logic',
+      'Data Structures',
+      'Core Computer Science Concepts',
+      'SQL & Database',
+      'Verbal Ability'
+    ],
+    process: [
+      'National Qualifier Test (NQT)',
+      'Technical Interview',
+      'Managerial Round',
+      'HR Interview'
+    ],
+    requirements: [
+      'Minimum 60% in X, XII, and Graduation',
+      'All backlogs cleared',
+      'Good analytical skills',
+      'Strong communication skills'
+    ]
+  },
+  wipro: {
+    name: 'Wipro',
+    description: 'Wipro is a leading global information technology, consulting and business process services company, delivering solutions to enable clients to do business better.',
+    topics: [
+      'Quantitative Aptitude',
+      'Logical Reasoning',
+      'Verbal Ability',
+      'Data Structures & Algorithms',
+      'Computer Programming',
+      'Technical Fundamentals'
+    ],
+    process: [
+      'Online Assessment',
+      'Technical Round',
+      'HR Interview'
+    ],
+    requirements: [
+      'Minimum 60% throughout academics',
+      'Maximum 1 year gap in education',
+      'Problem-solving skills',
+      'Adaptability and teamwork'
+    ]
+  },
+  accenture: {
+    name: 'Accenture',
+    description: 'Accenture is a global professional services company with leading capabilities in digital, cloud and security, serving clients in more than 120 countries.',
+    topics: [
+      'Communication Skills',
+      'Analytical Ability',
+      'Attention to Detail',
+      'Programming Fundamentals',
+      'SQL & Database Concepts',
+      'Logical Reasoning'
+    ],
+    process: [
+      'Cognitive & Technical Assessment',
+      'Coding Round',
+      'Communication Assessment',
+      'HR Interview'
+    ],
+    requirements: [
+      '60% or above in academics',
+      'Good communication skills',
+      'Willingness to relocate',
+      'Ability to work in teams'
+    ]
+  },
+  cognizant: {
+    name: 'Cognizant',
+    description: 'Cognizant is an American multinational information technology services and consulting company that provides business consulting, IT and outsourcing services.',
+    topics: [
+      'Analytical Reasoning',
+      'Quantitative Aptitude',
+      'Computer Programming',
+      'Data Structures',
+      'DBMS & SQL',
+      'OOPS Concepts'
+    ],
+    process: [
+      'Online Aptitude Test',
+      'Coding Assessment',
+      'Technical Interview',
+      'HR Interview'
+    ],
+    requirements: [
+      'Minimum 60% in X, XII, and Graduation',
+      'No standing backlogs',
+      'Good problem-solving ability',
+      'Effective communication skills'
+    ]
   }
 };
 
 const CompanyInfo = ({ companyName }: { companyName?: string }) => {
+  const navigate = useNavigate();
+  
   if (!companyName || !companyData[companyName]) {
     return (
       <div className="container mx-auto px-4 py-16">
         <h1 className="text-3xl font-bold mb-8">Company Not Found</h1>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground mb-6">
           The requested company information is not available.
         </p>
+        <Button onClick={() => navigate('/')} className="bg-primary text-white">
+          Return to Home
+        </Button>
       </div>
     );
   }
@@ -99,8 +200,8 @@ const CompanyInfo = ({ companyName }: { companyName?: string }) => {
       </div>
 
       <div className="flex gap-4">
-        <Button>Start Practicing</Button>
-        <Button variant="outline">View Resources</Button>
+        <Button onClick={() => navigate('/quiz')}>Start Practicing</Button>
+        <Button variant="outline" onClick={() => navigate('/resources')}>View Resources</Button>
       </div>
     </div>
   );

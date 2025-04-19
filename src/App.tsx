@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -17,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import Resources from "./pages/Resources";
 import Companies from "./pages/Companies";
 import LogoAnimation from "./components/LogoAnimation";
+import Quiz from "./pages/Quiz";
 
 const queryClient = new QueryClient();
 
@@ -50,19 +52,10 @@ const App = () => {
     }
   }, []);
 
-  // Check if the user has seen the animation before
+  // Always show animation on every refresh
   useEffect(() => {
-    const hasSeenAnimation = localStorage.getItem('hasSeenAnimation');
-    if (hasSeenAnimation) {
-      setShowAnimation(false);
-    } else {
-      // Set a flag in localStorage so we don't show the animation again on refresh
-      localStorage.setItem('hasSeenAnimation', 'true');
-      
-      // For testing purposes, you can comment out the line above and uncomment this
-      // to always show the animation (for development)
-      // localStorage.removeItem('hasSeenAnimation');
-    }
+    // Reset animation state on page load
+    setShowAnimation(true);
   }, []);
 
   const handleAnimationComplete = () => {
@@ -88,6 +81,8 @@ const App = () => {
               <Route path="/topics/:topicId" element={<Topics />} />
               <Route path="/about" element={<About />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/quiz" element={<Quiz />} />
+              <Route path="/quiz/:topicId" element={<Quiz />} />
               <Route path="/resources" element={
                 <ProtectedRoute>
                   <Resources />

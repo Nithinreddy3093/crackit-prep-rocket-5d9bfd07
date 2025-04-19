@@ -20,6 +20,29 @@ const Index = () => {
       <TopicsSection />
       <CompaniesSection />
 
+      {/* Quiz CTA Section */}
+      <section className="py-12 sm:py-16 bg-white dark:bg-darkBlue-800">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
+              Test Your Knowledge with AI-Powered Quizzes
+            </h2>
+            <p className="mt-4 text-xl text-muted-foreground">
+              Answer questions on multiple CS topics and get personalized AI feedback on your strengths and weaknesses.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <Button
+                onClick={() => navigate('/quiz')}
+                size="lg"
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                Start Quiz Now
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-12 sm:py-16 bg-gradient-to-br from-darkBlue-900 to-darkBlue-700">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
