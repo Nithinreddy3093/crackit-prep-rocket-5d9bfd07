@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Brain, Target, BookOpen, BarChart2, CheckCircle, XCircle, ExternalLink, Loader2 } from 'lucide-react';
 import { generateAIFeedback, AIFeedback, QuizResult } from '@/services/geminiService';
+import { updateUserPerformance } from '@/services/userPerformanceService';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/components/ui/use-toast';
 
 interface QuizFeedbackProps {
   score: number;
@@ -21,8 +24,11 @@ const QuizFeedback: React.FC<QuizFeedbackProps> = ({
   topic
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [feedback, setFeedback] = useState<AIFeedback | null>(null);
   const [loading, setLoading] = useState(true);
+  const [savingProgress, setSavingProgress] = useState(false);
+  const [progressSaved, setProgressSaved] = useState(false);
   const percentage = Math.round((score / totalQuestions) * 100);
 
   useEffect(() => {
@@ -39,15 +45,30 @@ const QuizFeedback: React.FC<QuizFeedbackProps> = ({
         
         const result = await generateAIFeedback(quizResult);
         setFeedback(result);
+        
+        // Save user's performance if logged in
+        if (user) {
+          setSavingProgress(true);
+          await updateUserPerformance(user.id, topic, percentage);
+          setProgressSaved(true);
+          
+          // Show toast notification
+          toast({
+            title: "Progress Saved",
+            description: `Your ${topic} quiz results have been saved to your profile.`,
+            variant: "default",
+          });
+        }
       } catch (error) {
         console.error('Error getting AI feedback:', error);
       } finally {
         setLoading(false);
+        setSavingProgress(false);
       }
     };
 
     fetchFeedback();
-  }, [score, totalQuestions, correctQuestions, incorrectQuestions, topic]);
+  }, [score, totalQuestions, correctQuestions, incorrectQuestions, topic, user, percentage]);
 
   if (loading) {
     return (
@@ -100,6 +121,27 @@ const QuizFeedback: React.FC<QuizFeedbackProps> = ({
           <p className="text-muted-foreground mt-1">
             You scored {score} out of {totalQuestions} questions
           </p>
+          
+          {user && (
+            <div className="mt-2 flex items-center justify-center gap-2 text-sm">
+              {savingProgress ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                  <span className="text-muted-foreground">Saving progress...</span>
+                </>
+              ) : progressSaved ? (
+                <>
+                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  <span className="text-green-500">Progress saved to your profile</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">Progress not saved</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -178,7 +220,7 @@ const QuizFeedback: React.FC<QuizFeedbackProps> = ({
           onClick={() => navigate('/dashboard')}
           className="border-border text-primary hover:bg-primary/10"
         >
-          Back to Dashboard
+          View Your Dashboard
         </Button>
       </div>
     </div>

@@ -7,6 +7,8 @@ import QuizIntro from '@/components/quiz/QuizIntro';
 import QuizCard from '@/components/QuizCard';
 import QuizFeedback from '@/components/QuizFeedback';
 import { generateQuestions } from '@/services/quizService';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from "@/components/ui/use-toast";
 
 interface Question {
   id: number;
@@ -19,6 +21,7 @@ interface Question {
 const Quiz = () => {
   const { topicId } = useParams();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -28,6 +31,7 @@ const Quiz = () => {
   const [correctQuestions, setCorrectQuestions] = useState<number[]>([]);
   const [incorrectQuestions, setIncorrectQuestions] = useState<number[]>([]);
   const [topic, setTopic] = useState(topicId || 'General Computer Science');
+  const [quizStartTime, setQuizStartTime] = useState<Date | null>(null);
 
   useEffect(() => {
     const loadQuestions = async () => {
@@ -37,6 +41,11 @@ const Quiz = () => {
         setQuestions(quizQuestions);
       } catch (error) {
         console.error('Failed to load questions:', error);
+        toast({
+          title: "Error loading questions",
+          description: "There was a problem loading quiz questions. Please try again.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -47,6 +56,12 @@ const Quiz = () => {
 
   const handleStartQuiz = () => {
     setShowIntro(false);
+    setQuizStartTime(new Date());
+    
+    // Track quiz start if user is authenticated
+    if (isAuthenticated) {
+      console.log(`User ${user?.id} started ${topic} quiz`);
+    }
   };
 
   const handleNextQuestion = () => {
@@ -54,10 +69,19 @@ const Quiz = () => {
   };
 
   const handleQuizCompleted = (correct: number[], incorrect: number[]) => {
+    const quizEndTime = new Date();
+    const quizDurationMs = quizStartTime ? quizEndTime.getTime() - quizStartTime.getTime() : 0;
+    const quizDurationMin = Math.round(quizDurationMs / 60000);
+    
     setCorrectQuestions(correct);
     setIncorrectQuestions(incorrect);
     setScore(correct.length);
     setQuizCompleted(true);
+    
+    // Track quiz completion if user is authenticated
+    if (isAuthenticated) {
+      console.log(`User ${user?.id} completed ${topic} quiz with score ${correct.length}/${questions.length} in ${quizDurationMin} minutes`);
+    }
   };
 
   const handleRetakeQuiz = () => {

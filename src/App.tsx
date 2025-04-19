@@ -20,7 +20,14 @@ import Companies from "./pages/Companies";
 import LogoAnimation from "./components/LogoAnimation";
 import Quiz from "./pages/Quiz";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 // Protected route wrapper component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
