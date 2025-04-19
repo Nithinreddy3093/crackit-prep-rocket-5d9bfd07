@@ -22,14 +22,14 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({ userName }) => {
   };
 
   return (
-    <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-darkBlue-900 to-darkBlue-800">
+    <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-background to-accent/5">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Welcome back, {userName}!
             </h1>
-            <p className="text-xl text-blue-100">
+            <p className="text-xl text-muted-foreground">
               Track your progress, identify weaknesses, and improve your skills.
             </p>
           </div>
@@ -43,7 +43,7 @@ const WelcomeSection: React.FC<WelcomeSectionProps> = ({ userName }) => {
             <Button 
               onClick={() => navigate('/resources')}
               variant="outline" 
-              className="border-blue-400 text-blue-300 hover:bg-blue-900/30"
+              className="border-primary/50 text-primary hover:bg-primary/10"
             >
               Browse Resources
             </Button>

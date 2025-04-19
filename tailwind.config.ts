@@ -76,7 +76,7 @@ export default {
                     '900': '#4c1d95',
                     '950': '#2e1065',
                 },
-                // New dark blue theme colors
+                // Dark blue theme colors
                 darkBlue: {
                     '50': '#E6F0FF',
                     '100': '#CCE0FF',

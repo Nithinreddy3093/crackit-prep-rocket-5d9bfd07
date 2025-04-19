@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
@@ -75,37 +76,39 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/topics" element={<Topics />} />
-              <Route path="/topics/:topicId" element={<Topics />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/quiz" element={<Quiz />} />
-              <Route path="/quiz/:topicId" element={<Quiz />} />
-              <Route path="/resources" element={
-                <ProtectedRoute>
-                  <Resources />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/companies/:companyName" element={<Companies />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AuthProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/topics" element={<Topics />} />
+                <Route path="/topics/:topicId" element={<Topics />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/quiz" element={<Quiz />} />
+                <Route path="/quiz/:topicId" element={<Quiz />} />
+                <Route path="/resources" element={
+                  <ProtectedRoute>
+                    <Resources />
+                  </ProtectedRoute>
+                } />
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/companies/:companyName" element={<Companies />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
