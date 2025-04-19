@@ -9,7 +9,7 @@ const LogoAnimation = ({ onAnimationComplete }: { onAnimationComplete: () => voi
     const timer = setTimeout(() => {
       setIsAnimating(false);
       onAnimationComplete();
-    }, 3500); // Extended animation time
+    }, 3500); // Animation duration
 
     return () => clearTimeout(timer);
   }, [onAnimationComplete]);

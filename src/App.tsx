@@ -1,4 +1,4 @@
-
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +15,7 @@ import About from "./pages/About";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
 import Resources from "./pages/Resources";
+import Companies from "./pages/Companies";
 import LogoAnimation from "./components/LogoAnimation";
 
 const queryClient = new QueryClient();
@@ -97,7 +98,7 @@ const App = () => {
                   <Dashboard />
                 </ProtectedRoute>
               } />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/companies/:companyName" element={<Companies />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
