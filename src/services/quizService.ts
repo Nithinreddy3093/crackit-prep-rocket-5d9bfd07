@@ -1,4 +1,3 @@
-
 import { generateAIFeedback } from './geminiService';
 
 interface Question {
@@ -9,7 +8,7 @@ interface Question {
   explanation: string;
 }
 
-// Mock questions for various topics
+// Extended mock questions for various topics
 const MOCK_QUESTIONS: Record<string, Question[]> = {
   "Data Structures and Algorithms": [
     {
@@ -223,20 +222,112 @@ const MOCK_QUESTIONS: Record<string, Question[]> = {
       correctAnswer: 1,
       explanation: "A file system is used to organize and store files on storage devices, providing a way to organize data in a hierarchical structure of directories or folders."
     }
+  ],
+  "Database Management": [
+    {
+      id: 1,
+      question: "What is the highest normal form in database normalization?",
+      options: ["1NF", "2NF", "3NF", "BCNF"],
+      correctAnswer: 3,
+      explanation: "BCNF (Boyce-Codd Normal Form) is a higher normal form than 3NF. While 5NF and 6NF exist, BCNF is often considered the highest practical normal form in most database designs."
+    },
+    {
+      id: 2,
+      question: "Which of the following is NOT a type of database index?",
+      options: ["B-Tree index", "Hash index", "Matrix index", "Bitmap index"],
+      correctAnswer: 2,
+      explanation: "Matrix index is not a standard type of database index. Common index types include B-Tree, Hash, Bitmap, and Full-text indices."
+    },
+    {
+      id: 3,
+      question: "What does ACID stand for in database transactions?",
+      options: [
+        "Atomicity, Consistency, Isolation, Durability",
+        "Availability, Consistency, Integration, Durability",
+        "Atomicity, Concurrency, Integrity, Dependability",
+        "Automation, Consistency, Isolation, Durability"
+      ],
+      correctAnswer: 0,
+      explanation: "ACID stands for Atomicity, Consistency, Isolation, and Durability, which are the key properties that guarantee reliable processing of database transactions."
+    }
+  ],
+  "Cyber Security": [
+    {
+      id: 1,
+      question: "What is a man-in-the-middle attack?",
+      options: [
+        "A type of DoS attack that floods a server with traffic",
+        "An attack where an unauthorized party positions themselves between communications",
+        "A type of malware that encrypts files and demands ransom",
+        "A brute force attack against user passwords"
+      ],
+      correctAnswer: 1,
+      explanation: "A man-in-the-middle attack occurs when an attacker secretly intercepts and possibly alters communications between two parties who believe they are directly communicating with each other."
+    },
+    {
+      id: 2,
+      question: "What is the primary purpose of a firewall?",
+      options: [
+        "To detect and remove viruses",
+        "To monitor network traffic for suspicious activity",
+        "To control incoming and outgoing network traffic based on predetermined security rules",
+        "To encrypt data during transmission"
+      ],
+      correctAnswer: 2,
+      explanation: "A firewall's primary purpose is to establish a barrier between a trusted internal network and untrusted external networks, controlling traffic based on security rules."
+    }
   ]
 };
 
-// Function to generate questions using Gemini API (mock for now)
-export const generateQuestions = async (topic: string): Promise<Question[]> => {
-  console.log(`Generating questions for topic: ${topic}`);
+// Generate difficulty-specific prompts for AI question generation
+const generatePromptForTopic = (topic: string, difficulty: string = 'intermediate'): string => {
+  const difficultyGuide = {
+    beginner: "fundamental concepts, basic definitions, and simple applications",
+    intermediate: "practical applications, moderate complexity scenarios, and standard techniques",
+    advanced: "complex problems, edge cases, optimization techniques, and advanced concepts"
+  }[difficulty];
+
+  return `
+    Generate a multiple-choice question on ${topic} with exactly 4 options and one correct answer.
+    The question should test knowledge of ${difficultyGuide}.
+    The question should be specific, technically accurate, and clear.
+    
+    Format your response as JSON with the following structure:
+    {
+      "question": "The complete question text",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correctAnswer": 0, // Index of correct answer (0-3)
+      "explanation": "Detailed explanation of why the answer is correct and why others are wrong"
+    }
+  `;
+};
+
+// Function to generate questions with improved AI prompting
+export const generateQuestions = async (topic: string, difficulty: string = 'intermediate'): Promise<Question[]> => {
+  console.log(`Generating questions for topic: ${topic} at ${difficulty} difficulty`);
   
-  // For now, return mock questions based on the topic
-  if (MOCK_QUESTIONS[topic]) {
-    return MOCK_QUESTIONS[topic];
+  try {
+    // If we have mock questions for this topic, use them as a fallback
+    const mockQuestionsForTopic = MOCK_QUESTIONS[topic];
+    
+    // In a real implementation, you would:
+    // 1. Check if we have cached questions for this topic+difficulty
+    // 2. If not, call AI API with better prompting
+    // 3. Cache the results for future use
+    // 4. Return the AI-generated questions
+    
+    // For now, return mock questions based on the topic if available
+    if (mockQuestionsForTopic) {
+      return mockQuestionsForTopic;
+    }
+    
+    // Default to DSA questions if the topic doesn't match
+    return MOCK_QUESTIONS["Data Structures and Algorithms"];
+  } catch (error) {
+    console.error("Error generating questions:", error);
+    // Always fall back to mock questions if there's an error
+    return MOCK_QUESTIONS["Data Structures and Algorithms"];
   }
-  
-  // Default to DSA questions if the topic doesn't match
-  return MOCK_QUESTIONS["Data Structures and Algorithms"];
 };
 
 // We'll use the existing geminiService.ts for AI feedback analysis

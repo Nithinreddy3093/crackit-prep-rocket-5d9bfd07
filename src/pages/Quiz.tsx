@@ -23,6 +23,7 @@ const Quiz = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showIntro, setShowIntro] = useState(true);
@@ -32,13 +33,31 @@ const Quiz = () => {
   const [incorrectQuestions, setIncorrectQuestions] = useState<number[]>([]);
   const [topic, setTopic] = useState(topicId || 'General Computer Science');
   const [quizStartTime, setQuizStartTime] = useState<Date | null>(null);
+  const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
 
   useEffect(() => {
     const loadQuestions = async () => {
       setIsLoading(true);
       try {
-        const quizQuestions = await generateQuestions(topic);
-        setQuestions(quizQuestions);
+        let retries = 0;
+        let quizQuestions: Question[] = [];
+        
+        while (retries < 3 && quizQuestions.length === 0) {
+          if (retries > 0) {
+            setIsRetrying(true);
+            // Add a slight delay between retries
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          
+          quizQuestions = await generateQuestions(topic, difficulty);
+          retries++;
+        }
+        
+        if (quizQuestions.length > 0) {
+          setQuestions(quizQuestions);
+        } else {
+          throw new Error("Failed to load questions after multiple attempts");
+        }
       } catch (error) {
         console.error('Failed to load questions:', error);
         toast({
@@ -48,11 +67,12 @@ const Quiz = () => {
         });
       } finally {
         setIsLoading(false);
+        setIsRetrying(false);
       }
     };
 
     loadQuestions();
-  }, [topic]);
+  }, [topic, difficulty]);
 
   const handleStartQuiz = () => {
     setShowIntro(false);
@@ -60,7 +80,7 @@ const Quiz = () => {
     
     // Track quiz start if user is authenticated
     if (isAuthenticated) {
-      console.log(`User ${user?.id} started ${topic} quiz`);
+      console.log(`User ${user?.id} started ${topic} quiz at ${difficulty} difficulty`);
     }
   };
 
@@ -93,19 +113,9 @@ const Quiz = () => {
     setShowIntro(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container mx-auto px-4 py-16 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent animate-pulse-slow flex items-center justify-center">
-            <div className="w-3 h-3 bg-white rounded-full"></div>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  const handleDifficultyChange = (newDifficulty: 'beginner' | 'intermediate' | 'advanced') => {
+    setDifficulty(newDifficulty);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,6 +126,7 @@ const Quiz = () => {
             topic={topic} 
             questionCount={questions.length} 
             onStartQuiz={handleStartQuiz} 
+            isLoading={isLoading || isRetrying}
           />
         ) : quizCompleted ? (
           <QuizFeedback
@@ -124,22 +135,38 @@ const Quiz = () => {
             correctQuestions={correctQuestions}
             incorrectQuestions={incorrectQuestions}
             topic={topic}
+            difficulty={difficulty}
           />
         ) : (
           <div className="max-w-3xl mx-auto">
-            <QuizCard
-              question={questions[currentQuestionIndex].question}
-              options={questions[currentQuestionIndex].options}
-              correctAnswer={questions[currentQuestionIndex].correctAnswer}
-              explanation={questions[currentQuestionIndex].explanation}
-              onNextQuestion={handleNextQuestion}
-              onCompleted={handleQuizCompleted}
-              isLastQuestion={currentQuestionIndex === questions.length - 1}
-              currentQuestion={currentQuestionIndex + 1}
-              totalQuestions={questions.length}
-              correctQuestions={correctQuestions}
-              incorrectQuestions={incorrectQuestions}
-            />
+            {isLoading || isRetrying ? (
+              <div className="bg-card rounded-xl shadow-sm p-8 text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <div className="mb-4 relative">
+                    <div className="h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-8 w-8 rounded-full bg-primary/20"></div>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-medium text-foreground mb-2">Hang tight!</h3>
+                  <p className="text-muted-foreground">Prepping your next challenge...</p>
+                </div>
+              </div>
+            ) : (
+              <QuizCard
+                question={questions[currentQuestionIndex].question}
+                options={questions[currentQuestionIndex].options}
+                correctAnswer={questions[currentQuestionIndex].correctAnswer}
+                explanation={questions[currentQuestionIndex].explanation}
+                onNextQuestion={handleNextQuestion}
+                onCompleted={handleQuizCompleted}
+                isLastQuestion={currentQuestionIndex === questions.length - 1}
+                currentQuestion={currentQuestionIndex + 1}
+                totalQuestions={questions.length}
+                correctQuestions={correctQuestions}
+                incorrectQuestions={incorrectQuestions}
+              />
+            )}
           </div>
         )}
       </div>

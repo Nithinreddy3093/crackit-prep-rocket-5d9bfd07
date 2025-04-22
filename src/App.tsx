@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,8 +17,9 @@ import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
 import Resources from "./pages/Resources";
 import Companies from "./pages/Companies";
-import LogoAnimation from "./components/LogoAnimation";
+import CompaniesList from "./pages/CompaniesList";
 import Quiz from "./pages/Quiz";
+import LogoAnimation from "./components/LogoAnimation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -102,6 +102,7 @@ const App = () => {
                     <Dashboard />
                   </ProtectedRoute>
                 } />
+                <Route path="/companies" element={<CompaniesList />} />
                 <Route path="/companies/:companyName" element={<Companies />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
