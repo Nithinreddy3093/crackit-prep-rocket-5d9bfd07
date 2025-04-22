@@ -19,6 +19,10 @@ import Resources from "./pages/Resources";
 import Companies from "./pages/Companies";
 import CompaniesList from "./pages/CompaniesList";
 import Quiz from "./pages/Quiz";
+import Blogs from "./pages/Blogs";
+import StudyGuides from "./pages/StudyGuides";
+import FAQ from "./pages/FAQ";
+import Support from "./pages/Support";
 import LogoAnimation from "./components/LogoAnimation";
 
 const queryClient = new QueryClient({
@@ -104,6 +108,10 @@ const App = () => {
                 } />
                 <Route path="/companies" element={<CompaniesList />} />
                 <Route path="/companies/:companyName" element={<Companies />} />
+                <Route path="/blog" element={<Blogs />} />
+                <Route path="/guides" element={<StudyGuides />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/support" element={<Support />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AuthProvider>
