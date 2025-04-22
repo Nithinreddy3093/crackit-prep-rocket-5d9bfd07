@@ -7,6 +7,11 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "@/components/ui/use-toast";
 import { Button } from '@/components/ui/button';
+import { 
+  BarChart3, BookOpen, Trophy, ListChecks, 
+  Rocket, BookMarked, GraduationCap, Brain, 
+  MousePointerClick, ArrowUpRight, Layout, BookOpenCheck
+} from 'lucide-react';
 
 // Import refactored components
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
@@ -20,7 +25,6 @@ import SavedResources, { SavedResource } from '@/components/dashboard/SavedResou
 import RecentlyViewed from '@/components/dashboard/RecentlyViewed';
 import Certificates, { Certificate } from '@/components/dashboard/Certificates';
 import Badges from '@/components/dashboard/Badges';
-import { Video } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -73,9 +77,9 @@ const Dashboard = () => {
 
   // Mock saved resources
   const savedResources: SavedResource[] = [
-    { id: 1, title: 'Database Normalization Explained', type: 'Video', topic: 'DBMS', savedOn: 'April 8, 2025', url: '#' },
-    { id: 2, title: 'Advanced Algorithm Techniques', type: 'Article', topic: 'DSA', savedOn: 'April 5, 2025', url: '#' },
-    { id: 3, title: 'Memory Management in OS', type: 'Course', topic: 'OS', savedOn: 'April 2, 2025', url: '#' },
+    { id: 1, title: 'Database Normalization Explained', type: 'Video', topic: 'DBMS', savedOn: 'April 8, 2025', url: 'https://www.youtube.com/watch?v=UrYLYV7WSHM' },
+    { id: 2, title: 'Advanced Algorithm Techniques', type: 'Article', topic: 'DSA', savedOn: 'April 5, 2025', url: 'https://www.geeksforgeeks.org/advanced-data-structures/' },
+    { id: 3, title: 'Memory Management in OS', type: 'Course', topic: 'OS', savedOn: 'April 2, 2025', url: 'https://www.coursera.org/learn/operating-systems' },
   ];
 
   return (
@@ -90,73 +94,225 @@ const Dashboard = () => {
           <div className="max-w-7xl mx-auto">
             <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
               <TabsList className="grid grid-cols-4 w-full max-w-xl mx-auto mb-8 bg-white/5 backdrop-blur-md border border-white/10">
-                <TabsTrigger value="overview" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">Overview</TabsTrigger>
-                <TabsTrigger value="progress" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">Progress</TabsTrigger>
-                <TabsTrigger value="resources" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">Resources</TabsTrigger>
-                <TabsTrigger value="achievements" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">Achievements</TabsTrigger>
+                <TabsTrigger value="overview" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">
+                  <Layout className="h-4 w-4 mr-2" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="progress" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Progress
+                </TabsTrigger>
+                <TabsTrigger value="resources" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">
+                  <BookMarked className="h-4 w-4 mr-2" />
+                  Resources
+                </TabsTrigger>
+                <TabsTrigger value="achievements" className="text-gray-300 hover:text-white data-[state=active]:bg-primary/20">
+                  <Trophy className="h-4 w-4 mr-2" />
+                  Achievements
+                </TabsTrigger>
               </TabsList>
               
               {/* Tab contents with glass-card styling */}
               <TabsContent value="overview" className="space-y-8 animate-fade-in-up">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="glass-card p-6">
+                  <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                    <h3 className="section-title">
+                      <MousePointerClick className="section-icon" />
+                      Recent Activity
+                    </h3>
                     <RecentActivity 
                       activities={recentActivities} 
                       onViewAllActivity={() => setActiveTab("progress")} 
                     />
                   </div>
                   
-                  <div className="glass-card p-6">
+                  <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                    <h3 className="section-title">
+                      <ListChecks className="section-icon" />
+                      Upcoming Quizzes
+                    </h3>
                     <UpcomingQuizzes quizzes={upcomingQuizzes} />
+                  </div>
+                  
+                  <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                    <h3 className="section-title">
+                      <Trophy className="section-icon" />
+                      Your Achievements
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/80">Quizzes Completed</span>
+                        <span className="font-bold text-primary">12</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-white/80">Total Score</span>
+                        <span className="font-bold text-primary">85%</span>
+                      </div>
+                      <Button
+                        onClick={() => setActiveTab("achievements")}
+                        variant="outline"
+                        size="sm"
+                        className="w-full mt-2 text-primary border-primary/30 hover:bg-primary/10"
+                      >
+                        View All Achievements
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                  <h3 className="section-title">
+                    <Brain className="section-icon" />
+                    AI Recommendations
+                  </h3>
                   <AiRecommendations />
                 </div>
 
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                  <h3 className="section-title">
+                    <Rocket className="section-icon" />
+                    Popular Topics
+                  </h3>
                   <PopularTopics />
                 </div>
               </TabsContent>
               
               {/* Progress Tab Content */}
               <TabsContent value="progress" className="space-y-8 animate-fade-in-up">
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                  <h3 className="section-title">
+                    <BarChart3 className="section-icon" />
+                    Your Learning Progress
+                  </h3>
                   <StudyStats performanceStats={performanceStats} />
                 </div>
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                  <h3 className="section-title">
+                    <ListChecks className="section-icon" />
+                    Activity Timeline
+                  </h3>
                   <ActivityHistory activities={recentActivities} />
+                </div>
+                <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                  <h3 className="section-title">
+                    <BookOpenCheck className="section-icon" />
+                    Recent Quiz Results
+                  </h3>
+                  <div className="space-y-4">
+                    {recentActivities
+                      .filter(activity => activity.type === 'quiz')
+                      .map((quiz, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/10">
+                          <div>
+                            <h4 className="font-medium text-white">{quiz.name}</h4>
+                            <p className="text-sm text-white/70">{quiz.date}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-primary">{quiz.score}</div>
+                            <p className="text-xs text-white/70">{quiz.topic}</p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </TabsContent>
               
               {/* Resources Tab Content */}
               <TabsContent value="resources" className="space-y-8 animate-fade-in-up">
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-white">Your Learning Resources</h2>
+                    <h3 className="section-title mb-0">
+                      <BookOpen className="section-icon" />
+                      Your Learning Resources
+                    </h3>
                     <Button 
                       onClick={() => navigate('/resources')}
                       className="bg-primary hover:bg-primary/90 text-white"
                     >
                       Browse All Resources
+                      <ArrowUpRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
                   
                   <SavedResources resources={savedResources} />
                   <div className="mt-8">
+                    <h3 className="section-title">
+                      <MousePointerClick className="section-icon" />
+                      Recently Viewed
+                    </h3>
                     <RecentlyViewed />
+                  </div>
+                  
+                  <div className="mt-8 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <h4 className="font-semibold text-white mb-2 flex items-center">
+                      <Rocket className="h-4 w-4 mr-2 text-blue-400" />
+                      Enhanced Learning Resources
+                    </h4>
+                    <p className="text-white/80 text-sm mb-3">
+                      Explore these handpicked resources to accelerate your learning.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <a 
+                        href="https://www.geeksforgeeks.org/data-structures/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-green-500/20 flex items-center justify-center mr-3">
+                          <BookOpen className="h-4 w-4 text-green-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h5 className="font-medium text-white text-sm">Data Structures</h5>
+                          <p className="text-xs text-white/70">GeeksforGeeks Guide</p>
+                        </div>
+                      </a>
+                      <a 
+                        href="https://leetcode.com/list/xi4ci4ig/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center p-3 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-orange-500/20 flex items-center justify-center mr-3">
+                          <ListChecks className="h-4 w-4 text-orange-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h5 className="font-medium text-white text-sm">Blind 75 Problems</h5>
+                          <p className="text-xs text-white/70">LeetCode Collection</p>
+                        </div>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
               
               {/* Achievements Tab Content */}
               <TabsContent value="achievements" className="space-y-8 animate-fade-in-up">
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                  <h3 className="section-title">
+                    <GraduationCap className="section-icon" />
+                    Your Certificates
+                  </h3>
                   <Certificates certificates={certificates} />
                 </div>
-                <div className="glass-card p-6">
+                <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
+                  <h3 className="section-title">
+                    <Trophy className="section-icon" />
+                    Your Badges
+                  </h3>
                   <Badges />
+                  
+                  <div className="mt-8 text-center">
+                    <div className="inline-block p-6 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl border border-white/10">
+                      <h4 className="text-xl font-bold text-white mb-3">Ready for your next challenge?</h4>
+                      <p className="text-white/70 mb-4">Take a quiz to earn more badges and improve your skills!</p>
+                      <Button 
+                        onClick={() => navigate('/topics')}
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                      >
+                        Explore Quiz Topics
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>

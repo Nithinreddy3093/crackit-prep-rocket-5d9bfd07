@@ -31,25 +31,25 @@ const CompaniesSection = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <CompanyCard
             name="Infosys"
-            logo="/placeholder.svg"
+            logo="https://brandlogos.net/wp-content/uploads/2023/10/infosys-logo-brandlogos.net_.png"
             description="Technical aptitude & coding patterns as per Infosys' hiring process."
             to="/companies/infosys"
           />
           <CompanyCard
             name="TCS"
-            logo="/placeholder.svg"
+            logo="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Tata_Consultancy_Services_Logo.svg/512px-Tata_Consultancy_Services_Logo.svg.png"
             description="TCS National Qualifier Test (NQT) style questions and practice tests."
             to="/companies/tcs"
           />
           <CompanyCard
             name="Wipro"
-            logo="/placeholder.svg"
+            logo="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Wipro_Primary_Logo_Color_RGB.svg/512px-Wipro_Primary_Logo_Color_RGB.svg.png"
             description="Designed based on Wipro NLTH and other selection processes."
             to="/companies/wipro"
           />
           <CompanyCard
             name="Accenture"
-            logo="/placeholder.svg"
+            logo="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Accenture.svg/512px-Accenture.svg.png"
             description="Technical, analytical and coding challenges based on Accenture's process."
             to="/companies/accenture"
           />
