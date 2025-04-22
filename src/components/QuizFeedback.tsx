@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +13,7 @@ interface QuizFeedbackProps {
   correctQuestions: number[];
   incorrectQuestions: number[];
   topic: string;
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
 }
 
 const QuizFeedback: React.FC<QuizFeedbackProps> = ({
@@ -21,7 +21,8 @@ const QuizFeedback: React.FC<QuizFeedbackProps> = ({
   totalQuestions,
   correctQuestions,
   incorrectQuestions,
-  topic
+  topic,
+  difficulty = 'intermediate'
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
