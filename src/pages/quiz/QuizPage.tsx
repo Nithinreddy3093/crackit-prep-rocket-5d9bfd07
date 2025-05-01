@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuiz } from "@/hooks/useQuiz";
 import Navbar from '@/components/Navbar';
@@ -8,10 +8,16 @@ import QuizQuestion from './components/QuizQuestion';
 import QuizResults from './components/QuizResults';
 import LoadingState from './components/LoadingState';
 import ErrorState from './components/ErrorState';
+import QuizIntro from '@/components/quiz/QuizIntro';
 
 const QuizPage = () => {
   const { topicId } = useParams<{ topicId: string }>();
+  const [quizStarted, setQuizStarted] = useState(false);
   const quiz = useQuiz(topicId);
+  
+  const handleStartQuiz = () => {
+    setQuizStarted(true);
+  };
   
   if (quiz.isLoading) {
     return <LoadingState />;
@@ -29,8 +35,15 @@ const QuizPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
       <Navbar />
-      <main className="flex-grow p-4">
-        {quiz.quizCompleted ? (
+      <main className="flex-grow p-4 md:p-8">
+        {!quizStarted ? (
+          <QuizIntro 
+            topic={quiz.currentTopic?.title || "General Knowledge"}
+            questionCount={quiz.questions.length}
+            onStartQuiz={handleStartQuiz}
+            isLoading={quiz.isLoading}
+          />
+        ) : quiz.quizCompleted ? (
           <QuizResults 
             correctAnswers={quiz.correctAnswers}
             totalQuestions={quiz.questions.length}
