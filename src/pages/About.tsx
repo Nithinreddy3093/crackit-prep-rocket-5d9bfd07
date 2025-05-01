@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -174,59 +175,6 @@ const About = () => {
           </div>
         </section>
         
-        {/* Team Section */}
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Meet Our Team</h2>
-              <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                We're a team of engineers, educators, and AI specialists passionate about improving technical education
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                <div className="aspect-w-4 aspect-h-3 bg-gray-200 dark:bg-gray-700">
-                  <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80" alt="Team member" className="object-cover" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Alex Parker</h3>
-                  <p className="text-crackit-600 dark:text-crackit-400">Founder & CEO</p>
-                  <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm">
-                    Former software engineer at Google with a passion for making technical concepts accessible to everyone.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                <div className="aspect-w-4 aspect-h-3 bg-gray-200 dark:bg-gray-700">
-                  <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1169&q=80" alt="Team member" className="object-cover" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Sophia Chen</h3>
-                  <p className="text-crackit-600 dark:text-crackit-400">CTO</p>
-                  <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm">
-                    AI researcher with a PhD in machine learning, focused on building adaptive learning systems.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-                <div className="aspect-w-4 aspect-h-3 bg-gray-200 dark:bg-gray-700">
-                  <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80" alt="Team member" className="object-cover" />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Raj Mehta</h3>
-                  <p className="text-crackit-600 dark:text-crackit-400">Head of Content</p>
-                  <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm">
-                    Former CS professor with 10+ years of experience preparing students for technical roles.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        
         {/* Testimonials */}
         <section className="py-16 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -338,3 +286,4 @@ const About = () => {
 };
 
 export default About;
+
