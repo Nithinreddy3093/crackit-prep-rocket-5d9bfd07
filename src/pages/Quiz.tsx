@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -44,14 +45,16 @@ const Quiz = () => {
     onSuccess: (data) => {
       setQuestions(data);
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error fetching questions",
-        description: error.message,
-        variant: "destructive",
-      });
+    meta: {
+      onError: (error: any) => {
+        toast({
+          title: "Error fetching questions",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
-    enabled: !!topicId, // Ensure topicId is available before running the query
+    enabled: !!topicId // Ensure topicId is available before running the query
   });
 
   // Fetch topic details
@@ -61,14 +64,16 @@ const Quiz = () => {
     onSuccess: (data) => {
       setCurrentTopic(data);
     },
-    onError: (error: any) => {
-      toast({
-        title: "Error fetching topic",
-        description: error.message,
-        variant: "destructive",
-      });
+    meta: {
+      onError: (error: any) => {
+        toast({
+          title: "Error fetching topic",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
-    enabled: !!topicId, // Ensure topicId is available before running the query
+    enabled: !!topicId // Ensure topicId is available before running the query
   });
 
   useEffect(() => {
@@ -252,7 +257,7 @@ const Quiz = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-white text-lg">{currentQuestion.text}</p>
-              <RadioGroup defaultValue={selectedAnswer} onValueChange={handleAnswerSelect} className="w-full">
+              <RadioGroup defaultValue={selectedAnswer || ""} onValueChange={handleAnswerSelect} className="w-full">
                 {currentQuestion.options.map((option) => (
                   <div key={option} className="flex items-center space-x-2">
                     <RadioGroupItem value={option} id={`answer-${option}`} className="peer h-4 w-4 shrink-0 rounded-full border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />

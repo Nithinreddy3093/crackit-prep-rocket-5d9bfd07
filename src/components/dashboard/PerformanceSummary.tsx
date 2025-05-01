@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, CheckCircle, LineChart, Award } from 'lucide-react';
+import { Clock, CheckCircle, LineChart, Award, Brain } from 'lucide-react';
 import { getUserPerformance, getPerformanceHistory, getAIRecommendations } from '@/services/supabasePerformanceService';
 import { Skeleton } from '@/components/ui/skeleton';
 
