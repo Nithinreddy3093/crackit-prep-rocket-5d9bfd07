@@ -9,13 +9,173 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      learning_resources: {
+        Row: {
+          description: string
+          difficulty: string
+          id: string
+          tags: string[]
+          title: string
+          topic: string
+          type: string
+          url: string
+        }
+        Insert: {
+          description: string
+          difficulty: string
+          id?: string
+          tags?: string[]
+          title: string
+          topic: string
+          type: string
+          url: string
+        }
+        Update: {
+          description?: string
+          difficulty?: string
+          id?: string
+          tags?: string[]
+          title?: string
+          topic?: string
+          type?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      performance_history: {
+        Row: {
+          completion_time: number | null
+          date: string
+          id: string
+          quiz_id: string | null
+          score: number
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          completion_time?: number | null
+          date?: string
+          id?: string
+          quiz_id?: string | null
+          score: number
+          topic: string
+          user_id: string
+        }
+        Update: {
+          completion_time?: number | null
+          date?: string
+          id?: string
+          quiz_id?: string | null
+          score?: number
+          topic?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      topic_scores: {
+        Row: {
+          created_at: string
+          id: string
+          quizzes_taken: number
+          score: number
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quizzes_taken?: number
+          score?: number
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quizzes_taken?: number
+          score?: number
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_description: string
+          badge_id: string
+          badge_name: string
+          earned_date: string
+          icon: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_description: string
+          badge_id: string
+          badge_name: string
+          earned_date?: string
+          icon: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_description?: string
+          badge_id?: string
+          badge_name?: string
+          earned_date?: string
+          icon?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_performance: {
+        Row: {
+          created_at: string
+          id: string
+          last_quiz_date: string | null
+          overall_score: number
+          quizzes_taken: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_quiz_date?: string | null
+          overall_score?: number
+          quizzes_taken?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_quiz_date?: string | null
+          overall_score?: number
+          quizzes_taken?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_user_performance: {
+        Args: {
+          p_user_id: string
+          p_topic: string
+          p_score: number
+          p_completion_time?: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

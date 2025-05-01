@@ -15,21 +15,25 @@ import {
 
 // Import refactored components
 import WelcomeSection from '@/components/dashboard/WelcomeSection';
-import RecentActivity, { ActivityItem } from '@/components/dashboard/RecentActivity';
-import UpcomingQuizzes, { QuizItem } from '@/components/dashboard/UpcomingQuizzes';
+import RecentActivity from '@/components/dashboard/RecentActivity';
+import UpcomingQuizzes from '@/components/dashboard/UpcomingQuizzes';
 import AiRecommendations from '@/components/dashboard/AiRecommendations';
 import PopularTopics from '@/components/dashboard/PopularTopics';
-import StudyStats, { PerformanceStat } from '@/components/dashboard/StudyStats';
+import StudyStats from '@/components/dashboard/StudyStats';
 import ActivityHistory from '@/components/dashboard/ActivityHistory';
-import SavedResources, { SavedResource } from '@/components/dashboard/SavedResources';
+import SavedResources from '@/components/dashboard/SavedResources';
 import RecentlyViewed from '@/components/dashboard/RecentlyViewed';
-import Certificates, { Certificate } from '@/components/dashboard/Certificates';
+import Certificates from '@/components/dashboard/Certificates';
 import Badges from '@/components/dashboard/Badges';
+import PerformanceSummary from '@/components/dashboard/PerformanceSummary';
+import { getPerformanceHistory } from '@/services/supabasePerformanceService';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Helper function to show a welcome toast
   useEffect(() => {
@@ -45,38 +49,60 @@ const Dashboard = () => {
         sessionStorage.setItem('hasSeenWelcome', 'true');
       }, 1000);
     }
+
+    // Fetch real activity data
+    const fetchActivities = async () => {
+      if (user) {
+        try {
+          setIsLoading(true);
+          const history = await getPerformanceHistory(user.id);
+          
+          // Convert to activity items
+          const activities = history.map((item, index) => ({
+            id: index + 1,
+            type: 'quiz',
+            name: `${item.topic} Quiz`,
+            score: `${item.score}/100`,
+            date: item.date,
+            topic: item.topic.split(' ')[0] // Just use the first word as shorthand
+          }));
+          
+          setRecentActivities(activities);
+        } catch (error) {
+          console.error('Error fetching activities:', error);
+          // Use mock data as fallback
+          setRecentActivities(mockRecentActivities);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    fetchActivities();
   }, [user]);
 
-  // Mock data
-  const recentActivities: ActivityItem[] = [
+  // Mock data as fallbacks
+  const mockRecentActivities = [
     { id: 1, type: 'quiz', name: 'Data Structures Quiz', score: '8/10', date: '2025-04-10', topic: 'DSA' },
     { id: 2, type: 'resource', name: 'Database Normalization Article', date: '2025-04-08', topic: 'DBMS' },
     { id: 3, type: 'quiz', name: 'Operating Systems Quiz', score: '7/10', date: '2025-04-05', topic: 'OS' },
     { id: 4, type: 'resource', name: 'Algorithm Complexity Video', date: '2025-04-03', topic: 'DSA' },
   ];
 
-  const upcomingQuizzes: QuizItem[] = [
+  const upcomingQuizzes = [
     { id: 1, name: 'Advanced Data Structures', date: '2025-04-15', timeEstimate: '30 min' },
     { id: 2, name: 'SQL Query Optimization', date: '2025-04-18', timeEstimate: '25 min' },
     { id: 3, name: 'Process Scheduling Algorithms', date: '2025-04-20', timeEstimate: '20 min' },
   ];
-
-  // Mock performance stats
-  const performanceStats: PerformanceStat[] = [
-    { topic: 'Data Structures', progress: 72, quizzesTaken: 5, averageScore: 84 },
-    { topic: 'Algorithms', progress: 60, quizzesTaken: 3, averageScore: 78 },
-    { topic: 'Databases', progress: 45, quizzesTaken: 2, averageScore: 65 },
-    { topic: 'Operating Systems', progress: 30, quizzesTaken: 1, averageScore: 70 },
-  ];
   
   // Mock certificates
-  const certificates: Certificate[] = [
+  const certificates = [
     { id: 1, name: 'Data Structures & Algorithms Proficiency', issueDate: '2025-03-20', score: '90%' },
     { id: 2, name: 'SQL & Database Management', issueDate: '2025-02-15', score: '85%' },
   ];
 
   // Mock saved resources
-  const savedResources: SavedResource[] = [
+  const savedResources = [
     { id: 1, title: 'Database Normalization Explained', type: 'Video', topic: 'DBMS', savedOn: 'April 8, 2025', url: 'https://www.youtube.com/watch?v=UrYLYV7WSHM' },
     { id: 2, title: 'Advanced Algorithm Techniques', type: 'Article', topic: 'DSA', savedOn: 'April 5, 2025', url: 'https://www.geeksforgeeks.org/advanced-data-structures/' },
     { id: 3, title: 'Memory Management in OS', type: 'Course', topic: 'OS', savedOn: 'April 2, 2025', url: 'https://www.coursera.org/learn/operating-systems' },
@@ -114,6 +140,9 @@ const Dashboard = () => {
               
               {/* Tab contents with glass-card styling */}
               <TabsContent value="overview" className="space-y-8 animate-fade-in-up">
+                {/* Performance Summary (new component) */}
+                <PerformanceSummary />
+              
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
                     <h3 className="section-title">
@@ -142,11 +171,15 @@ const Dashboard = () => {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-white/80">Quizzes Completed</span>
-                        <span className="font-bold text-primary">12</span>
+                        <span className="font-bold text-primary">
+                          {isLoading ? '...' : (recentActivities.filter(a => a.type === 'quiz').length)}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-white/80">Total Score</span>
-                        <span className="font-bold text-primary">85%</span>
+                        <span className="font-bold text-primary">
+                          {isLoading ? '...' : '85%'}
+                        </span>
                       </div>
                       <Button
                         onClick={() => setActiveTab("achievements")}
@@ -184,7 +217,7 @@ const Dashboard = () => {
                     <BarChart3 className="section-icon" />
                     Your Learning Progress
                   </h3>
-                  <StudyStats performanceStats={performanceStats} />
+                  <StudyStats />
                 </div>
                 <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
                   <h3 className="section-title">

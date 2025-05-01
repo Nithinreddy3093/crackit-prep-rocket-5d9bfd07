@@ -2,8 +2,17 @@
 import React, { useEffect, useState } from 'react';
 import { Code, Database, Cpu, Brain, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getUserBadges, Badge as BadgeType } from '@/services/userPerformanceService';
+import { getUserBadges } from '@/services/supabasePerformanceService';
 import { useAuth } from '@/contexts/AuthContext';
+
+export interface BadgeType {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  earned: boolean;
+  earnedDate?: string;
+}
 
 const Badges: React.FC = () => {
   const { user } = useAuth();
@@ -16,7 +25,42 @@ const Badges: React.FC = () => {
         setLoading(true);
         if (user) {
           const userBadges = await getUserBadges(user.id);
-          setBadges(userBadges);
+          
+          // Add some default badges if none exist
+          if (userBadges.length === 0) {
+            setBadges([
+              {
+                id: "algorithm-master",
+                name: "Algorithm Master",
+                icon: "Code",
+                description: "Scored above 75% in Data Structures and Algorithms quiz",
+                earned: false
+              },
+              {
+                id: "sql-expert",
+                name: "SQL Expert",
+                icon: "Database",
+                description: "Scored above 80% in SQL and Database Management quiz",
+                earned: false
+              },
+              {
+                id: "os-specialist",
+                name: "OS Specialist",
+                icon: "Cpu",
+                description: "Scored above 80% in Operating Systems quiz",
+                earned: false
+              },
+              {
+                id: "ai-apprentice",
+                name: "AI Apprentice",
+                icon: "Brain",
+                description: "Completed at least 3 AI and Machine Learning quizzes",
+                earned: false
+              }
+            ]);
+          } else {
+            setBadges(userBadges);
+          }
         }
       } catch (error) {
         console.error('Error fetching badges:', error);

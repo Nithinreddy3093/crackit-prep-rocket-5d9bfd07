@@ -4,7 +4,7 @@ import { Brain, Target, BookOpen, ExternalLink, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import { getSuggestedResources, getUserPerformance } from '@/services/userPerformanceService';
+import { getSuggestedResources, getUserPerformance, getAIRecommendations } from '@/services/supabasePerformanceService';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AiRecommendations = () => {
@@ -12,6 +12,7 @@ const AiRecommendations = () => {
   const [loading, setLoading] = useState(true);
   const [weakTopics, setWeakTopics] = useState<string[]>([]);
   const [resources, setResources] = useState<any[]>([]);
+  const [aiRecommendation, setAiRecommendation] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,10 +20,15 @@ const AiRecommendations = () => {
         setLoading(true);
         if (user) {
           const performance = await getUserPerformance(user.id);
-          setWeakTopics(performance.weakTopics);
+          if (performance) {
+            setWeakTopics(performance.weakTopics);
+          }
           
           const suggestedResources = await getSuggestedResources(user.id);
           setResources(suggestedResources.slice(0, 2)); // Only show 2 resources
+          
+          const recommendation = await getAIRecommendations(user.id);
+          setAiRecommendation(recommendation);
         }
       } catch (error) {
         console.error('Error fetching recommendations:', error);
@@ -76,6 +82,17 @@ const AiRecommendations = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* AI Insight Box */}
+        <div className="p-4 mb-6 rounded-xl bg-primary/10 border border-primary/30">
+          <h3 className="font-medium text-white flex items-center">
+            <Brain className="h-4 w-4 mr-2 text-primary" />
+            AI Insight
+          </h3>
+          <p className="text-white/80 mt-2 text-sm">
+            {aiRecommendation}
+          </p>
+        </div>
+      
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-5 rounded-xl bg-darkBlue-700/50 border border-darkBlue-600">
             <div className="flex items-center mb-4">
@@ -132,11 +149,8 @@ const AiRecommendations = () => {
                     <div className="flex-1">
                       <p className="text-white text-sm font-medium">{resource.title}</p>
                       <p className="text-gray-400 text-xs mt-1 flex items-center">
-                        {resource.type === 'video' && 'Video tutorial'}
-                        {resource.type === 'article' && 'Article'}
-                        {resource.type === 'course' && 'Course'}
-                        {resource.type === 'practice' && 'Practice exercises'}
-                        {' • '}{resource.description?.substring(0, 30)}...
+                        {resource.type.charAt(0).toUpperCase() + resource.type.slice(1)}
+                        {' • '}{resource.description.substring(0, 30)}...
                       </p>
                     </div>
                     <Button size="sm" variant="ghost" className="h-8 text-primary hover:bg-primary/10" asChild>

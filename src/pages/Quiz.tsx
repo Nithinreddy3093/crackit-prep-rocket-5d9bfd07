@@ -1,235 +1,275 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { 
+  Card, CardContent, CardDescription, CardHeader, CardTitle 
+} from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { CheckCircle, Timer } from 'lucide-react';
+import { cn } from "@/lib/utils";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import QuizIntro from '@/components/quiz/QuizIntro';
-import QuizCard from '@/components/QuizCard';
-import QuizFeedback from '@/components/QuizFeedback';
-import { generateQuestions } from '@/services/quizService';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from "@/components/ui/use-toast";
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { getQuestionsByTopicId } from "@/services/questionService";
+import { getTopicById } from "@/services/topicService";
+import { updateUserPerformance } from "@/services/supabasePerformanceService";
 
 interface Question {
-  id: number;
-  question: string;
+  id: string;
+  text: string;
   options: string[];
-  correctAnswer: number;
-  explanation: string;
+  correctAnswer: string;
 }
 
 const Quiz = () => {
-  const { topicId } = useParams();
+  const { topicId } = useParams<{ topicId: string }>();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [showIntro, setShowIntro] = useState(true);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
-  const [score, setScore] = useState(0);
-  const [correctQuestions, setCorrectQuestions] = useState<number[]>([]);
-  const [incorrectQuestions, setIncorrectQuestions] = useState<number[]>([]);
-  const [topic, setTopic] = useState(topicId || 'General Computer Science');
-  const [quizStartTime, setQuizStartTime] = useState<Date | null>(null);
-  const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [currentTopic, setCurrentTopic] = useState<any | null>(null);
+
+  // Fetch questions using react-query
+  const { isLoading: isQuestionsLoading, error: questionsError } = useQuery({
+    queryKey: ['questions', topicId],
+    queryFn: () => getQuestionsByTopicId(topicId),
+    onSuccess: (data) => {
+      setQuestions(data);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error fetching questions",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+    enabled: !!topicId, // Ensure topicId is available before running the query
+  });
+
+  // Fetch topic details
+  const { isLoading: isTopicLoading, error: topicError } = useQuery({
+    queryKey: ['topic', topicId],
+    queryFn: () => getTopicById(topicId),
+    onSuccess: (data) => {
+      setCurrentTopic(data);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error fetching topic",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+    enabled: !!topicId, // Ensure topicId is available before running the query
+  });
 
   useEffect(() => {
-    if (topicId) {
-      setTopic(decodeURIComponent(topicId));
+    if (questions.length > 0) {
+      setStartTime(Date.now());
     }
-  }, [topicId]);
+  }, [questions.length]);
 
   useEffect(() => {
-    const loadQuestions = async () => {
-      setIsLoading(true);
-      setLoadError(null);
-      try {
-        let retries = 0;
-        let quizQuestions: Question[] = [];
-        
-        while (retries < 3 && quizQuestions.length === 0) {
-          if (retries > 0) {
-            setIsRetrying(true);
-            setRetryCount(retries);
-            // Add a slight delay between retries
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-          
-          quizQuestions = await generateQuestions(topic, difficulty);
-          retries++;
-        }
-        
-        if (quizQuestions.length > 0) {
-          setQuestions(quizQuestions);
-        } else {
-          throw new Error("Failed to load questions after multiple attempts");
-        }
-      } catch (error) {
-        console.error('Failed to load questions:', error);
-        setLoadError("We couldn't load questions at this time. Please try again later.");
-        toast({
-          title: "Error loading questions",
-          description: "There was a problem loading quiz questions. Please try again.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-        setIsRetrying(false);
-      }
-    };
-
-    if (!showIntro || questions.length === 0) {
-      loadQuestions();
+    let intervalId: NodeJS.Timeout;
+    if (startTime > 0 && !quizCompleted) {
+      intervalId = setInterval(() => {
+        setElapsedTime(Date.now() - startTime);
+      }, 1000);
     }
-  }, [topic, difficulty]);
+    return () => clearInterval(intervalId);
+  }, [startTime, quizCompleted]);
 
-  const handleStartQuiz = () => {
-    setShowIntro(false);
-    setQuizStartTime(new Date());
-    
-    // Track quiz start if user is authenticated
-    if (isAuthenticated) {
-      console.log(`User ${user?.id} started ${topic} quiz at ${difficulty} difficulty`);
+  const handleAnswerSelect = (answer: string) => {
+    setSelectedAnswer(answer);
+  };
+
+  const goToNextQuestion = () => {
+    if (!selectedAnswer) {
+      toast({
+        title: "Please select an answer",
+        description: "You must select an answer before proceeding.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const currentQuestion = questions[currentQuestionIndex];
+    if (selectedAnswer === currentQuestion.correctAnswer) {
+      setCorrectAnswers(correctAnswers + 1);
+    }
+
+    setSelectedAnswer(null); // Reset selected answer
+
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    } else {
+      setQuizCompleted(true);
     }
   };
 
-  const handleNextQuestion = () => {
-    setCurrentQuestionIndex((prev) => prev + 1);
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  const handleQuizCompleted = (correct: number[], incorrect: number[]) => {
-    const quizEndTime = new Date();
-    const quizDurationMs = quizStartTime ? quizEndTime.getTime() - quizStartTime.getTime() : 0;
-    const quizDurationMin = Math.round(quizDurationMs / 60000);
-    
-    setCorrectQuestions(correct);
-    setIncorrectQuestions(incorrect);
-    setScore(correct.length);
-    setQuizCompleted(true);
-    
-    // Track quiz completion if user is authenticated
-    if (isAuthenticated) {
-      console.log(`User ${user?.id} completed ${topic} quiz with score ${correct.length}/${questions.length} in ${quizDurationMin} minutes`);
-    }
-  };
-
-  const handleRetakeQuiz = () => {
+  const handleRestartQuiz = () => {
     setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setCorrectAnswers(0);
     setQuizCompleted(false);
-    setScore(0);
-    setCorrectQuestions([]);
-    setIncorrectQuestions([]);
-    setShowIntro(true);
-    setLoadError(null);
+    setStartTime(Date.now());
+    setElapsedTime(0);
   };
 
-  const handleDifficultyChange = (newDifficulty: 'beginner' | 'intermediate' | 'advanced') => {
-    setDifficulty(newDifficulty);
-  };
-
-  const getLoadingMessage = () => {
-    if (isRetrying) {
-      return `Hang tight! Attempt ${retryCount}/3 to prepare your questions...`;
+  const handleSubmitQuiz = async () => {
+    try {
+      if (user) {
+        const quizTopic = currentTopic?.title || 'General';
+        const quizScore = Math.round((correctAnswers / questions.length) * 100);
+        const completionTime = Math.floor((Date.now() - startTime) / 1000); // in seconds
+        
+        // Update the user's performance in Supabase
+        await updateUserPerformance(user.id, quizTopic, quizScore, completionTime);
+      }
+      
+      toast({
+        title: "Quiz Submitted",
+        description: "Your quiz has been submitted and your score has been recorded.",
+        variant: "default",
+      });
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error("Error submitting quiz:", error);
+      toast({
+        title: "Error submitting quiz",
+        description: error.message || "Failed to submit the quiz. Please try again.",
+        variant: "destructive",
+      });
     }
-    return "Prepping your next challenge...";
   };
+
+  if (isQuestionsLoading || isTopicLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent animate-pulse-slow flex items-center justify-center">
+        <div className="w-3 h-3 bg-white rounded-full"></div>
+      </div>
+    </div>;
+  }
+
+  if (questionsError || topicError) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-semibold text-destructive mb-4">Error</h2>
+        <p className="text-muted-foreground">
+          {questionsError?.message || topicError?.message || "Failed to load quiz."}
+        </p>
+        <Button variant="outline" onClick={() => navigate('/topics')}>
+          Go back to topics
+        </Button>
+      </div>
+    </div>;
+  }
+
+  if (quizCompleted) {
+    const score = Math.round((correctAnswers / questions.length) * 100);
+
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center p-4">
+          <Card className="w-full max-w-md bg-darkBlue-800 border-darkBlue-700">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-white">Quiz Completed!</CardTitle>
+              <CardDescription className="text-gray-400">Here are your results:</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-white">Topic:</span>
+                <span className="font-medium text-primary">{currentTopic?.title}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white">Time Taken:</span>
+                <span className="font-medium text-primary">{formatTime(elapsedTime)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white">Your Score:</span>
+                <span className="font-bold text-3xl text-primary">{score}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-white">Correct Answers:</span>
+                <span className="font-medium text-primary">{correctAnswers} / {questions.length}</span>
+              </div>
+            </CardContent>
+            
+            <div className="flex justify-between p-6">
+              <Button variant="secondary" onClick={handleRestartQuiz}>
+                Restart Quiz
+              </Button>
+              <Button onClick={handleSubmitQuiz}>
+                Submit Quiz
+              </Button>
+            </div>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
       <Navbar />
-      <div className="container mx-auto px-4 py-8 md:py-16">
-        {showIntro ? (
-          <QuizIntro 
-            topic={topic} 
-            questionCount={10} // We're now always using 10 questions
-            onStartQuiz={handleStartQuiz} 
-            isLoading={isLoading || isRetrying}
-            onDifficultyChange={handleDifficultyChange}
-            selectedDifficulty={difficulty}
-          />
-        ) : quizCompleted ? (
-          <QuizFeedback
-            score={score}
-            totalQuestions={questions.length}
-            correctQuestions={correctQuestions}
-            incorrectQuestions={incorrectQuestions}
-            topic={topic}
-            difficulty={difficulty}
-          />
-        ) : (
-          <div className="max-w-3xl mx-auto">
-            {isLoading || isRetrying ? (
-              <div className="bg-card rounded-xl shadow-sm p-8 text-center">
-                <div className="flex flex-col items-center justify-center">
-                  <div className="mb-4 relative">
-                    <div className="h-16 w-16 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="h-8 w-8 rounded-full bg-primary/20"></div>
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-medium text-foreground mb-2">Hang tight!</h3>
-                  <p className="text-muted-foreground">{getLoadingMessage()}</p>
-                </div>
-              </div>
-            ) : loadError ? (
-              <div className="bg-card rounded-xl shadow-sm p-8 text-center">
-                <div className="flex flex-col items-center justify-center space-y-4">
-                  <AlertTriangle className="h-16 w-16 text-amber-500" />
-                  <h3 className="text-xl font-medium text-foreground">We encountered a problem</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">{loadError}</p>
-                  <div className="flex gap-4 mt-6">
-                    <button 
-                      onClick={() => navigate('/topics')}
-                      className="px-4 py-2 rounded-md bg-background border border-input hover:bg-accent text-foreground"
-                    >
-                      Choose Another Topic
-                    </button>
-                    <button 
-                      onClick={handleRetakeQuiz}
-                      className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : questions.length > 0 ? (
-              <QuizCard
-                question={questions[currentQuestionIndex].question}
-                options={questions[currentQuestionIndex].options}
-                correctAnswer={questions[currentQuestionIndex].correctAnswer}
-                explanation={questions[currentQuestionIndex].explanation}
-                onNextQuestion={handleNextQuestion}
-                onCompleted={handleQuizCompleted}
-                isLastQuestion={currentQuestionIndex === questions.length - 1}
-                currentQuestion={currentQuestionIndex + 1}
-                totalQuestions={questions.length}
-                correctQuestions={correctQuestions}
-                incorrectQuestions={incorrectQuestions}
-              />
-            ) : (
-              <div className="bg-card rounded-xl shadow-sm p-8 text-center">
-                <div className="flex flex-col items-center justify-center space-y-4">
-                  <AlertTriangle className="h-16 w-16 text-amber-500" />
-                  <h3 className="text-xl font-medium text-foreground">No questions available</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">We couldn't find any questions for this topic. Please try a different topic.</p>
-                  <button 
-                    onClick={() => navigate('/topics')}
-                    className="px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-                  >
-                    Browse Topics
-                  </button>
-                </div>
-              </div>
-            )}
+      <main className="flex-grow p-4">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-white">{currentTopic?.title} Quiz</h1>
+            <div className="flex items-center text-gray-300">
+              <Timer className="mr-2 h-4 w-4" />
+              <span>{formatTime(elapsedTime)}</span>
+            </div>
           </div>
-        )}
-      </div>
+          
+          <Card className="bg-darkBlue-800 border-darkBlue-700">
+            <CardHeader>
+              <CardTitle className="text-xl text-white">
+                Question {currentQuestionIndex + 1} / {questions.length}
+              </CardTitle>
+              <CardDescription className="text-gray-400">
+                Answer the question below
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-white text-lg">{currentQuestion.text}</p>
+              <RadioGroup defaultValue={selectedAnswer} onValueChange={handleAnswerSelect} className="w-full">
+                {currentQuestion.options.map((option) => (
+                  <div key={option} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option} id={`answer-${option}`} className="peer h-4 w-4 shrink-0 rounded-full border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                    <Label htmlFor={`answer-${option}`} className="cursor-pointer text-white peer-checked:text-primary">
+                      {option}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </CardContent>
+          </Card>
+          
+          <Button onClick={goToNextQuestion} className="w-full bg-primary hover:bg-primary/90 text-white">
+            {currentQuestionIndex === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+          </Button>
+        </div>
+      </main>
       <Footer />
     </div>
   );

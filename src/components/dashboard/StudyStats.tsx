@@ -1,9 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { ArrowUp, ArrowDown, BarChart2, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
-import { getPerformanceHistory, getUserPerformance } from '@/services/userPerformanceService';
+import { getUserPerformance, getPerformanceHistory } from '@/services/supabasePerformanceService';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
@@ -34,15 +35,17 @@ const StudyStats: React.FC<StudyStatsProps> = ({ performanceStats: propStats }) 
             setStats(propStats);
           } else {
             const performance = await getUserPerformance(user.id);
-            setOverallScore(performance.overallScore);
-            
-            const fetchedStats = Object.entries(performance.topicScores).map(([topic, score]) => ({
-              topic,
-              progress: score,
-              quizzesTaken: performance.quizzesTaken,
-              averageScore: score
-            }));
-            setStats(fetchedStats);
+            if (performance) {
+              setOverallScore(performance.overallScore);
+              
+              const fetchedStats = Object.entries(performance.topicScores).map(([topic, score]) => ({
+                topic,
+                progress: score,
+                quizzesTaken: performance.quizzesTaken,
+                averageScore: score
+              }));
+              setStats(fetchedStats);
+            }
           }
           
           const history = await getPerformanceHistory(user.id);
