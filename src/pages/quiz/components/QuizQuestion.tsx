@@ -62,7 +62,7 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
         <CardContent className="space-y-4">
           <p className="text-white text-lg">{currentQuestion.text}</p>
           <RadioGroup 
-            defaultValue={selectedAnswer || ""} 
+            value={selectedAnswer || ""} 
             onValueChange={onAnswerSelect} 
             className="w-full"
           >
