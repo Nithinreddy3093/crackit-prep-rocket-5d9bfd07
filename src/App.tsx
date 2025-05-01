@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -18,7 +19,7 @@ import Dashboard from "./pages/Dashboard";
 import Resources from "./pages/Resources";
 import Companies from "./pages/Companies";
 import CompaniesList from "./pages/CompaniesList";
-import Quiz from "./pages/Quiz";
+import Quiz from "./pages/Quiz"; // This now imports from the refactored component
 import Blogs from "./pages/Blogs";
 import StudyGuides from "./pages/StudyGuides";
 import FAQ from "./pages/FAQ";
