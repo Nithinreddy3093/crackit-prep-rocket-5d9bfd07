@@ -42,10 +42,11 @@ const Quiz = () => {
   const { isLoading: isQuestionsLoading, error: questionsError } = useQuery({
     queryKey: ['questions', topicId],
     queryFn: () => getQuestionsByTopicId(topicId),
-    onSuccess: (data) => {
-      setQuestions(data);
-    },
+    enabled: !!topicId, // Ensure topicId is available before running the query
     meta: {
+      onSuccess: (data: Question[]) => {
+        setQuestions(data);
+      },
       onError: (error: any) => {
         toast({
           title: "Error fetching questions",
@@ -53,18 +54,18 @@ const Quiz = () => {
           variant: "destructive",
         });
       }
-    },
-    enabled: !!topicId // Ensure topicId is available before running the query
+    }
   });
 
   // Fetch topic details
   const { isLoading: isTopicLoading, error: topicError } = useQuery({
     queryKey: ['topic', topicId],
     queryFn: () => getTopicById(topicId),
-    onSuccess: (data) => {
-      setCurrentTopic(data);
-    },
+    enabled: !!topicId, // Ensure topicId is available before running the query
     meta: {
+      onSuccess: (data: any) => {
+        setCurrentTopic(data);
+      },
       onError: (error: any) => {
         toast({
           title: "Error fetching topic",
@@ -72,9 +73,31 @@ const Quiz = () => {
           variant: "destructive",
         });
       }
-    },
-    enabled: !!topicId // Ensure topicId is available before running the query
+    }
   });
+
+  // Add effect hooks to manage question data and timers
+  useEffect(() => {
+    // When questions are loaded from the query, set them to state
+    if (isQuestionsLoading === false && !questionsError && questions.length === 0) {
+      getQuestionsByTopicId(topicId).then(data => {
+        setQuestions(data);
+      }).catch(error => {
+        console.error('Error fetching questions:', error);
+      });
+    }
+  }, [isQuestionsLoading, questionsError, topicId, questions.length]);
+
+  useEffect(() => {
+    // When topic is loaded from the query, set it to state
+    if (isTopicLoading === false && !topicError && !currentTopic) {
+      getTopicById(topicId).then(data => {
+        setCurrentTopic(data);
+      }).catch(error => {
+        console.error('Error fetching topic:', error);
+      });
+    }
+  }, [isTopicLoading, topicError, topicId, currentTopic]);
 
   useEffect(() => {
     if (questions.length > 0) {
@@ -256,17 +279,21 @@ const Quiz = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-white text-lg">{currentQuestion.text}</p>
-              <RadioGroup defaultValue={selectedAnswer || ""} onValueChange={handleAnswerSelect} className="w-full">
-                {currentQuestion.options.map((option) => (
-                  <div key={option} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option} id={`answer-${option}`} className="peer h-4 w-4 shrink-0 rounded-full border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
-                    <Label htmlFor={`answer-${option}`} className="cursor-pointer text-white peer-checked:text-primary">
-                      {option}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
+              {currentQuestion && (
+                <>
+                  <p className="text-white text-lg">{currentQuestion.text}</p>
+                  <RadioGroup defaultValue={selectedAnswer || ""} onValueChange={handleAnswerSelect} className="w-full">
+                    {currentQuestion.options.map((option) => (
+                      <div key={option} className="flex items-center space-x-2">
+                        <RadioGroupItem value={option} id={`answer-${option}`} className="peer h-4 w-4 shrink-0 rounded-full border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50" />
+                        <Label htmlFor={`answer-${option}`} className="cursor-pointer text-white peer-checked:text-primary">
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                </>
+              )}
             </CardContent>
           </Card>
           
