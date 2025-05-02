@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 
 interface TopicCardProps {
@@ -12,6 +11,7 @@ interface TopicCardProps {
   questionCount?: number;
   timeEstimate?: string;
   completed?: number;
+  onClick?: () => void;
 }
 
 const TopicCard: React.FC<TopicCardProps> = ({
@@ -22,12 +22,13 @@ const TopicCard: React.FC<TopicCardProps> = ({
   to,
   questionCount = 15,
   timeEstimate = "15 min",
-  completed = 0
+  completed = 0,
+  onClick
 }) => {
   return (
-    <Link 
-      to={to}
-      className={`topic-card group block p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 h-full overflow-hidden ${bgColor}`}
+    <div 
+      onClick={onClick}
+      className={`topic-card group block p-6 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 h-full overflow-hidden cursor-pointer ${bgColor}`}
     >
       <div className="topic-card-content">
         <div className="flex items-center justify-between mb-2">
@@ -68,7 +69,7 @@ const TopicCard: React.FC<TopicCardProps> = ({
           </div>
         )}
       </div>
-    </Link>
+    </div>
   );
 };
 
