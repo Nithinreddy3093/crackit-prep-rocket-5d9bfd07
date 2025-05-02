@@ -1,10 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
-import { getQuestionsByTopicId } from "@/services/questionService";
+import { 
+  getQuestionsByTopicId, 
+  generateUniqueQuestionsForSession 
+} from "@/services/questionService";
 import { getTopicById } from "@/services/topicService";
 import { updateUserPerformance } from "@/services/supabasePerformanceService";
 
@@ -34,27 +36,10 @@ export function useQuiz(topicId: string | undefined) {
   const [startTime, setStartTime] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentTopic, setCurrentTopic] = useState<Topic | null>(null);
-
-  // Fetch questions using react-query
-  const { 
-    isLoading: isQuestionsLoading, 
-    error: questionsError 
-  } = useQuery({
-    queryKey: ['questions', topicId],
-    queryFn: () => getQuestionsByTopicId(topicId),
-    enabled: !!topicId,
-    meta: {
-      onSuccess: (data: Question[]) => {
-        setQuestions(data);
-      },
-      onError: (error: any) => {
-        toast({
-          title: "Error fetching questions",
-          description: error.message,
-          variant: "destructive",
-        });
-      }
-    }
+  const [seenQuestionIds, setSeenQuestionIds] = useState<string[]>(() => {
+    // Load previously seen question IDs from localStorage
+    const savedIds = localStorage.getItem('seenQuestionIds');
+    return savedIds ? JSON.parse(savedIds) : [];
   });
 
   // Fetch topic details
@@ -79,10 +64,32 @@ export function useQuiz(topicId: string | undefined) {
     }
   });
 
+  // Fetch or generate questions using react-query
+  const { 
+    isLoading: isQuestionsLoading, 
+    error: questionsError 
+  } = useQuery({
+    queryKey: ['questions', topicId, seenQuestionIds],
+    queryFn: () => generateUniqueQuestionsForSession(user?.id, topicId, seenQuestionIds),
+    enabled: !!topicId,
+    meta: {
+      onSuccess: (data: Question[]) => {
+        setQuestions(data);
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Error fetching questions",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
+  });
+
   // Fetch data manually in useEffect as a fallback if react-query's onSuccess doesn't work
   useEffect(() => {
     if (isQuestionsLoading === false && !questionsError && questions.length === 0 && topicId) {
-      getQuestionsByTopicId(topicId)
+      generateUniqueQuestionsForSession(user?.id, topicId, seenQuestionIds)
         .then(data => {
           setQuestions(data);
         })
@@ -90,7 +97,7 @@ export function useQuiz(topicId: string | undefined) {
           console.error('Error fetching questions:', error);
         });
     }
-  }, [isQuestionsLoading, questionsError, topicId, questions.length]);
+  }, [isQuestionsLoading, questionsError, topicId, questions.length, user?.id, seenQuestionIds]);
 
   useEffect(() => {
     if (isTopicLoading === false && !topicError && !currentTopic && topicId) {
@@ -121,6 +128,21 @@ export function useQuiz(topicId: string | undefined) {
     }
     return () => clearInterval(intervalId);
   }, [startTime, quizCompleted]);
+
+  // Store seen question IDs in localStorage whenever a quiz is completed
+  useEffect(() => {
+    if (quizCompleted && questions.length > 0) {
+      // Add current quiz questions to seen questions
+      const newSeenIds = [...seenQuestionIds, ...questions.map(q => q.id)];
+      
+      // If we have too many IDs, keep only the most recent ones to prevent localStorage from getting too large
+      const limitedIds = newSeenIds.slice(-500); // Keep last 500 questions
+      
+      // Update state and localStorage
+      setSeenQuestionIds(limitedIds);
+      localStorage.setItem('seenQuestionIds', JSON.stringify(limitedIds));
+    }
+  }, [quizCompleted, questions, seenQuestionIds]);
 
   // Format time in minutes:seconds
   const formatTime = (ms: number) => {
@@ -162,12 +184,27 @@ export function useQuiz(topicId: string | undefined) {
 
   // Restart the quiz
   const handleRestartQuiz = () => {
-    setCurrentQuestionIndex(0);
-    setSelectedAnswer(null);
-    setCorrectAnswers(0);
-    setQuizCompleted(false);
-    setStartTime(Date.now());
-    setElapsedTime(0);
+    // Generate new questions for the restart
+    if (topicId) {
+      generateUniqueQuestionsForSession(user?.id, topicId, seenQuestionIds)
+        .then(newQuestions => {
+          setQuestions(newQuestions);
+          setCurrentQuestionIndex(0);
+          setSelectedAnswer(null);
+          setCorrectAnswers(0);
+          setQuizCompleted(false);
+          setStartTime(Date.now());
+          setElapsedTime(0);
+        })
+        .catch(error => {
+          console.error('Error generating new questions:', error);
+          toast({
+            title: "Error restarting quiz",
+            description: error.message,
+            variant: "destructive",
+          });
+        });
+    }
   };
 
   // Submit quiz and save results
@@ -209,6 +246,7 @@ export function useQuiz(topicId: string | undefined) {
     currentTopic,
     isLoading: isQuestionsLoading || isTopicLoading,
     error: questionsError || topicError,
+    seenQuestionIds,
     
     // Current question
     currentQuestion: questions[currentQuestionIndex],

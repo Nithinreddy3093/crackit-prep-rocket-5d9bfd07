@@ -42,6 +42,7 @@ const QuizPage = () => {
             questionCount={quiz.questions.length}
             onStartQuiz={handleStartQuiz}
             isLoading={quiz.isLoading}
+            seenQuestions={quiz.seenQuestionIds.length}
           />
         ) : quiz.quizCompleted ? (
           <QuizResults 
