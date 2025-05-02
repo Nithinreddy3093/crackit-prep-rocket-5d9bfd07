@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/components/ui/use-toast";
+import { generateUniqueQuestionsForSession } from "@/services/questionService";
 
 import { useQuestionManagement } from './quiz/useQuestionManagement';
 import { useTopicFetching } from './quiz/useTopicFetching';
