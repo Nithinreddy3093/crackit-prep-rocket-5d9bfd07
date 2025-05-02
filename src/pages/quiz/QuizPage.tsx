@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuiz } from "@/hooks/useQuiz";
 import Navbar from '@/components/Navbar';
@@ -15,13 +15,8 @@ import { ArrowLeft } from 'lucide-react';
 const QuizPage = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
-  const [quizStarted, setQuizStarted] = useState(false);
   const quiz = useQuiz(topicId);
   
-  const handleStartQuiz = () => {
-    setQuizStarted(true);
-  };
-
   const handleBackToTopics = () => {
     navigate('/topics');
   };
@@ -53,11 +48,11 @@ const QuizPage = () => {
             Back to Topics
           </Button>
           
-          {!quizStarted ? (
+          {!quiz.quizStarted ? (
             <QuizIntro 
               topic={quiz.currentTopic?.title || "General Knowledge"}
               questionCount={quiz.questions.length}
-              onStartQuiz={handleStartQuiz}
+              onStartQuiz={quiz.startQuiz}
               isLoading={quiz.isLoading}
               seenQuestions={quiz.seenQuestionIds.length}
             />
