@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getAllTopics, Topic } from '@/services/topicService';
 import { motion } from 'framer-motion';
-import { Search, Filter, Books, BookX, ListFilter } from 'lucide-react';
+import { Search, Filter, Book, BookX, ListFilter } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import TopicCard from '@/components/TopicCard';
 import {
@@ -172,7 +171,7 @@ const Topics: React.FC = () => {
                 <motion.div key={topic.id} variants={item}>
                   <TopicCard
                     title={topic.title}
-                    icon={<Books className="w-6 h-6" />}
+                    icon={<Book className="w-6 h-6" />}
                     description={topic.description}
                     bgColor={`bg-gradient-to-br ${topic.color || 'from-darkBlue-700 to-darkBlue-600'}`}
                     to="#"

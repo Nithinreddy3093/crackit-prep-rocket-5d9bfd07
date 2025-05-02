@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Code, Database, Cpu, Brain, BarChart, PieChart } from 'lucide-react';
+import { ArrowRight, Book, Database, Cpu, Brain, BarChart, PieChart } from 'lucide-react';
 import TopicCard from '@/components/TopicCard';
 
 const TopicsSection = () => {
@@ -20,7 +20,7 @@ const TopicsSection = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <TopicCard
             title="Data Structures & Algorithms"
-            icon={<Code className="w-6 h-6" />}
+            icon={<Book className="w-6 h-6" />}
             description="Arrays, Linked Lists, Trees, Graphs, Sorting and Searching Algorithms."
             bgColor="bg-gradient-to-br from-darkBlue-700 to-darkBlue-600"
             to="/topics/dsa"
