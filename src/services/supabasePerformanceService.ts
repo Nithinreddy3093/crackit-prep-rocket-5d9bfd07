@@ -142,7 +142,7 @@ export const getRecentQuizDetails = async (userId: string): Promise<QuizResult[]
       return [];
     }
 
-    return data;
+    return data as QuizResult[];
   } catch (error) {
     console.error('Error in getRecentQuizDetails:', error);
     return [];

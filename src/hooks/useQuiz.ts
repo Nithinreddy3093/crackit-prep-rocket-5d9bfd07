@@ -53,7 +53,7 @@ export function useQuiz(topicId: string | undefined) {
     }
   }, [isQuestionsLoading, questionsError, topicId, questions.length, user?.id, seenQuestionIds]);
 
-  // Modified goToNextQuestion to handle quiz completion
+  // Modified goToNextQuestion to handle quiz completion and track question details
   const handleNextQuestion = () => {
     if (currentQuestion && selectedAnswer !== null) {
       // Track question details

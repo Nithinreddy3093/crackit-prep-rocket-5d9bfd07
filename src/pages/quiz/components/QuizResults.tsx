@@ -1,9 +1,28 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { CheckCircle, Clock, Trophy, RotateCw, Upload } from 'lucide-react';
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  ArrowRight,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Undo2,
+  Send
+} from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+
+interface QuestionDetail {
+  questionId: string;
+  question: string;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+}
 
 interface QuizResultsProps {
   correctAnswers: number;
@@ -13,117 +32,178 @@ interface QuizResultsProps {
   formatTime: (ms: number) => string;
   onRestart: () => void;
   onSubmit: () => void;
-  questionDetails?: {
-    questionId: string;
-    question: string;
-    userAnswer: string;
-    correctAnswer: string;
-    isCorrect: boolean;
-  }[];
+  questionDetails?: QuestionDetail[];
 }
 
 const QuizResults: React.FC<QuizResultsProps> = ({
   correctAnswers,
   totalQuestions,
   elapsedTime,
-  topicTitle,
+  topicTitle = "Quiz",
   formatTime,
   onRestart,
   onSubmit,
-  questionDetails
+  questionDetails = []
 }) => {
-  const score = Math.round((correctAnswers / totalQuestions) * 100);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+  const averageTimePerQuestion = Math.round(elapsedTime / totalQuestions / 1000);
   
-  // Determine score color and message
-  let scoreColor = "text-red-500";
-  let scoreMessage = "Needs improvement";
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    await onSubmit();
+    setIsSubmitting(false);
+  };
   
-  if (score >= 80) {
-    scoreColor = "text-green-500";
-    scoreMessage = "Excellent!";
-  } else if (score >= 60) {
-    scoreColor = "text-amber-500";
-    scoreMessage = "Good job!";
-  } else if (score >= 40) {
-    scoreColor = "text-orange-500";
-    scoreMessage = "Keep practicing!";
-  }
-
   return (
-    <div className="max-w-3xl mx-auto flex items-center justify-center h-full animate-fade-in-up">
-      <Card className="w-full max-w-md bg-darkBlue-800 border-darkBlue-700 shadow-xl overflow-hidden">
-        <div className="bg-gradient-to-br from-primary/20 to-darkBlue-900 p-6 text-center">
-          <div className="inline-block rounded-full bg-white/10 p-6 backdrop-blur-sm mb-4">
-            <Trophy className="h-12 w-12 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold text-white">Quiz Completed!</h2>
-          <p className="text-blue-200 mt-1">Here's how you performed</p>
+    <div className="glass-card p-6 space-y-6 animate-fade-in">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-white mb-1">{topicTitle} Quiz Completed!</h2>
+        <p className="text-white/70">Here's how you did:</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Score */}
+        <div className="bg-darkBlue-800/50 p-5 rounded-xl text-center">
+          <div className="text-4xl font-bold text-primary mb-2">{correctAnswers}/{totalQuestions}</div>
+          <div className="text-lg text-white/80">Questions</div>
         </div>
         
-        <CardContent className="p-6 space-y-6">
-          <div className="text-center">
-            <div className="relative inline-block">
-              <div className="text-5xl font-bold mb-2 animate-pulse-glow">
-                <span className={scoreColor}>{score}%</span>
-              </div>
-              <p className={`text-sm font-medium ${scoreColor}`}>{scoreMessage}</p>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between bg-darkBlue-700/30 p-3 rounded-lg">
-              <div className="flex items-center">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                <span className="text-white">Correct Answers</span>
-              </div>
-              <span className="font-medium text-primary">{correctAnswers} / {totalQuestions}</span>
-            </div>
-            
-            <div className="flex items-center justify-between bg-darkBlue-700/30 p-3 rounded-lg">
-              <div className="flex items-center">
-                <Clock className="h-5 w-5 text-blue-400 mr-3" />
-                <span className="text-white">Time Taken</span>
-              </div>
-              <span className="font-medium text-primary">{formatTime(elapsedTime)}</span>
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>Beginner</span>
-                <span>Intermediate</span>
-                <span>Expert</span>
-              </div>
-              <Slider
-                defaultValue={[score]}
-                max={100}
-                step={1}
-                disabled
-                className="cursor-default"
-              />
-            </div>
-          </div>
-        </CardContent>
+        {/* Percentage */}
+        <div className="bg-darkBlue-800/50 p-5 rounded-xl text-center">
+          <div className="text-4xl font-bold text-primary mb-2">{percentage}%</div>
+          <div className="text-lg text-white/80">Score</div>
+        </div>
         
-        <div className="border-t border-darkBlue-700 p-4 bg-darkBlue-900/50">
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
-              onClick={onRestart}
-              className="flex items-center justify-center gap-2 bg-transparent border-primary/30 text-primary hover:bg-primary/10"
-            >
-              <RotateCw className="h-4 w-4" />
-              Retry Quiz
-            </Button>
-            <Button 
-              onClick={onSubmit}
-              className="flex items-center justify-center gap-2 bg-primary hover:bg-primary/90"
-            >
-              <Upload className="h-4 w-4" />
+        {/* Time */}
+        <div className="bg-darkBlue-800/50 p-5 rounded-xl text-center">
+          <div className="text-4xl font-bold text-primary mb-2">{formatTime(elapsedTime)}</div>
+          <div className="text-lg text-white/80">Time Taken</div>
+        </div>
+      </div>
+      
+      {/* Performance metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-darkBlue-800/30 p-4 rounded-xl">
+          <div className="flex items-center mb-3">
+            <Clock className="w-5 h-5 text-primary mr-2" />
+            <h3 className="text-lg font-medium text-white">Time Analysis</h3>
+          </div>
+          <p className="text-white/70 text-sm mb-2">
+            You spent an average of {averageTimePerQuestion} seconds per question.
+          </p>
+          <div className="h-2 bg-darkBlue-900/50 rounded-full">
+            <div 
+              className="h-2 bg-primary rounded-full"
+              style={{ width: `${Math.min((averageTimePerQuestion / 40) * 100, 100)}%` }}  
+            ></div>
+          </div>
+          <div className="flex justify-between mt-1 text-xs text-white/60">
+            <span>Fast (10s)</span>
+            <span>Average (20s)</span>
+            <span>Slow (40s+)</span>
+          </div>
+        </div>
+        
+        <div className="bg-darkBlue-800/30 p-4 rounded-xl">
+          <div className="flex items-center mb-3">
+            <CheckCircle className="w-5 h-5 text-primary mr-2" />
+            <h3 className="text-lg font-medium text-white">Accuracy</h3>
+          </div>
+          <p className="text-white/70 text-sm mb-2">
+            {percentage >= 80 ? 'Excellent! Your knowledge is solid.' : 
+             percentage >= 60 ? 'Good job! You\'ve got most concepts right.' : 
+             'You might need to review this topic more.'}
+          </p>
+          <div className="h-2 bg-darkBlue-900/50 rounded-full">
+            <div 
+              className={`h-2 rounded-full ${
+                percentage >= 80 ? 'bg-green-500' : 
+                percentage >= 60 ? 'bg-yellow-500' : 
+                'bg-red-500'
+              }`}
+              style={{ width: `${percentage}%` }}  
+            ></div>
+          </div>
+          <div className="flex justify-between mt-1 text-xs text-white/60">
+            <span>0%</span>
+            <span>50%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Question review */}
+      {questionDetails && questionDetails.length > 0 && (
+        <div className="bg-darkBlue-800/20 p-4 rounded-xl">
+          <h3 className="text-lg font-medium text-white mb-3">Question Review</h3>
+          <Accordion type="single" collapsible className="text-white">
+            {questionDetails.map((detail, index) => (
+              <AccordionItem key={index} value={`question-${index}`}>
+                <AccordionTrigger className="py-3 hover:bg-darkBlue-800/30 px-3 rounded-md">
+                  <div className="flex items-center text-left">
+                    <div className="mr-3">
+                      {detail.isCorrect ? 
+                        <CheckCircle className="h-5 w-5 text-green-400" /> : 
+                        <XCircle className="h-5 w-5 text-red-400" />
+                      }
+                    </div>
+                    <div className="flex-grow">
+                      <div className="line-clamp-1">{detail.question}</div>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 pb-4 pt-1">
+                  <div className="space-y-2 text-sm text-white/80">
+                    <div>
+                      <span className="font-semibold text-white/90">Your answer:</span> 
+                      <span className={`ml-2 ${detail.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                        {detail.userAnswer}
+                      </span>
+                    </div>
+                    
+                    {!detail.isCorrect && (
+                      <div>
+                        <span className="font-semibold text-white/90">Correct answer:</span> 
+                        <span className="ml-2 text-green-400">{detail.correctAnswer}</span>
+                      </div>
+                    )}
+                    
+                    <div className="text-xs text-white/50">Question ID: {detail.questionId}</div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      )}
+      
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 pt-6">
+        <Button 
+          onClick={onRestart}
+          variant="outline" 
+          className="border-white/20 text-white hover:bg-white/10"
+        >
+          <Undo2 className="mr-2 h-4 w-4" />
+          Try Another Quiz
+        </Button>
+        
+        <Button 
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="bg-primary hover:bg-primary/90"
+        >
+          {isSubmitting ? (
+            <>Processing...</>
+          ) : (
+            <>
+              <Send className="mr-2 h-4 w-4" />
               Submit Results
-            </Button>
-          </div>
-        </div>
-      </Card>
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   );
 };

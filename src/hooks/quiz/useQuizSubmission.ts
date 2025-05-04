@@ -38,17 +38,17 @@ export function useQuizSubmission() {
         const quizScore = Math.round((correctAnswers / totalQuestions) * 100);
         const completionTime = Math.floor(timeInMs / 1000); // convert ms to seconds
         
-        // Save detailed quiz results
-        const { data: quizResultData, error: quizResultError } = await supabase
+        // Save detailed quiz results - using custom insert to handle the new table
+        const { error: quizResultError } = await supabase
           .from('quiz_results')
-          .insert([{
+          .insert({
             user_id: userId,
             topic: quizTopic,
             score: quizScore,
             completion_time: completionTime,
             question_details: questionDetails || [],
             date: new Date().toISOString()
-          }]);
+          });
         
         if (quizResultError) {
           console.error("Error saving quiz details:", quizResultError);

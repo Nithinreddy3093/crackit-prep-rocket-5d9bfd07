@@ -72,6 +72,36 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_results: {
+        Row: {
+          completion_time: number | null
+          date: string
+          id: string
+          question_details: Json | null
+          score: number
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          completion_time?: number | null
+          date?: string
+          id?: string
+          question_details?: Json | null
+          score: number
+          topic: string
+          user_id: string
+        }
+        Update: {
+          completion_time?: number | null
+          date?: string
+          id?: string
+          question_details?: Json | null
+          score?: number
+          topic?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       topic_scores: {
         Row: {
           created_at: string
