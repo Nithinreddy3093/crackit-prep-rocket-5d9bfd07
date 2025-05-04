@@ -38,9 +38,10 @@ export function useQuizSubmission() {
         const quizScore = Math.round((correctAnswers / totalQuestions) * 100);
         const completionTime = Math.floor(timeInMs / 1000); // convert ms to seconds
         
-        // Save detailed quiz results - using custom insert to handle the new table
+        // Save detailed quiz results using a direct insert without specifying the table in the from() method
+        // This works around the type checking issues with the newly created table
         const { error: quizResultError } = await supabase
-          .from('quiz_results')
+          .from('quiz_results' as any)
           .insert({
             user_id: userId,
             topic: quizTopic,

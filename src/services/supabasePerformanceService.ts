@@ -130,8 +130,9 @@ export const getPerformanceHistory = async (userId: string): Promise<Performance
 // Get recent quiz details
 export const getRecentQuizDetails = async (userId: string): Promise<QuizResult[]> => {
   try {
+    // Use type assertion for the table name since it's not in the TypeScript types yet
     const { data, error } = await supabase
-      .from('quiz_results')
+      .from('quiz_results' as any)
       .select('*')
       .eq('user_id', userId)
       .order('date', { ascending: false })
@@ -142,7 +143,7 @@ export const getRecentQuizDetails = async (userId: string): Promise<QuizResult[]
       return [];
     }
 
-    return data as QuizResult[];
+    return data as unknown as QuizResult[];
   } catch (error) {
     console.error('Error in getRecentQuizDetails:', error);
     return [];
