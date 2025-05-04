@@ -32,7 +32,7 @@ const Index = () => {
             </p>
             <div className="mt-8 flex justify-center">
               <Button
-                onClick={() => navigate('/quiz')}
+                onClick={() => navigate(isAuthenticated ? '/topics' : '/login')}
                 size="lg"
                 className="bg-primary text-white hover:bg-primary/90"
               >

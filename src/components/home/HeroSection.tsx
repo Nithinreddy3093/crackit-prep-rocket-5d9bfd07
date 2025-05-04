@@ -24,7 +24,7 @@ const HeroSection = () => {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Button
-                onClick={() => navigate(isAuthenticated ? '/dashboard' : '/signup')}
+                onClick={() => navigate(isAuthenticated ? '/dashboard' : '/login')}
                 size="lg"
                 className="bg-primary hover:bg-primary/90 text-white"
               >

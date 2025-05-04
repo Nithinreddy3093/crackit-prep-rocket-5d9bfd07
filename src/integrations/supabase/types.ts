@@ -162,6 +162,36 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          achievements: Json
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          last_login: string
+          progress: Json
+        }
+        Insert: {
+          achievements?: Json
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          last_login?: string
+          progress?: Json
+        }
+        Update: {
+          achievements?: Json
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          last_login?: string
+          progress?: Json
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
