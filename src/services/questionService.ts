@@ -25,8 +25,8 @@ export const getQuestionsByTopicId = async (
     }
 
     // For now, return mock questions until we implement them in Supabase
-    // In a real implementation, this would fetch from Supabase with filters
-    let allQuestions = getMockQuestions(topicId);
+    // Get expanded question set per topic
+    let allQuestions = getExpandedQuestions(topicId);
     
     // Filter out previously seen questions
     if (excludedIds.length > 0) {
@@ -42,7 +42,7 @@ export const getQuestionsByTopicId = async (
     // This ensures we always return some questions even if the user has seen them before
     if (allQuestions.length < count) {
       console.warn('Not enough unique questions available, including some repeated questions');
-      allQuestions = getMockQuestions(topicId);
+      allQuestions = getExpandedQuestions(topicId);
       
       // Still filter by difficulty if specified
       if (difficulty !== 'mixed') {
@@ -55,6 +55,202 @@ export const getQuestionsByTopicId = async (
   } catch (error) {
     console.error(`Error fetching questions for topic ${topicId}:`, error);
     throw new Error('Failed to fetch questions. Please try again later.');
+  }
+};
+
+// Expanded question set with more questions per topic
+const getExpandedQuestions = (topicId: string): Question[] => {
+  const baseQuestions = getMockQuestions(topicId);
+  const expandedQuestions = generateAdditionalQuestions(topicId);
+  return [...baseQuestions, ...expandedQuestions];
+};
+
+// Generate additional questions dynamically to have more variety
+const generateAdditionalQuestions = (topicId: string): Question[] => {
+  // Generate additional questions based on the topic
+  switch (topicId) {
+    case 'dsa':
+      return [
+        {
+          id: 'dsa-6',
+          text: 'What is the time complexity of inserting an element into a hash table?',
+          options: ['O(1)', 'O(log n)', 'O(n)', 'O(n²)'],
+          correctAnswer: 'O(1)',
+          explanation: 'Hash tables provide constant time O(1) insertion in the average case, though it can be O(n) in the worst case due to collisions.',
+          topic_id: 'dsa',
+          difficulty: 'intermediate'
+        },
+        {
+          id: 'dsa-7',
+          text: 'Which of the following data structures is most efficient for implementing a priority queue?',
+          options: ['Array', 'Linked List', 'Binary Heap', 'Hash Table'],
+          correctAnswer: 'Binary Heap',
+          explanation: 'Binary heaps provide efficient (O(log n)) operations for insertion and deletion of the highest-priority element, making them ideal for priority queues.',
+          topic_id: 'dsa',
+          difficulty: 'intermediate'
+        },
+        {
+          id: 'dsa-8',
+          text: 'What is the main disadvantage of using a recursive algorithm compared to an iterative one?',
+          options: [
+            'Recursive algorithms are always slower',
+            'Recursive algorithms use more memory due to the call stack',
+            'Recursive algorithms cannot solve certain problems',
+            'Recursive algorithms always have higher time complexity'
+          ],
+          correctAnswer: 'Recursive algorithms use more memory due to the call stack',
+          explanation: 'Recursive algorithms consume more memory due to function call overhead and maintaining the call stack, which can lead to stack overflow for deep recursions.',
+          topic_id: 'dsa',
+          difficulty: 'intermediate'
+        },
+        {
+          id: 'dsa-9',
+          text: 'Which sorting algorithm has the best average-case time complexity?',
+          options: ['Bubble Sort', 'Insertion Sort', 'Quick Sort', 'Selection Sort'],
+          correctAnswer: 'Quick Sort',
+          explanation: 'Quick Sort has an average-case time complexity of O(n log n), which is better than O(n²) algorithms like Bubble Sort, Insertion Sort, and Selection Sort.',
+          topic_id: 'dsa',
+          difficulty: 'intermediate'
+        },
+        {
+          id: 'dsa-10',
+          text: 'What is the space complexity of breadth-first search (BFS) on a graph?',
+          options: ['O(1)', 'O(log V)', 'O(V)', 'O(V + E)'],
+          correctAnswer: 'O(V)',
+          explanation: 'BFS uses a queue to store vertices, which in the worst case can contain all vertices of the graph, resulting in O(V) space complexity.',
+          topic_id: 'dsa',
+          difficulty: 'advanced'
+        },
+        {
+          id: 'dsa-11',
+          text: 'Which of the following is NOT an application of a stack data structure?',
+          options: ['Function call management', 'Expression evaluation', 'Breadth-first search', 'Undo operation in text editors'],
+          correctAnswer: 'Breadth-first search',
+          explanation: 'Breadth-first search uses a queue, not a stack. The other options all use stacks: function calls are managed with a call stack, expression evaluation uses stacks for operators, and undo operations stack previous states.',
+          topic_id: 'dsa',
+          difficulty: 'intermediate'
+        },
+        {
+          id: 'dsa-12',
+          text: 'What is the worst-case time complexity for finding an element in a balanced binary search tree?',
+          options: ['O(1)', 'O(log n)', 'O(n)', 'O(n log n)'],
+          correctAnswer: 'O(log n)',
+          explanation: 'In a balanced binary search tree, the height is approximately log n, so the worst-case search time is O(log n).',
+          topic_id: 'dsa',
+          difficulty: 'beginner'
+        },
+        {
+          id: 'dsa-13',
+          text: 'Which of these data structures allows for O(1) access to elements by index?',
+          options: ['Linked List', 'Array', 'Binary Search Tree', 'Heap'],
+          correctAnswer: 'Array',
+          explanation: 'Arrays allow direct access to any element using its index in constant time O(1), unlike linked lists, trees, or heaps which require traversal.',
+          topic_id: 'dsa',
+          difficulty: 'beginner'
+        },
+        {
+          id: 'dsa-14',
+          text: 'What is dynamic programming primarily used for?',
+          options: [
+            'Searching algorithms',
+            'Optimization problems with overlapping subproblems',
+            'Memory allocation',
+            'Thread management'
+          ],
+          correctAnswer: 'Optimization problems with overlapping subproblems',
+          explanation: 'Dynamic programming solves optimization problems by breaking them down into simpler subproblems and storing the results to avoid redundant calculations.',
+          topic_id: 'dsa',
+          difficulty: 'advanced'
+        },
+        {
+          id: 'dsa-15',
+          text: 'What is the primary advantage of using a doubly linked list over a singly linked list?',
+          options: [
+            'Less memory usage',
+            'Faster insertion at the beginning',
+            'Bidirectional traversal capability',
+            'Better cache performance'
+          ],
+          correctAnswer: 'Bidirectional traversal capability',
+          explanation: 'A doubly linked list allows traversal in both forward and backward directions, unlike a singly linked list which only allows forward traversal.',
+          topic_id: 'dsa',
+          difficulty: 'beginner'
+        }
+      ];
+    
+    case 'dbms':
+      return [
+        {
+          id: 'dbms-6',
+          text: 'What is the difference between a primary key and a unique key?',
+          options: [
+            'A primary key cannot be null, while a unique key can be null',
+            'A primary key automatically creates an index, while a unique key does not',
+            'A table can have multiple primary keys, but only one unique key',
+            'A primary key must be a single column, while a unique key can span multiple columns'
+          ],
+          correctAnswer: 'A primary key cannot be null, while a unique key can be null',
+          explanation: 'The main difference is that a primary key cannot contain NULL values, while a unique key can. Also, a table can have only one primary key but multiple unique keys.',
+          topic_id: 'dbms',
+          difficulty: 'intermediate'
+        },
+        {
+          id: 'dbms-7',
+          text: 'Which normal form eliminates partial dependencies?',
+          options: ['1NF', '2NF', '3NF', 'BCNF'],
+          correctAnswer: '2NF',
+          explanation: 'Second Normal Form (2NF) eliminates partial dependencies, where a non-key attribute depends on only part of a composite key.',
+          topic_id: 'dbms',
+          difficulty: 'intermediate'
+        },
+        {
+          id: 'dbms-8',
+          text: 'What is a deadlock in database transactions?',
+          options: [
+            'When a transaction is waiting for a resource that will never be available',
+            'When two or more transactions are waiting for each other to release locks, and neither can proceed',
+            'When a transaction is terminated unexpectedly',
+            'When a database server crashes during a transaction'
+          ],
+          correctAnswer: 'When two or more transactions are waiting for each other to release locks, and neither can proceed',
+          explanation: 'A deadlock occurs when transactions are unable to proceed because each is waiting for resources held by another transaction in the deadlock set.',
+          topic_id: 'dbms',
+          difficulty: 'advanced'
+        }
+        // ... More DBMS questions could be added here
+      ];
+
+    case 'os':
+      return [
+        {
+          id: 'os-6',
+          text: 'What is the difference between a process and a thread?',
+          options: [
+            'Processes share memory space, threads do not',
+            'Threads are more resource-intensive than processes',
+            'Processes have separate memory spaces, threads share memory space within a process',
+            'Threads cannot communicate with each other, processes can'
+          ],
+          correctAnswer: 'Processes have separate memory spaces, threads share memory space within a process',
+          explanation: 'Processes have their own memory spaces and resources, while threads within the same process share the process\'s memory space and resources.',
+          topic_id: 'os',
+          difficulty: 'intermediate'
+        },
+        {
+          id: 'os-7',
+          text: 'Which of the following is NOT a process state?',
+          options: ['Ready', 'Running', 'Waiting', 'Executing'],
+          correctAnswer: 'Executing',
+          explanation: 'The standard process states are Ready, Running, and Waiting (or Blocked). "Executing" is generally not used as a formal process state.',
+          topic_id: 'os',
+          difficulty: 'beginner'
+        }
+        // ... More OS questions
+      ];
+
+    // Add cases for other topics
+    default:
+      return [];
   }
 };
 

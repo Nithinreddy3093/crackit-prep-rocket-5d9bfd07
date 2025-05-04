@@ -1,103 +1,110 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { toast } from "@/components/ui/use-toast";
-import { 
-  generateUniqueQuestionsForSession 
-} from "@/services/questionService";
 
-export interface Question {
-  id: string;
-  text: string;
-  options: string[];
-  correctAnswer: string;
-}
+import { useState, useEffect, useCallback } from 'react';
+import { Question, getQuestionsByTopicId } from "@/services/questionService";
 
-export function useQuestionManagement(userId: string | undefined, topicId: string | undefined) {
+export function useQuestionManagement(userId?: string, topicId?: string) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [seenQuestionIds, setSeenQuestionIds] = useState<string[]>(() => {
-    // Load previously seen question IDs from localStorage
-    const savedIds = localStorage.getItem('seenQuestionIds');
-    return savedIds ? JSON.parse(savedIds) : [];
-  });
+  const [seenQuestionIds, setSeenQuestionIds] = useState<string[]>([]);
+  const [isQuestionsLoading, setIsQuestionsLoading] = useState(true);
+  const [questionsError, setQuestionsError] = useState<Error | null>(null);
+  const [questionDetails, setQuestionDetails] = useState<{
+    questionId: string;
+    question: string;
+    userAnswer: string;
+    correctAnswer: string;
+    isCorrect: boolean;
+  }[]>([]);
 
-  // Fetch or generate questions using react-query
-  const { 
-    isLoading: isQuestionsLoading, 
-    error: questionsError 
-  } = useQuery({
-    queryKey: ['questions', topicId, seenQuestionIds],
-    queryFn: () => generateUniqueQuestionsForSession(userId, topicId, seenQuestionIds),
-    enabled: !!topicId,
-    meta: {
-      onSuccess: (data: Question[]) => {
-        setQuestions(data);
-      },
-      onError: (error: any) => {
-        toast({
-          title: "Error fetching questions",
-          description: error.message,
-          variant: "destructive",
-        });
+  // Fetch previously seen questions from localStorage
+  useEffect(() => {
+    if (userId && topicId) {
+      const key = `${userId}_${topicId}_seen_questions`;
+      const storedSeenQuestions = localStorage.getItem(key);
+      
+      if (storedSeenQuestions) {
+        try {
+          setSeenQuestionIds(JSON.parse(storedSeenQuestions));
+        } catch (e) {
+          console.error('Error parsing stored seen questions:', e);
+          setSeenQuestionIds([]);
+        }
       }
     }
-  });
+  }, [userId, topicId]);
 
-  // Reset question state
-  const resetQuestionState = () => {
+  // Fetch questions for the topic
+  useEffect(() => {
+    if (topicId) {
+      setIsQuestionsLoading(true);
+      setQuestionsError(null);
+      
+      getQuestionsByTopicId(topicId, seenQuestionIds)
+        .then(fetchedQuestions => {
+          setQuestions(fetchedQuestions);
+          setCurrentQuestionIndex(0);
+          setSelectedAnswer(null);
+          setCorrectAnswers(0);
+          setQuestionDetails([]);
+          setIsQuestionsLoading(false);
+        })
+        .catch(error => {
+          console.error('Error fetching questions:', error);
+          setQuestionsError(error instanceof Error ? error : new Error(String(error)));
+          setIsQuestionsLoading(false);
+        });
+    }
+  }, [topicId, seenQuestionIds]);
+
+  const currentQuestion = questions[currentQuestionIndex];
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    setSelectedAnswer(answerIndex);
+    
+    const isCorrect = currentQuestion.options[answerIndex] === currentQuestion.correctAnswer;
+    
+    if (isCorrect) {
+      setCorrectAnswers(prev => prev + 1);
+    }
+  };
+
+  const goToNextQuestion = useCallback(() => {
+    setSelectedAnswer(null);
+    
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+      return false;
+    } else {
+      return true;
+    }
+  }, [currentQuestionIndex, questions.length]);
+
+  const resetQuestionState = useCallback(() => {
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
     setCorrectAnswers(0);
-  };
+    setQuestionDetails([]);
+  }, []);
 
-  // Handle answer selection
-  const handleAnswerSelect = (answer: string) => {
-    setSelectedAnswer(answer);
-  };
-
-  // Go to next question or complete quiz
-  const goToNextQuestion = () => {
-    if (!selectedAnswer) {
-      toast({
-        title: "Please select an answer",
-        description: "You must select an answer before proceeding.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const currentQuestion = questions[currentQuestionIndex];
-    if (selectedAnswer === currentQuestion.correctAnswer) {
-      setCorrectAnswers(correctAnswers + 1);
-    }
-
-    setSelectedAnswer(null); // Reset selected answer
-
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      return true; // Quiz completed
-    }
-    
-    return false;
-  };
-
-  // Update seen question IDs in localStorage
-  const updateSeenQuestions = () => {
-    if (questions.length > 0) {
-      // Add current quiz questions to seen questions
-      const newSeenIds = [...seenQuestionIds, ...questions.map(q => q.id)];
+  const updateSeenQuestions = useCallback(() => {
+    if (userId && topicId) {
+      const newSeenQuestionIds = [
+        ...seenQuestionIds,
+        ...questions.map(question => question.id)
+      ];
       
-      // If we have too many IDs, keep only the most recent ones to prevent localStorage from getting too large
-      const limitedIds = newSeenIds.slice(-500); // Keep last 500 questions
+      // Remove duplicates
+      const uniqueSeenQuestionIds = [...new Set(newSeenQuestionIds)];
       
-      // Update state and localStorage
-      setSeenQuestionIds(limitedIds);
-      localStorage.setItem('seenQuestionIds', JSON.stringify(limitedIds));
+      // Store in localStorage
+      const key = `${userId}_${topicId}_seen_questions`;
+      localStorage.setItem(key, JSON.stringify(uniqueSeenQuestionIds));
+      
+      setSeenQuestionIds(uniqueSeenQuestionIds);
     }
-  };
+  }, [userId, topicId, questions, seenQuestionIds]);
 
   return {
     questions,
@@ -106,8 +113,10 @@ export function useQuestionManagement(userId: string | undefined, topicId: strin
     correctAnswers,
     isQuestionsLoading,
     questionsError,
-    currentQuestion: questions[currentQuestionIndex],
+    currentQuestion,
     seenQuestionIds,
+    questionDetails,
+    setQuestionDetails,
     handleAnswerSelect,
     goToNextQuestion,
     resetQuestionState,

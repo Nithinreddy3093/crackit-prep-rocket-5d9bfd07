@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { BadgeType } from '@/components/dashboard/Badges';
@@ -30,6 +31,22 @@ export interface LearningResource {
   url: string;
   difficulty: string;
   tags: string[];
+}
+
+export interface QuizResult {
+  id: string;
+  user_id: string;
+  topic: string;
+  score: number;
+  completion_time?: number;
+  date: string;
+  question_details: {
+    questionId: string;
+    question: string;
+    userAnswer: string;
+    correctAnswer: string;
+    isCorrect: boolean;
+  }[];
 }
 
 // Get user performance data
@@ -106,6 +123,28 @@ export const getPerformanceHistory = async (userId: string): Promise<Performance
     }));
   } catch (error) {
     console.error('Error in getPerformanceHistory:', error);
+    return [];
+  }
+};
+
+// Get recent quiz details
+export const getRecentQuizDetails = async (userId: string): Promise<QuizResult[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('quiz_results')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      console.error('Error fetching quiz results:', error);
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in getRecentQuizDetails:', error);
     return [];
   }
 };
@@ -238,7 +277,7 @@ export const getSuggestedResources = async (userId: string): Promise<LearningRes
   }
 };
 
-// Get AI recommendations based on performance
+// Get AI recommendations based on performance and quiz details
 export const getAIRecommendations = async (userId: string): Promise<string> => {
   try {
     const performance = await getUserPerformance(userId);
@@ -247,28 +286,78 @@ export const getAIRecommendations = async (userId: string): Promise<string> => {
       return "Complete more quizzes to get personalized AI recommendations.";
     }
     
-    // For now, we'll generate recommendations without AI
-    // This would ideally be replaced with a call to an AI service
+    // Get recent quiz details to provide more accurate recommendations
+    const recentQuizzes = await getRecentQuizDetails(userId);
     
-    let recommendation = "Based on your performance: ";
+    // Calculate topic-specific accuracies
+    const topicPerformance: Record<string, { correct: number; total: number }> = {};
     
-    if (performance.strongTopics.length > 0) {
-      recommendation += `You're doing well in ${performance.strongTopics.join(' and ')}. `;
+    recentQuizzes.forEach(quiz => {
+      if (!quiz.question_details) return;
+      
+      quiz.question_details.forEach(detail => {
+        const topic = detail.questionId.split('-')[0]; // e.g., "dsa-1" -> "dsa"
+        
+        if (!topicPerformance[topic]) {
+          topicPerformance[topic] = { correct: 0, total: 0 };
+        }
+        
+        topicPerformance[topic].total += 1;
+        if (detail.isCorrect) {
+          topicPerformance[topic].correct += 1;
+        }
+      });
+    });
+    
+    // Identify specific strengths and weaknesses by topic
+    const topicAnalysis = Object.entries(topicPerformance).map(([topic, stats]) => {
+      const accuracy = stats.total > 0 ? (stats.correct / stats.total) * 100 : 0;
+      return { 
+        topic, 
+        accuracy,
+        strength: accuracy >= 70,
+        weakness: accuracy < 50
+      };
+    });
+    
+    // Build AI recommendation
+    let recommendation = "Based on your recent quiz performance: ";
+    
+    const strengths = topicAnalysis.filter(t => t.strength);
+    const weaknesses = topicAnalysis.filter(t => t.weakness);
+    
+    if (strengths.length > 0) {
+      recommendation += `You're showing strong understanding in ${strengths.map(s => s.topic.toUpperCase()).join(', ')}. `;
     }
     
-    if (performance.weakTopics.length > 0) {
-      recommendation += `Focus more on ${performance.weakTopics.join(' and ')} to improve. `;
+    if (weaknesses.length > 0) {
+      recommendation += `Focus on improving your knowledge in ${weaknesses.map(w => w.topic.toUpperCase()).join(', ')}. `;
+      
+      // Add specific advice based on weak areas
+      weaknesses.forEach(weak => {
+        if (weak.topic === 'dsa') {
+          recommendation += "Try practicing more algorithm problems and data structure implementations. ";
+        } else if (weak.topic === 'dbms') {
+          recommendation += "Review database normalization concepts and practice more SQL queries. ";
+        } else if (weak.topic === 'os') {
+          recommendation += "Study process scheduling and memory management concepts more thoroughly. ";
+        }
+      });
     }
     
     if (performance.quizzesTaken < 5) {
-      recommendation += "Take more quizzes to get more accurate recommendations.";
+      recommendation += "Take more quizzes for more comprehensive recommendations.";
+    } else if (performance.overallScore >= 80) {
+      recommendation += "You're showing excellent progress! Consider exploring advanced topics.";
+    } else if (performance.overallScore >= 60) {
+      recommendation += "You're doing well, but could benefit from more consistent practice.";
     } else {
-      recommendation += "Keep practicing regularly to maintain your progress.";
+      recommendation += "Focus on understanding fundamental concepts before advancing to more complex topics.";
     }
     
     return recommendation;
   } catch (error) {
     console.error('Error in getAIRecommendations:', error);
-    return "Unable to generate recommendations at this time.";
+    return "Unable to generate recommendations at this time. Please try again later.";
   }
 };

@@ -7,7 +7,7 @@ import { generateUniqueQuestionsForSession } from "@/services/questionService";
 import { useQuestionManagement } from './quiz/useQuestionManagement';
 import { useTopicFetching } from './quiz/useTopicFetching';
 import { useQuizTimer } from './quiz/useQuizTimer';
-import { useQuizSubmission } from './quiz/useQuizSubmission';
+import { useQuizSubmission, QuizSubmissionData } from './quiz/useQuizSubmission';
 import { useQuizState } from './quiz/useQuizState';
 
 export function useQuiz(topicId: string | undefined) {
@@ -15,7 +15,8 @@ export function useQuiz(topicId: string | undefined) {
   const { 
     questions, currentQuestionIndex, selectedAnswer, correctAnswers,
     isQuestionsLoading, questionsError, currentQuestion, seenQuestionIds,
-    handleAnswerSelect, goToNextQuestion, resetQuestionState, updateSeenQuestions, setQuestions
+    handleAnswerSelect, goToNextQuestion, resetQuestionState, updateSeenQuestions, setQuestions,
+    questionDetails, setQuestionDetails
   } = useQuestionManagement(user?.id, topicId);
 
   const {
@@ -54,6 +55,19 @@ export function useQuiz(topicId: string | undefined) {
 
   // Modified goToNextQuestion to handle quiz completion
   const handleNextQuestion = () => {
+    if (currentQuestion && selectedAnswer !== null) {
+      // Track question details
+      const questionDetail = {
+        questionId: currentQuestion.id,
+        question: currentQuestion.text,
+        userAnswer: currentQuestion.options[selectedAnswer],
+        correctAnswer: currentQuestion.correctAnswer,
+        isCorrect: currentQuestion.options[selectedAnswer] === currentQuestion.correctAnswer
+      };
+      
+      setQuestionDetails([...questionDetails, questionDetail]);
+    }
+    
     const isCompleted = goToNextQuestion();
     if (isCompleted) {
       completeQuiz();
@@ -86,13 +100,25 @@ export function useQuiz(topicId: string | undefined) {
 
   // Submit quiz and save results
   const handleSubmitQuiz = async () => {
-    await submitQuiz(
-      user?.id,
-      currentTopic?.title,
+    if (!user?.id) {
+      toast({
+        title: "Authentication required",
+        description: "You need to be logged in to submit quiz results.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const quizData: QuizSubmissionData = {
+      userId: user.id,
+      topicTitle: currentTopic?.title || 'General Knowledge',
       correctAnswers,
-      questions.length,
-      elapsedTime
-    );
+      totalQuestions: questions.length,
+      timeInMs: elapsedTime,
+      questionDetails
+    };
+    
+    await submitQuiz(quizData);
   };
 
   return {
@@ -108,6 +134,7 @@ export function useQuiz(topicId: string | undefined) {
     isLoading: isQuestionsLoading || isTopicLoading,
     error: questionsError || topicError,
     seenQuestionIds,
+    questionDetails,
     
     // Current question
     currentQuestion,

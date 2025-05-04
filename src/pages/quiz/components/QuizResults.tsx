@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { CheckCircle, Clock, Trophy, RotateCw, Upload } from 'lucide-react';
@@ -13,6 +13,13 @@ interface QuizResultsProps {
   formatTime: (ms: number) => string;
   onRestart: () => void;
   onSubmit: () => void;
+  questionDetails?: {
+    questionId: string;
+    question: string;
+    userAnswer: string;
+    correctAnswer: string;
+    isCorrect: boolean;
+  }[];
 }
 
 const QuizResults: React.FC<QuizResultsProps> = ({
@@ -22,7 +29,8 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   topicTitle,
   formatTime,
   onRestart,
-  onSubmit
+  onSubmit,
+  questionDetails
 }) => {
   const score = Math.round((correctAnswers / totalQuestions) * 100);
   

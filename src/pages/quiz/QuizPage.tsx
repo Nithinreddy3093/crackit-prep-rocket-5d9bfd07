@@ -65,6 +65,7 @@ const QuizPage = () => {
               formatTime={quiz.formatTime}
               onRestart={quiz.handleRestartQuiz}
               onSubmit={quiz.handleSubmitQuiz}
+              questionDetails={quiz.questionDetails}
             />
           ) : (
             <QuizQuestion 
