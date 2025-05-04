@@ -16,7 +16,7 @@ export function useQuiz(topicId: string | undefined) {
     questions, currentQuestionIndex, selectedAnswer, correctAnswers,
     isQuestionsLoading, questionsError, currentQuestion, seenQuestionIds,
     handleAnswerSelect, goToNextQuestion, resetQuestionState, updateSeenQuestions, setQuestions,
-    questionDetails, setQuestionDetails
+    questionDetails, setQuestionDetails, userAnswers
   } = useQuestionManagement(user?.id, topicId);
 
   const {
@@ -28,17 +28,54 @@ export function useQuiz(topicId: string | undefined) {
   } = useQuizState();
 
   const {
-    elapsedTime, formatTime, resetTimer
+    elapsedTime, formatTime, resetTimer, pauseTimer, resumeTimer
   } = useQuizTimer(!quizCompleted && quizStarted && questions.length > 0);
 
-  const { submitQuiz } = useQuizSubmission();
+  const { submitQuiz, isSubmitting } = useQuizSubmission();
+
+  // Check if there's a saved quiz in localStorage to restore
+  useEffect(() => {
+    const savedResults = localStorage.getItem('lastQuizResults');
+    if (savedResults && quizCompleted) {
+      try {
+        // There are saved results that weren't submitted
+        toast({
+          title: "Unsubmitted Quiz Results",
+          description: "You have quiz results that weren't submitted. You can find them in your dashboard.",
+          variant: "default",
+        });
+      } catch (error) {
+        console.error('Error parsing saved results:', error);
+      }
+    }
+    
+    // Check for any in-progress quiz when component mounts
+    const inProgressQuiz = localStorage.getItem('inProgressQuiz');
+    if (inProgressQuiz && !quizStarted && !quizCompleted) {
+      try {
+        const quizData = JSON.parse(inProgressQuiz);
+        if (quizData.topicId === topicId) {
+          toast({
+            title: "Quiz in Progress",
+            description: "Continuing your in-progress quiz.",
+            variant: "default",
+          });
+          
+          // Automatically start the quiz
+          setTimeout(() => startQuiz(), 500);
+        }
+      } catch (error) {
+        console.error('Error parsing in-progress quiz:', error);
+      }
+    }
+  }, [quizStarted, quizCompleted, topicId, startQuiz]);
 
   // Store seen question IDs in localStorage whenever a quiz is completed
   useEffect(() => {
     if (quizCompleted) {
       updateSeenQuestions();
     }
-  }, [quizCompleted]);
+  }, [quizCompleted, updateSeenQuestions]);
 
   // Fetch data manually in useEffect as a fallback
   useEffect(() => {
@@ -51,7 +88,24 @@ export function useQuiz(topicId: string | undefined) {
           console.error('Error fetching questions:', error);
         });
     }
-  }, [isQuestionsLoading, questionsError, topicId, questions.length, user?.id, seenQuestionIds]);
+  }, [isQuestionsLoading, questionsError, topicId, questions.length, user?.id, seenQuestionIds, setQuestions]);
+
+  // Handle page visibility change to pause/resume timer
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && quizStarted && !quizCompleted) {
+        pauseTimer();
+      } else if (!document.hidden && quizStarted && !quizCompleted) {
+        resumeTimer();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [quizStarted, quizCompleted, pauseTimer, resumeTimer]);
 
   // Modified goToNextQuestion to handle quiz completion and track question details
   const handleNextQuestion = () => {
@@ -81,6 +135,10 @@ export function useQuiz(topicId: string | undefined) {
     resetQuiz();
     resetTimer();
     
+    // Clear localStorage entries
+    localStorage.removeItem('inProgressQuiz');
+    localStorage.removeItem('lastQuizResults');
+    
     // Generate new questions for the restart
     if (topicId && user?.id) {
       generateUniqueQuestionsForSession(user.id, topicId, seenQuestionIds)
@@ -109,6 +167,17 @@ export function useQuiz(topicId: string | undefined) {
       return;
     }
     
+    // Calculate analytics
+    const skippedQuestions = questionDetails.filter(q => q.userAnswer === '').length;
+    const incorrectQuestions = questionDetails.filter(q => !q.isCorrect && q.userAnswer !== '').length;
+    
+    console.log('Quiz analytics:', {
+      correctAnswers,
+      incorrectQuestions,
+      skippedQuestions,
+      totalQuestions: questions.length
+    });
+    
     const quizData: QuizSubmissionData = {
       userId: user.id,
       topicTitle: currentTopic?.title || 'General Knowledge',
@@ -118,7 +187,25 @@ export function useQuiz(topicId: string | undefined) {
       questionDetails
     };
     
-    await submitQuiz(quizData);
+    try {
+      await submitQuiz(quizData);
+      
+      // Save submission status to prevent resubmission
+      localStorage.removeItem('lastQuizResults');
+      localStorage.setItem('lastSubmittedQuiz', JSON.stringify({
+        topicId,
+        timestamp: new Date().toISOString()
+      }));
+      
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      
+      // Save to localStorage in case of submission failure
+      localStorage.setItem('lastQuizResults', JSON.stringify({
+        ...quizData,
+        timestamp: new Date().toISOString()
+      }));
+    }
   };
 
   return {
@@ -131,10 +218,11 @@ export function useQuiz(topicId: string | undefined) {
     quizStarted,
     elapsedTime,
     currentTopic,
-    isLoading: isQuestionsLoading || isTopicLoading,
+    isLoading: isQuestionsLoading || isTopicLoading || isSubmitting,
     error: questionsError || topicError,
     seenQuestionIds,
     questionDetails,
+    userAnswers,
     
     // Current question
     currentQuestion,

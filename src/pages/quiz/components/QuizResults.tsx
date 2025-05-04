@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight,
@@ -46,13 +46,69 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   questionDetails = []
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const percentage = Math.round((correctAnswers / totalQuestions) * 100);
   const averageTimePerQuestion = Math.round(elapsedTime / totalQuestions / 1000);
   
+  // Quiz analytics calculated from question details
+  const [analytics, setAnalytics] = useState({
+    correctCount: 0,
+    incorrectCount: 0,
+    skippedCount: 0,
+    accuracyPercentage: 0,
+  });
+
+  // Calculate analytics on component mount
+  useEffect(() => {
+    if (questionDetails.length > 0) {
+      const correct = questionDetails.filter(q => q.isCorrect).length;
+      const incorrect = questionDetails.filter(q => !q.isCorrect && q.userAnswer !== '').length;
+      const skipped = questionDetails.filter(q => q.userAnswer === '').length;
+      
+      setAnalytics({
+        correctCount: correct,
+        incorrectCount: incorrect,
+        skippedCount: skipped,
+        accuracyPercentage: Math.round((correct / (correct + incorrect || 1)) * 100),
+      });
+    } else {
+      setAnalytics({
+        correctCount: correctAnswers,
+        incorrectCount: totalQuestions - correctAnswers,
+        skippedCount: 0,
+        accuracyPercentage: percentage,
+      });
+    }
+  }, [questionDetails, correctAnswers, totalQuestions, percentage]);
+  
+  // Save quiz results to local storage for persistence
+  useEffect(() => {
+    const quizResultsData = {
+      correctAnswers,
+      totalQuestions,
+      elapsedTime,
+      topicTitle,
+      timestamp: new Date().toISOString(),
+      questionDetails,
+      analytics,
+    };
+    
+    // Store in localStorage to persist across navigation/refresh
+    localStorage.setItem('lastQuizResults', JSON.stringify(quizResultsData));
+  }, [correctAnswers, totalQuestions, elapsedTime, topicTitle, questionDetails, analytics]);
+  
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    await onSubmit();
-    setIsSubmitting(false);
+    try {
+      await onSubmit();
+      setIsSubmitted(true);
+      // Clear from localStorage after successful submission
+      localStorage.removeItem('lastQuizResults');
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -60,6 +116,12 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-1">{topicTitle} Quiz Completed!</h2>
         <p className="text-white/70">Here's how you did:</p>
+        
+        {isSubmitted && (
+          <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm">
+            <CheckCircle className="w-3 h-3 mr-1" /> Results saved to your profile
+          </div>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -79,6 +141,25 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         <div className="bg-darkBlue-800/50 p-5 rounded-xl text-center">
           <div className="text-4xl font-bold text-primary mb-2">{formatTime(elapsedTime)}</div>
           <div className="text-lg text-white/80">Time Taken</div>
+        </div>
+      </div>
+      
+      {/* Answers breakdown */}
+      <div className="bg-darkBlue-800/30 p-4 rounded-xl">
+        <h3 className="text-lg font-medium text-white mb-3">Answer Breakdown</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
+            <div className="text-xl font-bold text-green-400">{analytics.correctCount}</div>
+            <div className="text-xs text-white/70">Correct</div>
+          </div>
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-center">
+            <div className="text-xl font-bold text-red-400">{analytics.incorrectCount}</div>
+            <div className="text-xs text-white/70">Incorrect</div>
+          </div>
+          <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg text-center">
+            <div className="text-xl font-bold text-yellow-400">{analytics.skippedCount}</div>
+            <div className="text-xs text-white/70">Skipped</div>
+          </div>
         </div>
       </div>
       
@@ -158,7 +239,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                     <div>
                       <span className="font-semibold text-white/90">Your answer:</span> 
                       <span className={`ml-2 ${detail.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
-                        {detail.userAnswer}
+                        {detail.userAnswer || 'Skipped'}
                       </span>
                     </div>
                     
@@ -191,11 +272,13 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         
         <Button 
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isSubmitted}
           className="bg-primary hover:bg-primary/90"
         >
           {isSubmitting ? (
             <>Processing...</>
+          ) : isSubmitted ? (
+            <>Results Saved</>
           ) : (
             <>
               <Send className="mr-2 h-4 w-4" />

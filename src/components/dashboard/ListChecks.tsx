@@ -1,4 +1,8 @@
 
 import { ListChecks as LucideListChecks } from 'lucide-react';
 
-export { LucideListChecks as default };
+const ListChecks = () => {
+  return <LucideListChecks className="h-5 w-5" />;
+};
+
+export default ListChecks;

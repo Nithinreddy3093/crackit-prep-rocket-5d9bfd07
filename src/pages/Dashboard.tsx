@@ -52,10 +52,10 @@ const Dashboard = () => {
           setIsLoading(true);
           const history = await getPerformanceHistory(user.id);
           
-          // Convert to activity items
-          const activities = history.map((item, index) => ({
+          // Convert to activity items with proper type casting
+          const activities: ActivityItem[] = history.map((item, index) => ({
             id: index + 1,
-            type: 'quiz',
+            type: 'quiz' as const, // Explicitly type as 'quiz'
             name: `${item.topic} Quiz`,
             score: `${item.score}/100`,
             date: item.date,
@@ -65,7 +65,7 @@ const Dashboard = () => {
           setRecentActivities(activities);
         } catch (error) {
           console.error('Error fetching activities:', error);
-          // Use mock data as fallback
+          // Use mock data as fallback with proper typing
           setRecentActivities(mockRecentActivities);
         } finally {
           setIsLoading(false);
@@ -76,8 +76,8 @@ const Dashboard = () => {
     fetchActivities();
   }, [user]);
 
-  // Mock data as fallbacks
-  const mockRecentActivities = [
+  // Mock data as fallbacks with proper typing
+  const mockRecentActivities: ActivityItem[] = [
     { id: 1, type: 'quiz', name: 'Data Structures Quiz', score: '8/10', date: '2025-04-10', topic: 'DSA' },
     { id: 2, type: 'resource', name: 'Database Normalization Article', date: '2025-04-08', topic: 'DBMS' },
     { id: 3, type: 'quiz', name: 'Operating Systems Quiz', score: '7/10', date: '2025-04-05', topic: 'OS' },

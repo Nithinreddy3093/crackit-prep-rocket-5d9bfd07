@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
 import { updateUserPerformance } from "@/services/supabasePerformanceService";
@@ -21,9 +22,11 @@ export interface QuizSubmissionData {
 
 export function useQuizSubmission() {
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submitQuiz = async (quizData: QuizSubmissionData) => {
     try {
+      setIsSubmitting(true);
       const { 
         userId, 
         topicTitle, 
@@ -38,8 +41,28 @@ export function useQuizSubmission() {
         const quizScore = Math.round((correctAnswers / totalQuestions) * 100);
         const completionTime = Math.floor(timeInMs / 1000); // convert ms to seconds
         
-        // Save detailed quiz results using a direct insert without specifying the table in the from() method
-        // This works around the type checking issues with the newly created table
+        // Calculate analytics
+        const skipped = questionDetails?.filter(q => q.userAnswer === '').length || 0;
+        const incorrect = questionDetails?.filter(q => !q.isCorrect && q.userAnswer !== '').length || 0;
+        
+        // Prepare analytics data
+        const analyticsData = {
+          correct: correctAnswers,
+          incorrect: incorrect,
+          skipped: skipped,
+          accuracy: quizScore,
+          timePerQuestion: Math.round(completionTime / totalQuestions),
+        };
+        
+        console.log('Submitting quiz results:', {
+          quizTopic,
+          quizScore,
+          completionTime,
+          analyticsData
+        });
+        
+        // Save detailed quiz results using type assertion
+        // This works around the TypeScript issue with the newly created table
         const { error: quizResultError } = await supabase
           .from('quiz_results' as any)
           .insert({
@@ -53,18 +76,23 @@ export function useQuizSubmission() {
         
         if (quizResultError) {
           console.error("Error saving quiz details:", quizResultError);
+          throw new Error(`Failed to save quiz results: ${quizResultError.message}`);
         }
         
-        // Update the user's performance in Supabase
-        await updateUserPerformance(userId, quizTopic, quizScore, completionTime);
+        // Update the user's performance metrics in Supabase
+        const performanceData = await updateUserPerformance(userId, quizTopic, quizScore, completionTime);
+        
+        console.log('Updated performance data:', performanceData);
+        
+        // Clear any stored in-progress quiz data
+        localStorage.removeItem('inProgressQuiz');
+        
+        toast({
+          title: "Quiz Submitted Successfully",
+          description: `Your score of ${quizScore}% has been recorded.`,
+          variant: "default",
+        });
       }
-      
-      toast({
-        title: "Quiz Submitted",
-        description: "Your quiz has been submitted and your score has been recorded.",
-        variant: "default",
-      });
-      navigate('/dashboard');
     } catch (error: any) {
       console.error("Error submitting quiz:", error);
       toast({
@@ -72,8 +100,11 @@ export function useQuizSubmission() {
         description: error.message || "Failed to submit the quiz. Please try again.",
         variant: "destructive",
       });
+      throw error;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  return { submitQuiz };
+  return { submitQuiz, isSubmitting };
 }

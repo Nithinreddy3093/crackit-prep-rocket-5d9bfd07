@@ -13,6 +13,9 @@ export interface UserPerformance {
   lastQuizDate: string;
   strongTopics: string[];
   weakTopics: string[];
+  averageCompletionTime?: number;
+  recentSubjects?: string[];
+  accuracyPerTopic?: Record<string, number>;
 }
 
 export interface PerformanceHistory {
@@ -75,14 +78,45 @@ export const getUserPerformance = async (userId: string): Promise<UserPerformanc
       return null;
     }
 
+    // Get performance history for average completion time
+    const { data: historyData, error: historyError } = await supabase
+      .from('performance_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(10);
+      
+    if (historyError) {
+      console.error('Error fetching performance history:', historyError);
+    }
+
+    // Calculate average completion time
+    let avgCompletionTime = 0;
+    const validCompletionTimes = historyData?.filter(item => item.completion_time) || [];
+    
+    if (validCompletionTimes.length > 0) {
+      avgCompletionTime = validCompletionTimes.reduce(
+        (sum, item) => sum + (item.completion_time || 0), 0
+      ) / validCompletionTimes.length;
+    }
+
     // Create topic scores map
     const topicScores: Record<string, number> = {};
-    topicScoresData.forEach(item => {
+    topicScoresData?.forEach(item => {
       topicScores[item.topic] = item.score;
     });
 
+    // Create accuracy per topic map
+    const accuracyPerTopic: Record<string, number> = {};
+    topicScoresData?.forEach(item => {
+      accuracyPerTopic[item.topic] = item.score;
+    });
+
+    // Get recent subjects (last 5 unique topics)
+    const recentSubjects = [...new Set((historyData || []).map(item => item.topic))].slice(0, 5);
+
     // Sort topics by score to determine strong and weak topics
-    const sortedTopics = [...topicScoresData].sort((a, b) => b.score - a.score);
+    const sortedTopics = [...(topicScoresData || [])].sort((a, b) => b.score - a.score);
     const strongTopics = sortedTopics.slice(0, 2).map(item => item.topic);
     const weakTopics = [...sortedTopics].reverse().slice(0, 2).map(item => item.topic);
 
@@ -93,7 +127,10 @@ export const getUserPerformance = async (userId: string): Promise<UserPerformanc
       quizzesTaken: performanceData?.quizzes_taken || 0,
       lastQuizDate: performanceData?.last_quiz_date || new Date().toISOString(),
       strongTopics,
-      weakTopics
+      weakTopics,
+      averageCompletionTime: Math.round(avgCompletionTime),
+      recentSubjects,
+      accuracyPerTopic
     };
   } catch (error) {
     console.error('Error in getUserPerformance:', error);
@@ -130,7 +167,7 @@ export const getPerformanceHistory = async (userId: string): Promise<Performance
 // Get recent quiz details
 export const getRecentQuizDetails = async (userId: string): Promise<QuizResult[]> => {
   try {
-    // Use type assertion for the table name since it's not in the TypeScript types yet
+    // Use a type assertion to handle the quiz_results table
     const { data, error } = await supabase
       .from('quiz_results' as any)
       .select('*')
@@ -143,7 +180,8 @@ export const getRecentQuizDetails = async (userId: string): Promise<QuizResult[]
       return [];
     }
 
-    return data as unknown as QuizResult[];
+    // Assert the data type
+    return (data as unknown[] as QuizResult[]) || [];
   } catch (error) {
     console.error('Error in getRecentQuizDetails:', error);
     return [];
@@ -185,6 +223,8 @@ export const updateUserPerformance = async (
   completionTime?: number
 ): Promise<UserPerformance | null> => {
   try {
+    console.log(`Updating performance for user ${userId} with score ${score} in ${topic}`);
+    
     // Call the Supabase function
     const { data, error } = await supabase
       .rpc('update_user_performance', {
@@ -203,6 +243,8 @@ export const updateUserPerformance = async (
       });
       return null;
     }
+    
+    console.log('Performance update successful:', data);
     
     // Initialize badges if needed (in case this is the user's first quiz)
     await initializeUserBadges(userId);
@@ -296,7 +338,7 @@ export const getAIRecommendations = async (userId: string): Promise<string> => {
     recentQuizzes.forEach(quiz => {
       if (!quiz.question_details) return;
       
-      quiz.question_details.forEach(detail => {
+      (quiz.question_details as any[]).forEach(detail => {
         const topic = detail.questionId.split('-')[0]; // e.g., "dsa-1" -> "dsa"
         
         if (!topicPerformance[topic]) {
