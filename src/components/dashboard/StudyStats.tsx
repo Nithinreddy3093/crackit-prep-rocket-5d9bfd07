@@ -1,19 +1,17 @@
 
 import React, { useEffect, useState } from 'react';
-import { ArrowUp, ArrowDown, BarChart2, Loader2 } from 'lucide-react';
+import { BarChart2, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserPerformance, getPerformanceHistory } from '@/services/performance';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
+import { PerformanceStat } from '@/services/performance/types';
 
-export interface PerformanceStat {
-  topic: string;
-  progress: number;
-  quizzesTaken: number;
-  averageScore: number;
-}
+// Import sub-components
+import TopicProgress from './study-stats/TopicProgress';
+import PerformanceChart from './study-stats/PerformanceChart';
+import TopicComparison from './study-stats/TopicComparison';
+import OverallScoreDisplay from './study-stats/OverallScoreDisplay';
+import SectionHeader from './study-stats/SectionHeader';
 
 interface StudyStatsProps {
   performanceStats?: PerformanceStat[];
@@ -105,121 +103,29 @@ const StudyStats: React.FC<StudyStatsProps> = ({ performanceStats: propStats }) 
           <CardTitle>Study Progress</CardTitle>
           <CardDescription>Your performance across different subjects</CardDescription>
         </div>
-        <div className="flex items-center px-4 py-2 bg-primary/10 rounded-md">
-          <div className="text-md font-semibold mr-2">Overall Score:</div>
-          <div className="text-2xl font-bold text-primary">{overallScore}%</div>
-        </div>
+        <OverallScoreDisplay overallScore={overallScore} />
       </CardHeader>
       <CardContent className="space-y-8">
         <div className="space-y-6">
-          {stats.map((stat, index) => (
-            <div key={index} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium leading-none">{stat.topic}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {stat.quizzesTaken} quiz{stat.quizzesTaken !== 1 ? "zes" : ""} taken
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-medium ${
-                    stat.averageScore >= 75 ? 'text-green-500' : 
-                    stat.averageScore >= 60 ? 'text-yellow-500' : 'text-red-500'
-                  }`}>
-                    {stat.averageScore}%
-                  </span>
-                  {stat.averageScore >= 70 ? (
-                    <ArrowUp className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-              </div>
-              <Progress value={stat.progress} className="h-2" />
-            </div>
-          ))}
+          <TopicProgress stats={stats} loading={false} />
         </div>
 
         {historyData.length > 0 && (
           <div className="pt-4">
-            <div className="flex items-center mb-4">
-              <BarChart2 className="h-5 w-5 text-primary mr-2" />
-              <h3 className="font-medium">Performance Trends</h3>
-            </div>
-            
-            <div className="h-[300px] mt-4">
-              <ChartContainer
-                className="h-[300px]"
-                config={{
-                  dsa: { label: "DSA", theme: { light: "#0ea5e9", dark: "#0ea5e9" }},
-                  os: { label: "OS", theme: { light: "#f97316", dark: "#f97316" }},
-                  db: { label: "Database", theme: { light: "#8b5cf6", dark: "#8b5cf6" }},
-                  oop: { label: "OOP", theme: { light: "#10b981", dark: "#10b981" }}
-                }}
-              >
-                <LineChart data={historyData[0]?.data || []}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                  <Tooltip content={<ChartTooltipContent />} />
-                  <Legend />
-                  {historyData.map((series, index) => {
-                    let stroke = "#0ea5e9";
-                    if (series.topic.includes("Operating")) stroke = "#f97316";
-                    if (series.topic.includes("Database")) stroke = "#8b5cf6";
-                    if (series.topic.includes("Object")) stroke = "#10b981";
-                    
-                    return (
-                      <Line 
-                        key={index}
-                        type="monotone" 
-                        dataKey="score" 
-                        name={series.topic} 
-                        stroke={stroke}
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
-                        activeDot={{ r: 6 }}
-                      />
-                    );
-                  })}
-                </LineChart>
-              </ChartContainer>
-            </div>
+            <SectionHeader 
+              icon={<BarChart2 className="h-5 w-5 text-primary mr-2" />} 
+              title="Performance Trends" 
+            />
+            <PerformanceChart historyData={historyData} loading={false} />
           </div>
         )}
         
         <div className="pt-4">
-          <div className="flex items-center mb-4">
-            <BarChart2 className="h-5 w-5 text-primary mr-2" />
-            <h3 className="font-medium">Topic Comparison</h3>
-          </div>
-          
-          <div className="h-[300px] mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={stats}
-                margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="topic"
-                  tick={{ fontSize: 12 }}
-                  angle={-45}
-                  textAnchor="end"
-                  interval={0}
-                  height={70}
-                />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar
-                  dataKey="averageScore"
-                  name="Average Score"
-                  fill="#0ea5e9"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <SectionHeader 
+            icon={<BarChart2 className="h-5 w-5 text-primary mr-2" />} 
+            title="Topic Comparison" 
+          />
+          <TopicComparison stats={stats} loading={false} />
         </div>
       </CardContent>
     </Card>
