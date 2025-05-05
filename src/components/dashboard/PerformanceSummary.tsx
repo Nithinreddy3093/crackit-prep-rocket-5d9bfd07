@@ -8,7 +8,7 @@ import {
   getPerformanceHistory, 
   getAIRecommendations, 
   getRecentQuizDetails 
-} from '@/services/supabasePerformanceService';
+} from '@/services/performance';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const PerformanceSummary: React.FC = () => {

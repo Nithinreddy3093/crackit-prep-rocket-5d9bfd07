@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
-import { updateUserPerformance } from "@/services/supabasePerformanceService";
+import { updateUserPerformance } from "@/services/performance";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface QuizSubmissionData {

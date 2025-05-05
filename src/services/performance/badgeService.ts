@@ -158,3 +158,30 @@ export const initializeUserBadges = async (userId: string): Promise<void> => {
     console.error('Error in initializeUserBadges:', error);
   }
 };
+
+// Get user badges
+export const getUserBadges = async (userId: string): Promise<BadgeType[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_badges')
+      .select('*')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error fetching user badges:', error);
+      return [];
+    }
+
+    return data.map(item => ({
+      id: item.badge_id,
+      name: item.badge_name,
+      icon: item.icon,
+      description: item.badge_description,
+      earned: true,
+      earnedDate: item.earned_date
+    }));
+  } catch (error) {
+    console.error('Error in getUserBadges:', error);
+    return [];
+  }
+};

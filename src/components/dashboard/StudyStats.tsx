@@ -4,7 +4,7 @@ import { ArrowUp, ArrowDown, BarChart2, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserPerformance, getPerformanceHistory } from '@/services/supabasePerformanceService';
+import { getUserPerformance, getPerformanceHistory } from '@/services/performance';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 
