@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "@/components/ui/use-toast";
 import { Layout, BarChart3, BookMarked, Trophy } from 'lucide-react';
-import { getPerformanceHistory } from '@/services/supabasePerformanceService';
+import { getPerformanceHistory } from '@/services/performance/userPerformanceService';
 
 // Import dashboard tab content components
 import OverviewTab from '@/components/dashboard/tabs/OverviewTab';

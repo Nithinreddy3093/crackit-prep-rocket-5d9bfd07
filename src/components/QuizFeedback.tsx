@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { generateAIFeedback, AIFeedback, QuizResult } from '@/services/geminiService';
-import { updateUserPerformance } from '@/services/performance';
+import { updateUserPerformance } from '@/services/performance/userPerformanceService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/use-toast';
 import LoadingState from './quiz/LoadingState';

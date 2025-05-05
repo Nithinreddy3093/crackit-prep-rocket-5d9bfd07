@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Code, Database, Cpu, Brain, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { getUserBadges } from '@/services/supabasePerformanceService';
+import { getUserBadges } from '@/services/performance/badgeService';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface BadgeType {
