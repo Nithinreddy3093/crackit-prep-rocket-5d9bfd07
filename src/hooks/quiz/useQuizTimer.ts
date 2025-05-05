@@ -1,9 +1,11 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function useQuizTimer(isActive: boolean) {
   const [startTime, setStartTime] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const lastPauseTimeRef = useRef<number>(0);
 
   // Start the timer when quiz becomes active
   useEffect(() => {
@@ -15,13 +17,13 @@ export function useQuizTimer(isActive: boolean) {
   // Update elapsed time
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
-    if (startTime > 0 && isActive) {
+    if (startTime > 0 && isActive && !isPaused) {
       intervalId = setInterval(() => {
         setElapsedTime(Date.now() - startTime);
       }, 1000);
     }
     return () => clearInterval(intervalId);
-  }, [startTime, isActive]);
+  }, [startTime, isActive, isPaused]);
 
   // Format time in minutes:seconds
   const formatTime = (ms: number) => {
@@ -34,11 +36,30 @@ export function useQuizTimer(isActive: boolean) {
   const resetTimer = () => {
     setStartTime(Date.now());
     setElapsedTime(0);
+    setIsPaused(false);
+  };
+
+  const pauseTimer = () => {
+    if (!isPaused) {
+      lastPauseTimeRef.current = Date.now();
+      setIsPaused(true);
+    }
+  };
+
+  const resumeTimer = () => {
+    if (isPaused && lastPauseTimeRef.current > 0) {
+      // Adjust startTime to account for the pause duration
+      const pauseDuration = Date.now() - lastPauseTimeRef.current;
+      setStartTime(prevStartTime => prevStartTime + pauseDuration);
+      setIsPaused(false);
+    }
   };
 
   return {
     elapsedTime,
     formatTime,
-    resetTimer
+    resetTimer,
+    pauseTimer,
+    resumeTimer
   };
 }
