@@ -1,7 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { Clock, CheckCircle, LineChart, Award } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   getUserPerformance, 
   getPerformanceHistory, 
