@@ -1,15 +1,19 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { Clock, CheckCircle, LineChart, Award, Brain } from 'lucide-react';
+import { Clock, CheckCircle, LineChart, Award } from 'lucide-react';
 import { 
   getUserPerformance, 
   getPerformanceHistory, 
   getAIRecommendations, 
   getRecentQuizDetails 
 } from '@/services/performance';
-import { Skeleton } from '@/components/ui/skeleton';
+
+// Import custom components
+import StatCard from './performance-summary/StatCard';
+import StrengthAreas from './performance-summary/StrengthAreas';
+import ImprovementAreas from './performance-summary/ImprovementAreas';
+import AISummary from './performance-summary/AISummary';
 
 const PerformanceSummary: React.FC = () => {
   const { user } = useAuth();
@@ -119,43 +123,28 @@ const PerformanceSummary: React.FC = () => {
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {/* Quizzes Taken */}
-          <div className="bg-darkBlue-700/50 rounded-xl p-4 flex flex-col">
-            <div className="flex items-center mb-2">
-              <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
-              <span className="text-gray-300 text-sm">Quizzes Taken</span>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-16 bg-darkBlue-600" />
-            ) : (
-              <span className="text-2xl font-bold text-white">{quizzesTaken}</span>
-            )}
-          </div>
+          <StatCard 
+            icon={<CheckCircle className="h-5 w-5 text-green-400 mr-2" />}
+            title="Quizzes Taken"
+            value={quizzesTaken}
+            loading={loading}
+          />
           
           {/* Accuracy */}
-          <div className="bg-darkBlue-700/50 rounded-xl p-4 flex flex-col">
-            <div className="flex items-center mb-2">
-              <Award className="h-5 w-5 text-yellow-400 mr-2" />
-              <span className="text-gray-300 text-sm">Accuracy</span>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-16 bg-darkBlue-600" />
-            ) : (
-              <span className="text-2xl font-bold text-white">{accuracy}%</span>
-            )}
-          </div>
+          <StatCard 
+            icon={<Award className="h-5 w-5 text-yellow-400 mr-2" />}
+            title="Accuracy"
+            value={`${accuracy}%`}
+            loading={loading}
+          />
           
           {/* Avg Completion Time */}
-          <div className="bg-darkBlue-700/50 rounded-xl p-4 flex flex-col">
-            <div className="flex items-center mb-2">
-              <Clock className="h-5 w-5 text-blue-400 mr-2" />
-              <span className="text-gray-300 text-sm">Avg. Completion Time</span>
-            </div>
-            {loading ? (
-              <Skeleton className="h-8 w-24 bg-darkBlue-600" />
-            ) : (
-              <span className="text-2xl font-bold text-white">{formatTime(avgCompletionTime)}</span>
-            )}
-          </div>
+          <StatCard 
+            icon={<Clock className="h-5 w-5 text-blue-400 mr-2" />}
+            title="Avg. Completion Time"
+            value={formatTime(avgCompletionTime)}
+            loading={loading}
+          />
           
           {/* Recent Subjects */}
           <div className="bg-darkBlue-700/50 rounded-xl p-4 flex flex-col">
@@ -184,73 +173,14 @@ const PerformanceSummary: React.FC = () => {
         {/* Performance Insights */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* Strengths */}
-          <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-            <h4 className="flex items-center mb-2">
-              <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
-              <span className="text-white font-medium">Your Strengths</span>
-            </h4>
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full bg-darkBlue-700" />
-                <Skeleton className="h-4 w-3/4 bg-darkBlue-700" />
-              </div>
-            ) : (
-              <ul className="space-y-1">
-                {strengthAreas.length > 0 ? (
-                  strengthAreas.map((area, index) => (
-                    <li key={index} className="text-white/80 text-sm flex items-center">
-                      <span className="mr-2">•</span> {area}
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-white/80 text-sm">Complete more quizzes to identify your strengths</li>
-                )}
-              </ul>
-            )}
-          </div>
+          <StrengthAreas areas={strengthAreas} loading={loading} />
           
           {/* Areas to Improve */}
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-            <h4 className="flex items-center mb-2">
-              <LineChart className="h-4 w-4 text-red-400 mr-2" />
-              <span className="text-white font-medium">Areas to Improve</span>
-            </h4>
-            {loading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full bg-darkBlue-700" />
-                <Skeleton className="h-4 w-3/4 bg-darkBlue-700" />
-              </div>
-            ) : (
-              <ul className="space-y-1">
-                {improvementAreas.length > 0 ? (
-                  improvementAreas.map((area, index) => (
-                    <li key={index} className="text-white/80 text-sm flex items-center">
-                      <span className="mr-2">•</span> {area}
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-white/80 text-sm">Complete more quizzes to identify areas for improvement</li>
-                )}
-              </ul>
-            )}
-          </div>
+          <ImprovementAreas areas={improvementAreas} loading={loading} />
         </div>
         
         {/* AI Summary */}
-        <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
-          <div className="flex items-center mb-2">
-            <Brain className="h-5 w-5 text-primary mr-2" />
-            <span className="text-white font-medium">AI Performance Summary</span>
-          </div>
-          {loading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full bg-darkBlue-700" />
-              <Skeleton className="h-4 w-3/4 bg-darkBlue-700" />
-            </div>
-          ) : (
-            <p className="text-white/80 text-sm">{aiSummary}</p>
-          )}
-        </div>
+        <AISummary summary={aiSummary} loading={loading} />
       </CardContent>
     </Card>
   );

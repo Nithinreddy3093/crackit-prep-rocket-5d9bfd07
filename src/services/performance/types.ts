@@ -45,3 +45,10 @@ export interface QuizResult {
     isCorrect: boolean;
   }[];
 }
+
+export interface PerformanceStat {
+  topic: string;
+  progress?: number;
+  quizzesTaken?: number;
+  averageScore: number;
+}
