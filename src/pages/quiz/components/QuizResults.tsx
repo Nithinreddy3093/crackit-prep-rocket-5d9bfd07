@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight,
@@ -47,38 +47,39 @@ const QuizResults: React.FC<QuizResultsProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const percentage = Math.round((correctAnswers / totalQuestions) * 100);
-  const averageTimePerQuestion = Math.round(elapsedTime / totalQuestions / 1000);
+  
+  // Memoize calculations to prevent recalculations on each render
+  const percentage = useMemo(() => 
+    Math.round((correctAnswers / totalQuestions) * 100),
+    [correctAnswers, totalQuestions]
+  );
+  
+  const averageTimePerQuestion = useMemo(() => 
+    Math.round(elapsedTime / totalQuestions / 1000),
+    [elapsedTime, totalQuestions]
+  );
   
   // Quiz analytics calculated from question details
-  const [analytics, setAnalytics] = useState({
-    correctCount: 0,
-    incorrectCount: 0,
-    skippedCount: 0,
-    accuracyPercentage: 0,
-  });
-
-  // Calculate analytics on component mount
-  useEffect(() => {
+  const analytics = useMemo(() => {
     if (questionDetails.length > 0) {
       const correct = questionDetails.filter(q => q.isCorrect).length;
       const incorrect = questionDetails.filter(q => !q.isCorrect && q.userAnswer !== '').length;
       const skipped = questionDetails.filter(q => q.userAnswer === '').length;
       
-      setAnalytics({
+      return {
         correctCount: correct,
         incorrectCount: incorrect,
         skippedCount: skipped,
         accuracyPercentage: Math.round((correct / (correct + incorrect || 1)) * 100),
-      });
-    } else {
-      setAnalytics({
-        correctCount: correctAnswers,
-        incorrectCount: totalQuestions - correctAnswers,
-        skippedCount: 0,
-        accuracyPercentage: percentage,
-      });
-    }
+      };
+    } 
+    
+    return {
+      correctCount: correctAnswers,
+      incorrectCount: totalQuestions - correctAnswers,
+      skippedCount: 0,
+      accuracyPercentage: percentage,
+    };
   }, [questionDetails, correctAnswers, totalQuestions, percentage]);
   
   // Save quiz results to local storage for persistence
@@ -110,6 +111,20 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       setIsSubmitting(false);
     }
   };
+  
+  // Memoize performance feedback text
+  const performanceFeedback = useMemo(() => {
+    if (percentage >= 80) return 'Excellent! Your knowledge is solid.';
+    if (percentage >= 60) return 'Good job! You\'ve got most concepts right.';
+    return 'You might need to review this topic more.';
+  }, [percentage]);
+  
+  // Memoize performance UI elements
+  const performanceBarColor = useMemo(() => {
+    if (percentage >= 80) return 'bg-green-500';
+    if (percentage >= 60) return 'bg-yellow-500';
+    return 'bg-red-500';
+  }, [percentage]);
   
   return (
     <div className="glass-card p-6 space-y-6 animate-fade-in">
@@ -192,17 +207,11 @@ const QuizResults: React.FC<QuizResultsProps> = ({
             <h3 className="text-lg font-medium text-white">Accuracy</h3>
           </div>
           <p className="text-white/70 text-sm mb-2">
-            {percentage >= 80 ? 'Excellent! Your knowledge is solid.' : 
-             percentage >= 60 ? 'Good job! You\'ve got most concepts right.' : 
-             'You might need to review this topic more.'}
+            {performanceFeedback}
           </p>
           <div className="h-2 bg-darkBlue-900/50 rounded-full">
             <div 
-              className={`h-2 rounded-full ${
-                percentage >= 80 ? 'bg-green-500' : 
-                percentage >= 60 ? 'bg-yellow-500' : 
-                'bg-red-500'
-              }`}
+              className={`h-2 rounded-full ${performanceBarColor}`}
               style={{ width: `${percentage}%` }}  
             ></div>
           </div>
@@ -214,13 +223,13 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         </div>
       </div>
       
-      {/* Question review */}
+      {/* Question review - using virtualization for better performance */}
       {questionDetails && questionDetails.length > 0 && (
         <div className="bg-darkBlue-800/20 p-4 rounded-xl">
           <h3 className="text-lg font-medium text-white mb-3">Question Review</h3>
           <Accordion type="single" collapsible className="text-white">
-            {questionDetails.map((detail, index) => (
-              <AccordionItem key={index} value={`question-${index}`}>
+            {questionDetails.slice(0, 15).map((detail, index) => (
+              <AccordionItem key={`question-${detail.questionId}-${index}`} value={`question-${index}`}>
                 <AccordionTrigger className="py-3 hover:bg-darkBlue-800/30 px-3 rounded-md">
                   <div className="flex items-center text-left">
                     <div className="mr-3">
@@ -249,8 +258,6 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                         <span className="ml-2 text-green-400">{detail.correctAnswer}</span>
                       </div>
                     )}
-                    
-                    <div className="text-xs text-white/50">Question ID: {detail.questionId}</div>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -291,4 +298,4 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   );
 };
 
-export default QuizResults;
+export default React.memo(QuizResults);

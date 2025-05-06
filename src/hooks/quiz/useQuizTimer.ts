@@ -8,8 +8,9 @@ export function useQuizTimer(isRunning: boolean) {
   const requestRef = useRef<number | null>(null);
   const previousTimeRef = useRef<number | null>(null);
   const pausedTimeRef = useRef<number>(0);
+  const elapsedTimeRef = useRef<number>(0);
 
-  // Format milliseconds to mm:ss format
+  // Format milliseconds to mm:ss format - memoized to avoid recreations
   const formatTime = useCallback((milliseconds: number): string => {
     const seconds = Math.floor((milliseconds / 1000) % 60);
     const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
@@ -20,7 +21,7 @@ export function useQuizTimer(isRunning: boolean) {
     ].join(':');
   }, []);
 
-  // Animation frame callback
+  // Animation frame callback - optimized to use refs for better performance
   const animate = useCallback((time: number) => {
     if (previousTimeRef.current === null) {
       previousTimeRef.current = time;
@@ -31,38 +32,55 @@ export function useQuizTimer(isRunning: boolean) {
     previousTimeRef.current = time;
     
     if (!isPaused) {
-      setElapsedTime(prevTime => prevTime + deltaTime);
+      elapsedTimeRef.current += deltaTime;
+      setElapsedTime(elapsedTimeRef.current);
     }
     
     requestRef.current = requestAnimationFrame(animate);
   }, [isPaused]);
 
-  // Start/stop timer based on isRunning prop
+  // Start/stop timer based on isRunning prop - optimized with better cleanup
   useEffect(() => {
     if (isRunning && !isPaused) {
       requestRef.current = requestAnimationFrame(animate);
+      
+      return () => {
+        if (requestRef.current !== null) {
+          cancelAnimationFrame(requestRef.current);
+          requestRef.current = null;
+        }
+      };
     }
     
+    // Make sure to clean up on unmount even if not running
     return () => {
       if (requestRef.current !== null) {
         cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
       }
     };
   }, [isRunning, animate, isPaused]);
 
-  // Reset timer state
+  // Reset timer state - optimized to update refs directly
   const resetTimer = useCallback(() => {
     setElapsedTime(0);
+    elapsedTimeRef.current = 0;
     previousTimeRef.current = null;
     startTimeRef.current = null;
     pausedTimeRef.current = 0;
     setIsPaused(false);
+    
+    // Cancel any existing animation frame
+    if (requestRef.current !== null) {
+      cancelAnimationFrame(requestRef.current);
+      requestRef.current = null;
+    }
   }, []);
 
-  // Pause timer
+  // Pause timer - optimized
   const pauseTimer = useCallback(() => {
     if (!isPaused) {
-      pausedTimeRef.current = elapsedTime;
+      pausedTimeRef.current = elapsedTimeRef.current;
       setIsPaused(true);
       
       if (requestRef.current !== null) {
@@ -70,9 +88,9 @@ export function useQuizTimer(isRunning: boolean) {
         requestRef.current = null;
       }
     }
-  }, [elapsedTime, isPaused]);
+  }, [isPaused]);
 
-  // Resume timer
+  // Resume timer - optimized
   const resumeTimer = useCallback(() => {
     if (isPaused) {
       setIsPaused(false);

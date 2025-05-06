@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle } from 'lucide-react';
 
@@ -16,6 +16,65 @@ interface QuizCardProps {
   correctQuestions: number[];
   incorrectQuestions: number[];
 }
+
+// Memoized option button component to prevent unnecessary re-renders
+const QuizOptionButton = memo(({ 
+  option, 
+  index, 
+  selected, 
+  isAnswered, 
+  isCorrect, 
+  onClick 
+}: { 
+  option: string; 
+  index: number; 
+  selected: boolean; 
+  isAnswered: boolean; 
+  isCorrect: boolean;
+  onClick: () => void; 
+}) => {
+  const letterIndex = String.fromCharCode(65 + index);
+  
+  let className = `w-full text-left p-3 rounded-lg border transition-all `;
+  if (selected) {
+    if (isAnswered) {
+      className += isCorrect 
+        ? 'bg-green-500/10 border-green-500/30 dark:bg-green-500/5 dark:border-green-500/20 '
+        : 'bg-red-500/10 border-red-500/30 dark:bg-red-500/5 dark:border-red-500/20 ';
+    } else {
+      className += 'bg-primary/10 border-primary/30 dark:bg-primary/5 dark:border-primary/20 ';
+    }
+  } else if (isAnswered && isCorrect) {
+    className += 'bg-green-500/10 border-green-500/30 dark:bg-green-500/5 dark:border-green-500/20 ';
+  } else {
+    className += 'bg-background border-border hover:bg-muted/50 ';
+  }
+  
+  return (
+    <button
+      className={className}
+      onClick={onClick}
+      disabled={isAnswered}
+    >
+      <div className="flex items-start">
+        <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-muted/50 text-sm font-medium mr-3 mt-0.5">
+          {letterIndex}
+        </span>
+        <span className={`flex-1 text-${isAnswered && isCorrect ? 'green-600 dark:text-green-400' : 'foreground'}`}>
+          {option}
+        </span>
+        {isAnswered && selected && isCorrect && (
+          <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
+        )}
+        {isAnswered && selected && !isCorrect && (
+          <XCircle className="h-5 w-5 text-red-500 ml-2" />
+        )}
+      </div>
+    </button>
+  );
+});
+
+QuizOptionButton.displayName = 'QuizOptionButton';
 
 const QuizCard: React.FC<QuizCardProps> = ({
   question,
@@ -34,12 +93,13 @@ const QuizCard: React.FC<QuizCardProps> = ({
   const [isAnswered, setIsAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
-  const handleOptionSelect = (index: number) => {
+  // Memoized handlers to prevent unnecessary recreations
+  const handleOptionSelect = useCallback((index: number) => {
     if (isAnswered) return;
     setSelectedOption(index);
-  };
+  }, [isAnswered]);
 
-  const handleCheckAnswer = () => {
+  const handleCheckAnswer = useCallback(() => {
     if (selectedOption === null) return;
     
     const correct = selectedOption === correctAnswer;
@@ -51,9 +111,9 @@ const QuizCard: React.FC<QuizCardProps> = ({
     } else {
       incorrectQuestions.push(currentQuestion);
     }
-  };
+  }, [selectedOption, correctAnswer, correctQuestions, incorrectQuestions, currentQuestion]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setSelectedOption(null);
     setIsAnswered(false);
     setIsCorrect(false);
@@ -63,7 +123,10 @@ const QuizCard: React.FC<QuizCardProps> = ({
     } else {
       onNextQuestion();
     }
-  };
+  }, [isLastQuestion, onCompleted, correctQuestions, incorrectQuestions, onNextQuestion]);
+
+  // Calculate progress percentage
+  const progressPercentage = Math.max(0, Math.min(100, (currentQuestion / totalQuestions) * 100));
 
   return (
     <div className="bg-card dark:bg-darkBlue-900/50 rounded-xl shadow-md overflow-hidden">
@@ -75,7 +138,7 @@ const QuizCard: React.FC<QuizCardProps> = ({
           <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
             <div 
               className="h-full bg-primary"
-              style={{ width: `${(currentQuestion / totalQuestions) * 100}%` }}
+              style={{ width: `${progressPercentage}%` }}
             ></div>
           </div>
         </div>
@@ -84,37 +147,15 @@ const QuizCard: React.FC<QuizCardProps> = ({
         
         <div className="space-y-3 mb-6">
           {options.map((option, index) => (
-            <button
-              key={index}
-              className={`w-full text-left p-3 rounded-lg border transition-all ${
-                selectedOption === index 
-                  ? isAnswered 
-                    ? index === correctAnswer 
-                      ? 'bg-green-500/10 border-green-500/30 dark:bg-green-500/5 dark:border-green-500/20'
-                      : 'bg-red-500/10 border-red-500/30 dark:bg-red-500/5 dark:border-red-500/20'
-                    : 'bg-primary/10 border-primary/30 dark:bg-primary/5 dark:border-primary/20' 
-                  : isAnswered && index === correctAnswer
-                    ? 'bg-green-500/10 border-green-500/30 dark:bg-green-500/5 dark:border-green-500/20'
-                    : 'bg-background border-border hover:bg-muted/50'
-              }`}
+            <QuizOptionButton
+              key={`option-${index}`}
+              option={option}
+              index={index}
+              selected={selectedOption === index}
+              isAnswered={isAnswered}
+              isCorrect={index === correctAnswer}
               onClick={() => handleOptionSelect(index)}
-              disabled={isAnswered}
-            >
-              <div className="flex items-start">
-                <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-muted/50 text-sm font-medium mr-3 mt-0.5">
-                  {String.fromCharCode(65 + index)}
-                </span>
-                <span className={`flex-1 text-${isAnswered && index === correctAnswer ? 'green-600 dark:text-green-400' : 'foreground'}`}>
-                  {option}
-                </span>
-                {isAnswered && index === selectedOption && index === correctAnswer && (
-                  <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
-                )}
-                {isAnswered && index === selectedOption && index !== correctAnswer && (
-                  <XCircle className="h-5 w-5 text-red-500 ml-2" />
-                )}
-              </div>
-            </button>
+            />
           ))}
         </div>
         
@@ -157,4 +198,4 @@ const QuizCard: React.FC<QuizCardProps> = ({
   );
 };
 
-export default QuizCard;
+export default memo(QuizCard);
