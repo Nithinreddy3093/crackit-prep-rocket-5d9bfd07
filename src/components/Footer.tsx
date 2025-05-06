@@ -1,133 +1,90 @@
 
-import { Link } from "react-router-dom";
-import { Github, Linkedin } from "lucide-react";
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="bg-background border-t border-border">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <footer className="bg-darkBlue-900 py-12 border-t border-darkBlue-800">
+      <div className="container max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-              </div>
-              <span className="ml-2 text-xl font-bold text-foreground">Crackit</span>
-            </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Empowering students and professionals with comprehensive interview preparation tools and resources.
+          <div>
+            <h3 className="text-white font-bold mb-4">TechPrep</h3>
+            <p className="text-blue-300 mb-4">
+              Preparing the next generation of software engineers for technical interviews.
             </p>
-            <div className="mt-6 flex space-x-4">
-              <a 
-                href="https://www.linkedin.com/in/nithin-marthala/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                <span className="sr-only">LinkedIn</span>
-                <Linkedin className="h-6 w-6" />
+            <div className="flex space-x-4">
+              <a href="#" className="text-blue-400 hover:text-blue-300">
+                <i className="fab fa-twitter"></i>
               </a>
-              <a 
-                href="https://github.com/Nithinreddy3093" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-muted-foreground hover:text-primary transition-colors"
-              >
-                <span className="sr-only">GitHub</span>
-                <Github className="h-6 w-6" />
+              <a href="#" className="text-blue-400 hover:text-blue-300">
+                <i className="fab fa-linkedin"></i>
+              </a>
+              <a href="#" className="text-blue-400 hover:text-blue-300">
+                <i className="fab fa-github"></i>
               </a>
             </div>
           </div>
           
-          <div className="col-span-1">
-            <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">
-              Product
-            </h3>
-            <ul className="mt-4 space-y-2">
+          <div>
+            <h3 className="text-white font-bold mb-4">Company</h3>
+            <ul className="space-y-2">
               <li>
-                <Link to="/topics" className="text-sm text-muted-foreground hover:text-primary">
-                  Topics
-                </Link>
+                <Link to="/about" className="text-blue-400 hover:text-blue-300">About</Link>
               </li>
               <li>
-                <Link to="/companies" className="text-sm text-muted-foreground hover:text-primary">
-                  Companies
-                </Link>
+                <Link to="/features" className="text-blue-400 hover:text-blue-300">Features</Link>
               </li>
               <li>
-                <Link to="/features" className="text-sm text-muted-foreground hover:text-primary">
-                  Features
-                </Link>
+                <Link to="/pricing" className="text-blue-400 hover:text-blue-300">Pricing</Link>
               </li>
               <li>
-                <Link to="/pricing" className="text-sm text-muted-foreground hover:text-primary">
-                  Pricing
-                </Link>
+                <Link to="/careers" className="text-blue-400 hover:text-blue-300">Careers</Link>
+              </li>
+              <li>
+                <Link to="/contact" className="text-blue-400 hover:text-blue-300">Contact</Link>
               </li>
             </ul>
           </div>
           
-          <div className="col-span-1">
-            <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">
-              Resources
-            </h3>
-            <ul className="mt-4 space-y-2">
+          <div>
+            <h3 className="text-white font-bold mb-4">Resources</h3>
+            <ul className="space-y-2">
               <li>
-                <Link to="/blog" className="text-sm text-muted-foreground hover:text-primary">
-                  Blog
-                </Link>
+                <Link to="/guides" className="text-blue-400 hover:text-blue-300">Study Guides</Link>
               </li>
               <li>
-                <Link to="/guides" className="text-sm text-muted-foreground hover:text-primary">
-                  Study Guides
-                </Link>
+                <Link to="/blog" className="text-blue-400 hover:text-blue-300">Blog</Link>
               </li>
               <li>
-                <Link to="/faq" className="text-sm text-muted-foreground hover:text-primary">
-                  FAQs
-                </Link>
+                <Link to="/faq" className="text-blue-400 hover:text-blue-300">FAQ</Link>
               </li>
               <li>
-                <Link to="/support" className="text-sm text-muted-foreground hover:text-primary">
-                  Support
-                </Link>
+                <Link to="/companies" className="text-blue-400 hover:text-blue-300">Companies</Link>
+              </li>
+              <li>
+                <Link to="/support" className="text-blue-400 hover:text-blue-300">Support</Link>
               </li>
             </ul>
           </div>
           
-          <div className="col-span-1">
-            <h3 className="text-sm font-semibold text-foreground tracking-wider uppercase">
-              Company
-            </h3>
-            <ul className="mt-4 space-y-2">
+          <div>
+            <h3 className="text-white font-bold mb-4">Legal</h3>
+            <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-sm text-muted-foreground hover:text-primary">
-                  About Us
-                </Link>
+                <Link to="/terms" className="text-blue-400 hover:text-blue-300">Terms of Service</Link>
               </li>
               <li>
-                <Link to="/careers" className="text-sm text-muted-foreground hover:text-primary">
-                  Careers
-                </Link>
+                <Link to="/privacy" className="text-blue-400 hover:text-blue-300">Privacy Policy</Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary">
-                  Privacy
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary">
-                  Terms
-                </Link>
+                <Link to="/cookies" className="text-blue-400 hover:text-blue-300">Cookie Policy</Link>
               </li>
             </ul>
           </div>
         </div>
         
-        <div className="mt-12 border-t border-border pt-8">
-          <p className="text-sm text-muted-foreground text-center">
-            &copy; {new Date().getFullYear()} Crackit. All rights reserved.
-          </p>
+        <div className="border-t border-darkBlue-800 mt-8 pt-8 text-center">
+          <p className="text-blue-400">&copy; {new Date().getFullYear()} TechPrep. All rights reserved.</p>
         </div>
       </div>
     </footer>

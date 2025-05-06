@@ -19,12 +19,16 @@ import Dashboard from "./pages/Dashboard";
 import Resources from "./pages/Resources";
 import Companies from "./pages/Companies";
 import CompaniesList from "./pages/CompaniesList";
-import Quiz from "./pages/Quiz"; // This now imports from the refactored component
+import Quiz from "./pages/Quiz"; 
 import Blogs from "./pages/Blogs";
 import StudyGuides from "./pages/StudyGuides";
 import FAQ from "./pages/FAQ";
 import Support from "./pages/Support";
 import LogoAnimation from "./components/LogoAnimation";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Careers from "./pages/Careers";
+import Features from "./pages/Features";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,7 +98,11 @@ const App = () => {
                 <Route path="/topics" element={<Topics />} />
                 <Route path="/topics/:topicId" element={<Topics />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/features" element={<Features />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/careers" element={<Careers />} />
                 <Route path="/quiz" element={<Quiz />} />
                 <Route path="/quiz/:topicId" element={<Quiz />} />
                 <Route path="/resources" element={

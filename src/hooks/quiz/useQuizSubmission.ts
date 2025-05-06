@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
 import { updateUserPerformance } from "@/services/performance";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface QuizSubmissionData {
   userId: string;
@@ -24,8 +25,9 @@ export function useQuizSubmission() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const queryClient = useQueryClient();
 
-  const submitQuiz = async (quizData: QuizSubmissionData) => {
+  const submitQuiz = useCallback(async (quizData: QuizSubmissionData) => {
     try {
       if (isSubmitted) {
         toast({
@@ -102,6 +104,13 @@ export function useQuizSubmission() {
       
       setIsSubmitted(true);
       
+      // Invalidate and refetch all relevant queries to ensure dashboard is updated
+      queryClient.invalidateQueries({ queryKey: ['userPerformance'] });
+      queryClient.invalidateQueries({ queryKey: ['performanceHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['quizResults'] });
+      queryClient.invalidateQueries({ queryKey: ['topicScores'] });
+      queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] });
+      
       toast({
         title: "Quiz Submitted Successfully",
         description: `Your score of ${quizScore}% has been recorded.`,
@@ -111,7 +120,7 @@ export function useQuizSubmission() {
       // Navigate to dashboard after short delay to allow toast to be seen
       setTimeout(() => {
         navigate('/dashboard');
-      }, 2000);
+      }, 1500);
       
       return true;
     } catch (error: any) {
@@ -125,7 +134,7 @@ export function useQuizSubmission() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitted, navigate, queryClient]);
 
   return { submitQuiz, isSubmitting, isSubmitted };
 }

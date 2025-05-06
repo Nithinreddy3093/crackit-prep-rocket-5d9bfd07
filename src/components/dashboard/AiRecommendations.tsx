@@ -1,44 +1,41 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Brain, Target, BookOpen, ExternalLink, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { getSuggestedResources, getUserPerformance, getAIRecommendations } from '@/services/performance';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
 
 const AiRecommendations = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [weakTopics, setWeakTopics] = useState<string[]>([]);
-  const [resources, setResources] = useState<any[]>([]);
-  const [aiRecommendation, setAiRecommendation] = useState<string>("");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        if (user) {
-          const performance = await getUserPerformance(user.id);
-          if (performance) {
-            setWeakTopics(performance.weakTopics);
-          }
-          
-          const suggestedResources = await getSuggestedResources(user.id);
-          setResources(suggestedResources.slice(0, 2)); // Only show 2 resources
-          
-          const recommendation = await getAIRecommendations(user.id);
-          setAiRecommendation(recommendation);
-        }
-      } catch (error) {
-        console.error('Error fetching recommendations:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user]);
+  // Use React Query for optimal data fetching and caching
+  const { data: performance, isLoading: performanceLoading } = useQuery({
+    queryKey: ['userPerformance', user?.id],
+    queryFn: () => user ? getUserPerformance(user.id) : null,
+    enabled: !!user,
+    staleTime: 30000 // 30 seconds
+  });
+  
+  const { data: resources, isLoading: resourcesLoading } = useQuery({
+    queryKey: ['suggestedResources', user?.id],
+    queryFn: () => user ? getSuggestedResources(user.id) : [],
+    enabled: !!user,
+    staleTime: 30000
+  });
+  
+  const { data: aiRecommendation, isLoading: aiRecommendationLoading } = useQuery({
+    queryKey: ['aiRecommendations', user?.id],
+    queryFn: () => user ? getAIRecommendations(user.id) : "",
+    enabled: !!user,
+    staleTime: 30000
+  });
+  
+  const loading = performanceLoading || resourcesLoading || aiRecommendationLoading;
+  const weakTopics = performance?.weakTopics || [];
+  const displayResources = resources?.slice(0, 2) || [];
 
   const handleStartPractice = () => {
     toast({
@@ -89,7 +86,7 @@ const AiRecommendations = () => {
             AI Insight
           </h3>
           <p className="text-white/80 mt-2 text-sm">
-            {aiRecommendation}
+            {aiRecommendation || "Complete more quizzes to get personalized AI recommendations."}
           </p>
         </div>
       
@@ -143,8 +140,8 @@ const AiRecommendations = () => {
               </div>
             </div>
             <div className="space-y-3 mb-4">
-              {resources.length > 0 ? (
-                resources.map((resource, index) => (
+              {displayResources.length > 0 ? (
+                displayResources.map((resource, index) => (
                   <div key={index} className="flex items-start p-3 bg-darkBlue-700 rounded-lg hover:bg-darkBlue-600 transition-colors">
                     <div className="flex-1">
                       <p className="text-white text-sm font-medium">{resource.title}</p>
