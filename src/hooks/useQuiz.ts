@@ -7,7 +7,6 @@ import { generateUniqueQuestionsForSession } from "@/services/questionService";
 import { useQuestionManagement } from './quiz/useQuestionManagement';
 import { useTopicFetching } from './quiz/useTopicFetching';
 import { useQuizTimer } from './quiz/useQuizTimer';
-import { useQuizSubmission } from './quiz/useQuizSubmission';
 import { useQuizState } from './quiz/useQuizState';
 import { useQuizLocalStorage, QuizLocalStorageData } from './quiz/useQuizLocalStorage';
 import { useQuizActions } from './quiz/useQuizActions';
@@ -64,9 +63,9 @@ export function useQuiz(topicId: string | undefined) {
   // Store seen question IDs in localStorage whenever a quiz is completed
   useEffect(() => {
     if (quizCompleted) {
-      updateSeenQuestions();
+      updateSeenQuestions(questions);
     }
-  }, [quizCompleted, updateSeenQuestions]);
+  }, [quizCompleted, updateSeenQuestions, questions]);
 
   // Save quiz progress periodically
   useEffect(() => {
