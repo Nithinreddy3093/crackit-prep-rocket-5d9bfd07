@@ -92,7 +92,7 @@ export function useQuizActions(
     }
     
     // Calculate analytics
-    const analytics = calculateQuizAnalytics(questionDetails, correctAnswers, questions.length);
+    const analytics = calculateQuizAnalytics(questionDetails, correctAnswers, questions.length, elapsedTime);
     
     console.log('Quiz analytics:', analytics);
     

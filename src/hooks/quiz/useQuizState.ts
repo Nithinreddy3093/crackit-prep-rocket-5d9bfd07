@@ -1,26 +1,27 @@
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { generateUniqueQuestionsForSession } from "@/services/questionService";
-import { toast } from "@/components/ui/use-toast";
 
 export function useQuizState() {
-  const [quizCompleted, setQuizCompleted] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
-
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  
+  // Start the quiz
   const startQuiz = () => {
     setQuizStarted(true);
+    setQuizCompleted(false);
   };
-
+  
+  // Complete the quiz
   const completeQuiz = () => {
     setQuizCompleted(true);
   };
-
+  
+  // Reset the quiz state
   const resetQuiz = () => {
     setQuizStarted(false);
     setQuizCompleted(false);
   };
-
+  
   return {
     quizStarted,
     quizCompleted,

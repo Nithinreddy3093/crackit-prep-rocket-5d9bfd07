@@ -1,59 +1,85 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
-export function useQuizTimer(isActive: boolean) {
-  const [startTime, setStartTime] = useState(0);
+export function useQuizTimer(isRunning: boolean) {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const lastPauseTimeRef = useRef<number>(0);
+  const startTimeRef = useRef<number | null>(null);
+  const requestRef = useRef<number | null>(null);
+  const previousTimeRef = useRef<number | null>(null);
+  const pausedTimeRef = useRef<number>(0);
 
-  // Start the timer when quiz becomes active
-  useEffect(() => {
-    if (isActive) {
-      setStartTime(Date.now());
+  // Format milliseconds to mm:ss format
+  const formatTime = useCallback((milliseconds: number): string => {
+    const seconds = Math.floor((milliseconds / 1000) % 60);
+    const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
+    
+    return [
+      minutes.toString().padStart(2, '0'),
+      seconds.toString().padStart(2, '0')
+    ].join(':');
+  }, []);
+
+  // Animation frame callback
+  const animate = useCallback((time: number) => {
+    if (previousTimeRef.current === null) {
+      previousTimeRef.current = time;
+      startTimeRef.current = time;
     }
-  }, [isActive]);
-
-  // Update elapsed time
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    if (startTime > 0 && isActive && !isPaused) {
-      intervalId = setInterval(() => {
-        setElapsedTime(Date.now() - startTime);
-      }, 1000);
-    }
-    return () => clearInterval(intervalId);
-  }, [startTime, isActive, isPaused]);
-
-  // Format time in minutes:seconds
-  const formatTime = (ms: number) => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
-
-  const resetTimer = () => {
-    setStartTime(Date.now());
-    setElapsedTime(0);
-    setIsPaused(false);
-  };
-
-  const pauseTimer = () => {
+    
+    const deltaTime = time - previousTimeRef.current;
+    previousTimeRef.current = time;
+    
     if (!isPaused) {
-      lastPauseTimeRef.current = Date.now();
-      setIsPaused(true);
+      setElapsedTime(prevTime => prevTime + deltaTime);
     }
-  };
+    
+    requestRef.current = requestAnimationFrame(animate);
+  }, [isPaused]);
 
-  const resumeTimer = () => {
-    if (isPaused && lastPauseTimeRef.current > 0) {
-      // Adjust startTime to account for the pause duration
-      const pauseDuration = Date.now() - lastPauseTimeRef.current;
-      setStartTime(prevStartTime => prevStartTime + pauseDuration);
-      setIsPaused(false);
+  // Start/stop timer based on isRunning prop
+  useEffect(() => {
+    if (isRunning && !isPaused) {
+      requestRef.current = requestAnimationFrame(animate);
     }
-  };
+    
+    return () => {
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [isRunning, animate, isPaused]);
+
+  // Reset timer state
+  const resetTimer = useCallback(() => {
+    setElapsedTime(0);
+    previousTimeRef.current = null;
+    startTimeRef.current = null;
+    pausedTimeRef.current = 0;
+    setIsPaused(false);
+  }, []);
+
+  // Pause timer
+  const pauseTimer = useCallback(() => {
+    if (!isPaused) {
+      pausedTimeRef.current = elapsedTime;
+      setIsPaused(true);
+      
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+        requestRef.current = null;
+      }
+    }
+  }, [elapsedTime, isPaused]);
+
+  // Resume timer
+  const resumeTimer = useCallback(() => {
+    if (isPaused) {
+      setIsPaused(false);
+      previousTimeRef.current = null;
+      requestRef.current = requestAnimationFrame(animate);
+    }
+  }, [isPaused, animate]);
 
   return {
     elapsedTime,
