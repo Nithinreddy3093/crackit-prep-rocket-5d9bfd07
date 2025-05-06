@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +16,7 @@ import StrengthAreas from './performance-summary/StrengthAreas';
 import ImprovementAreas from './performance-summary/ImprovementAreas';
 import AISummary from './performance-summary/AISummary';
 
+// Use memo to prevent unnecessary re-renders
 const PerformanceSummary: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -188,4 +188,4 @@ const PerformanceSummary: React.FC = () => {
   );
 };
 
-export default PerformanceSummary;
+export default React.memo(PerformanceSummary);

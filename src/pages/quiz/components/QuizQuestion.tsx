@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Question } from '@/services/questionService';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,56 @@ interface QuizQuestionProps {
   topicTitle?: string;
 }
 
+// Memoized option component to reduce re-renders
+const QuizOption = memo(({ 
+  option, 
+  index, 
+  selected, 
+  isCorrect, 
+  isAnswered, 
+  correctAnswer,
+  onSelect 
+}: { 
+  option: string; 
+  index: number; 
+  selected: boolean; 
+  isCorrect: boolean | null; 
+  isAnswered: boolean;
+  correctAnswer: string;
+  onSelect: () => void;
+}) => {
+  return (
+    <div 
+      onClick={!isAnswered ? onSelect : undefined}
+      className={`
+        p-4 rounded-lg border transition-all ${!isAnswered ? 'cursor-pointer hover:bg-white/5 hover:border-white/30' : 'cursor-default'}
+        ${selected && isCorrect === true ? 'bg-green-500/20 border-green-500/50' : ''}
+        ${selected && isCorrect === false ? 'bg-red-500/20 border-red-500/50' : ''}
+        ${!selected && option === correctAnswer && isAnswered ? 'bg-green-500/10 border-green-500/30' : ''}
+        ${!selected && isAnswered ? 'opacity-50' : 'border-white/10 bg-white/5'}
+      `}
+    >
+      <div className="flex items-center">
+        <div className={`
+          w-6 h-6 rounded-full mr-3 flex items-center justify-center text-xs
+          ${selected ? 'bg-white/20' : 'bg-darkBlue-800/70'}
+        `}>
+          {String.fromCharCode(65 + index)}
+        </div>
+        <div className="flex-grow">{option}</div>
+        {isAnswered && (
+          <div className="ml-2">
+            {option === correctAnswer ? 
+              <CheckCircle className="h-5 w-5 text-green-400" /> : 
+              (selected ? <AlertCircle className="h-5 w-5 text-red-400" /> : null)
+            }
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
 const QuizQuestion: React.FC<QuizQuestionProps> = ({
   currentQuestion,
   currentIndex,
@@ -28,8 +78,41 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
   topicTitle
 }) => {
   const isAnswered = selectedAnswer !== null;
-  const isCorrect = isAnswered && currentQuestion.options[selectedAnswer] === currentQuestion.correctAnswer;
+  const isCorrect = isAnswered && currentQuestion?.options[selectedAnswer] === currentQuestion?.correctAnswer;
   
+  // Compute progress once
+  const progressPercentage = useMemo(() => 
+    Math.floor(((currentIndex) / totalQuestions) * 100), 
+    [currentIndex, totalQuestions]
+  );
+
+  // Memoize feedback message
+  const feedbackMessage = useMemo(() => {
+    if (!isAnswered) return null;
+    return (
+      <div className={`p-4 rounded-lg ${isCorrect ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
+        <div className="font-semibold mb-2 flex items-center">
+          {isCorrect ? 
+            <><CheckCircle className="h-4 w-4 mr-2 text-green-400" /> Correct!</> : 
+            <><AlertCircle className="h-4 w-4 mr-2 text-red-400" /> Incorrect</>
+          }
+        </div>
+        <p className="text-sm text-white/80">
+          {currentQuestion?.explanation || 
+            (isCorrect ? 
+              "Great job! That's the right answer." : 
+              `The correct answer is "${currentQuestion?.correctAnswer}".`
+            )
+          }
+        </p>
+      </div>
+    );
+  }, [isAnswered, isCorrect, currentQuestion]);
+
+  if (!currentQuestion) {
+    return null;
+  }
+
   return (
     <div className="glass-card p-6 space-y-6 animate-fade-in">
       {/* Header with topic and timer */}
@@ -48,12 +131,12 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
       <div className="space-y-2">
         <div className="flex justify-between items-center text-white/80 text-sm">
           <span>Question {currentIndex + 1} of {totalQuestions}</span>
-          <span>{Math.floor(((currentIndex) / totalQuestions) * 100)}% Complete</span>
+          <span>{progressPercentage}% Complete</span>
         </div>
         <div className="w-full bg-darkBlue-800/50 rounded-full h-2">
           <div 
             className="bg-primary h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${Math.floor(((currentIndex) / totalQuestions) * 100)}%` }}
+            style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
       </div>
@@ -61,64 +144,29 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
       {/* Question */}
       <div className="space-y-2">
         <h3 className="text-xl font-semibold text-white">{currentQuestion.text}</h3>
-        <div className="text-white/70 text-sm">{currentQuestion.explanation}</div>
+        {currentQuestion.explanation && (
+          <div className="text-white/70 text-sm">{currentQuestion.explanation}</div>
+        )}
       </div>
       
       {/* Answer options */}
       <div className="space-y-3">
         {currentQuestion.options.map((option, index) => (
-          <div 
+          <QuizOption
             key={index}
-            onClick={() => !isAnswered && onAnswerSelect(index)}
-            className={`
-              p-4 rounded-lg border transition-all cursor-pointer
-              ${isAnswered ? 'cursor-default' : 'hover:bg-white/5 hover:border-white/30'}
-              ${selectedAnswer === index && isCorrect ? 'bg-green-500/20 border-green-500/50' : ''}
-              ${selectedAnswer === index && !isCorrect ? 'bg-red-500/20 border-red-500/50' : ''}
-              ${selectedAnswer !== index && option === currentQuestion.correctAnswer && isAnswered ? 'bg-green-500/10 border-green-500/30' : ''}
-              ${selectedAnswer !== index && isAnswered ? 'opacity-50' : 'border-white/10 bg-white/5'}
-            `}
-          >
-            <div className="flex items-center">
-              <div className={`
-                w-6 h-6 rounded-full mr-3 flex items-center justify-center text-xs
-                ${selectedAnswer === index ? 'bg-white/20' : 'bg-darkBlue-800/70'}
-              `}>
-                {String.fromCharCode(65 + index)}
-              </div>
-              <div className="flex-grow">{option}</div>
-              {isAnswered && (
-                <div className="ml-2">
-                  {option === currentQuestion.correctAnswer ? 
-                    <CheckCircle className="h-5 w-5 text-green-400" /> : 
-                    (selectedAnswer === index ? <AlertCircle className="h-5 w-5 text-red-400" /> : null)
-                  }
-                </div>
-              )}
-            </div>
-          </div>
+            option={option}
+            index={index}
+            selected={selectedAnswer === index}
+            isCorrect={isAnswered ? option === currentQuestion.correctAnswer : null}
+            isAnswered={isAnswered}
+            correctAnswer={currentQuestion.correctAnswer}
+            onSelect={() => onAnswerSelect(index)}
+          />
         ))}
       </div>
       
       {/* Feedback and next button */}
-      {isAnswered && (
-        <div className={`p-4 rounded-lg ${isCorrect ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
-          <div className="font-semibold mb-2 flex items-center">
-            {isCorrect ? 
-              <><CheckCircle className="h-4 w-4 mr-2 text-green-400" /> Correct!</> : 
-              <><AlertCircle className="h-4 w-4 mr-2 text-red-400" /> Incorrect</>
-            }
-          </div>
-          <p className="text-sm text-white/80">
-            {currentQuestion.explanation || 
-              (isCorrect ? 
-                "Great job! That's the right answer." : 
-                `The correct answer is "${currentQuestion.correctAnswer}".`
-              )
-            }
-          </p>
-        </div>
-      )}
+      {feedbackMessage}
       
       <div className="flex justify-between pt-4">
         <div className="text-sm text-white/60">
@@ -136,4 +184,4 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
   );
 };
 
-export default QuizQuestion;
+export default memo(QuizQuestion);

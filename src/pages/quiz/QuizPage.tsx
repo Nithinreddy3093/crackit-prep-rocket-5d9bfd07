@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuiz } from "@/hooks/useQuiz";
 import Navbar from '@/components/Navbar';
@@ -17,9 +17,71 @@ const QuizPage = () => {
   const navigate = useNavigate();
   const quiz = useQuiz(topicId);
   
-  const handleBackToTopics = () => {
+  const handleBackToTopics = useCallback(() => {
     navigate('/topics');
-  };
+  }, [navigate]);
+  
+  const renderContent = useMemo(() => {
+    if (!quiz.quizStarted) {
+      return (
+        <QuizIntro 
+          topic={quiz.currentTopic?.title || "General Knowledge"}
+          questionCount={quiz.questions.length}
+          onStartQuiz={quiz.startQuiz}
+          isLoading={quiz.isLoading}
+          seenQuestions={quiz.seenQuestionIds.length}
+        />
+      );
+    }
+    
+    if (quiz.quizCompleted) {
+      return (
+        <QuizResults 
+          correctAnswers={quiz.correctAnswers}
+          totalQuestions={quiz.questions.length}
+          elapsedTime={quiz.elapsedTime}
+          topicTitle={quiz.currentTopic?.title}
+          formatTime={quiz.formatTime}
+          onRestart={quiz.handleRestartQuiz}
+          onSubmit={quiz.handleSubmitQuiz}
+          questionDetails={quiz.questionDetails}
+        />
+      );
+    }
+    
+    return (
+      <QuizQuestion 
+        currentQuestion={quiz.currentQuestion}
+        currentIndex={quiz.currentQuestionIndex}
+        totalQuestions={quiz.questions.length}
+        selectedAnswer={quiz.selectedAnswer}
+        onAnswerSelect={quiz.handleAnswerSelect}
+        onNextQuestion={quiz.goToNextQuestion}
+        elapsedTime={quiz.elapsedTime}
+        formatTime={quiz.formatTime}
+        topicTitle={quiz.currentTopic?.title}
+      />
+    );
+  }, [
+    quiz.quizStarted,
+    quiz.quizCompleted,
+    quiz.currentTopic?.title,
+    quiz.questions.length,
+    quiz.startQuiz,
+    quiz.isLoading,
+    quiz.seenQuestionIds.length,
+    quiz.correctAnswers,
+    quiz.elapsedTime,
+    quiz.formatTime,
+    quiz.handleRestartQuiz,
+    quiz.handleSubmitQuiz,
+    quiz.questionDetails,
+    quiz.currentQuestion,
+    quiz.currentQuestionIndex,
+    quiz.selectedAnswer,
+    quiz.handleAnswerSelect,
+    quiz.goToNextQuestion
+  ]);
   
   if (quiz.isLoading) {
     return <LoadingState />;
@@ -48,38 +110,7 @@ const QuizPage = () => {
             Back to Topics
           </Button>
           
-          {!quiz.quizStarted ? (
-            <QuizIntro 
-              topic={quiz.currentTopic?.title || "General Knowledge"}
-              questionCount={quiz.questions.length}
-              onStartQuiz={quiz.startQuiz}
-              isLoading={quiz.isLoading}
-              seenQuestions={quiz.seenQuestionIds.length}
-            />
-          ) : quiz.quizCompleted ? (
-            <QuizResults 
-              correctAnswers={quiz.correctAnswers}
-              totalQuestions={quiz.questions.length}
-              elapsedTime={quiz.elapsedTime}
-              topicTitle={quiz.currentTopic?.title}
-              formatTime={quiz.formatTime}
-              onRestart={quiz.handleRestartQuiz}
-              onSubmit={quiz.handleSubmitQuiz}
-              questionDetails={quiz.questionDetails}
-            />
-          ) : (
-            <QuizQuestion 
-              currentQuestion={quiz.currentQuestion}
-              currentIndex={quiz.currentQuestionIndex}
-              totalQuestions={quiz.questions.length}
-              selectedAnswer={quiz.selectedAnswer}
-              onAnswerSelect={quiz.handleAnswerSelect}
-              onNextQuestion={quiz.goToNextQuestion}
-              elapsedTime={quiz.elapsedTime}
-              formatTime={quiz.formatTime}
-              topicTitle={quiz.currentTopic?.title}
-            />
-          )}
+          {renderContent}
         </div>
       </main>
       <Footer />
