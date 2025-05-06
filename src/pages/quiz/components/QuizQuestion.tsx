@@ -1,5 +1,5 @@
 
-import React, { memo, useMemo, useCallback } from 'react';
+import React, { memo, useMemo, useCallback, useState, useEffect } from 'react';
 import { Question } from '@/services/questionService';
 import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,9 +57,16 @@ const QuizOption = memo(({
     `w-6 h-6 rounded-full mr-3 flex items-center justify-center text-xs ${selected ? 'bg-white/20' : 'bg-darkBlue-800/70'}`,
     [selected]
   );
+  
+  // Use a callback for the onClick handler to prevent recreation
+  const handleClick = useCallback(() => {
+    if (!isAnswered) {
+      onSelect();
+    }
+  }, [isAnswered, onSelect]);
 
   return (
-    <div onClick={!isAnswered ? onSelect : undefined} className={classes}>
+    <div onClick={handleClick} className={classes}>
       <div className="flex items-center">
         <div className={optionLetterClass}>
           {String.fromCharCode(65 + index)}
@@ -78,6 +85,8 @@ const QuizOption = memo(({
   );
 });
 
+QuizOption.displayName = 'QuizOption';
+
 // Prevent unnecessary re-renders by wrapping the component
 const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
   currentQuestion,
@@ -90,6 +99,31 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
   formatTime,
   topicTitle
 }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [animateIn, setAnimateIn] = useState(false);
+  
+  useEffect(() => {
+    // Mark component as loaded after mount
+    setIsLoaded(true);
+    
+    // Add slight delay to trigger animation
+    const timer = setTimeout(() => {
+      setAnimateIn(true);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  useEffect(() => {
+    // Reset animation state when question changes
+    setAnimateIn(false);
+    const timer = setTimeout(() => {
+      setAnimateIn(true);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [currentQuestion?.id]);
+  
   const isAnswered = selectedAnswer !== null;
   const isCorrect = useMemo(() => 
     isAnswered && currentQuestion?.options[selectedAnswer] === currentQuestion?.correctAnswer,
@@ -140,11 +174,15 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
   }, [isAnswered, isCorrect, currentQuestion]);
 
   if (!currentQuestion) {
-    return null;
+    return <div className="min-h-[400px] flex items-center justify-center">
+      <div className="text-white/60">Loading question...</div>
+    </div>;
   }
   
+  const animationClass = !isLoaded ? "" : (animateIn ? "animate-fade-in" : "opacity-0");
+  
   return (
-    <div className="glass-card p-6 space-y-6 animate-fade-in">
+    <div className={`glass-card p-6 space-y-6 transition-opacity duration-300 ${animationClass}`}>
       {/* Header with topic and timer */}
       <div className="flex justify-between items-center">
         <div className="text-white">
@@ -183,7 +221,7 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
       <div className="space-y-3">
         {currentQuestion.options.map((option, index) => (
           <QuizOption
-            key={index}
+            key={`${currentQuestion.id}-option-${index}`}
             option={option}
             index={index}
             selected={selectedAnswer === index}

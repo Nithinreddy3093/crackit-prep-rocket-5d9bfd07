@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 
 const LoadingState: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center">
+    <div className="min-h-[400px] flex flex-col items-center justify-center animate-fade-in">
       <div className="relative">
         <div className="w-16 h-16 rounded-full border-4 border-primary/30 animate-spin"></div>
         <div className="absolute inset-0 flex items-center justify-center">

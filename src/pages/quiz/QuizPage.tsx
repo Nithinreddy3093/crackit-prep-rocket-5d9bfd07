@@ -1,5 +1,5 @@
 
-import React, { useCallback, useMemo, Suspense, lazy } from 'react';
+import React, { useCallback, useMemo, Suspense, lazy, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuiz } from "@/hooks/useQuiz";
 import Navbar from '@/components/Navbar';
@@ -9,6 +9,7 @@ import ErrorState from './components/ErrorState';
 import QuizIntro from '@/components/quiz/QuizIntro';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { toast } from "@/components/ui/use-toast";
 
 // Lazy load components for better initial loading performance
 const QuizQuestion = lazy(() => import('./components/QuizQuestion'));
@@ -17,15 +18,35 @@ const QuizResults = lazy(() => import('./components/QuizResults'));
 const QuizPage = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const quiz = useQuiz(topicId);
   
+  // Handle initial loading state
+  useEffect(() => {
+    if (!quiz.isLoading && isInitialLoad) {
+      setIsInitialLoad(false);
+    }
+  }, [quiz.isLoading, isInitialLoad]);
+  
+  useEffect(() => {
+    // Show error toast when quiz fails to load
+    if (quiz.error && !isInitialLoad) {
+      toast({
+        title: "Error loading quiz",
+        description: (quiz.error as Error).message || "Failed to load quiz",
+        variant: "destructive",
+      });
+    }
+  }, [quiz.error, isInitialLoad]);
+
   const handleBackToTopics = useCallback(() => {
     navigate('/topics');
   }, [navigate]);
   
   // Memoize content to prevent unnecessary re-renders
   const renderContent = useMemo(() => {
-    if (quiz.isLoading) {
+    // Early return for initial loading state to prevent flickering
+    if (isInitialLoad || (quiz.isLoading && quiz.questions.length === 0)) {
       return <LoadingState />;
     }
     
@@ -83,6 +104,7 @@ const QuizPage = () => {
       </Suspense>
     );
   }, [
+    isInitialLoad,
     quiz.isLoading,
     quiz.error,
     quiz.quizStarted,
@@ -103,11 +125,6 @@ const QuizPage = () => {
     quiz.handleAnswerSelect,
     quiz.goToNextQuestion
   ]);
-
-  // Early return for loading state to avoid unnecessary renders
-  if (quiz.isLoading) {
-    return <LoadingState />;
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">

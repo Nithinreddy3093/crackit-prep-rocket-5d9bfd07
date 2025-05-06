@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   ArrowRight,
@@ -7,7 +7,8 @@ import {
   CheckCircle,
   XCircle,
   Undo2,
-  Send
+  Send,
+  Loader2
 } from 'lucide-react';
 import {
   Accordion,
@@ -15,6 +16,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { toast } from "@/components/ui/use-toast";
 
 interface QuestionDetail {
   questionId: string;
@@ -31,7 +33,7 @@ interface QuizResultsProps {
   topicTitle?: string;
   formatTime: (ms: number) => string;
   onRestart: () => void;
-  onSubmit: () => void;
+  onSubmit: () => Promise<any>;
   questionDetails?: QuestionDetail[];
 }
 
@@ -47,6 +49,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   
   // Memoize calculations to prevent recalculations on each render
   const percentage = useMemo(() => 
@@ -95,22 +98,50 @@ const QuizResults: React.FC<QuizResultsProps> = ({
     };
     
     // Store in localStorage to persist across navigation/refresh
-    localStorage.setItem('lastQuizResults', JSON.stringify(quizResultsData));
+    try {
+      localStorage.setItem('lastQuizResults', JSON.stringify(quizResultsData));
+    } catch (error) {
+      console.error('Error saving quiz results to localStorage:', error);
+    }
   }, [correctAnswers, totalQuestions, elapsedTime, topicTitle, questionDetails, analytics]);
   
-  const handleSubmit = async () => {
+  // Check if quiz was already submitted 
+  useEffect(() => {
+    const checkSubmissionStatus = () => {
+      const submitStatus = localStorage.getItem(`quiz_submitted_${topicTitle}`);
+      if (submitStatus === 'true') {
+        setIsSubmitted(true);
+      }
+    };
+    
+    checkSubmissionStatus();
+  }, [topicTitle]);
+  
+  const handleSubmit = useCallback(async () => {
+    if (isSubmitting || isSubmitted) return;
+    
     setIsSubmitting(true);
+    setSubmitError(null);
+    
     try {
       await onSubmit();
       setIsSubmitted(true);
+      localStorage.setItem(`quiz_submitted_${topicTitle}`, 'true');
+      
       // Clear from localStorage after successful submission
       localStorage.removeItem('lastQuizResults');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting quiz:', error);
+      setSubmitError(error.message || 'Failed to submit quiz. Please try again.');
+      toast({
+        title: "Error submitting quiz",
+        description: error.message || "Failed to submit the quiz. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, isSubmitted, onSubmit, topicTitle]);
   
   // Memoize performance feedback text
   const performanceFeedback = useMemo(() => {
@@ -135,6 +166,12 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         {isSubmitted && (
           <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm">
             <CheckCircle className="w-3 h-3 mr-1" /> Results saved to your profile
+          </div>
+        )}
+        
+        {submitError && (
+          <div className="mt-2 inline-flex items-center px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm">
+            <XCircle className="w-3 h-3 mr-1" /> {submitError}
           </div>
         )}
       </div>
@@ -223,12 +260,12 @@ const QuizResults: React.FC<QuizResultsProps> = ({
         </div>
       </div>
       
-      {/* Question review - using virtualization for better performance */}
+      {/* Question review with limited display for better performance */}
       {questionDetails && questionDetails.length > 0 && (
         <div className="bg-darkBlue-800/20 p-4 rounded-xl">
           <h3 className="text-lg font-medium text-white mb-3">Question Review</h3>
           <Accordion type="single" collapsible className="text-white">
-            {questionDetails.slice(0, 15).map((detail, index) => (
+            {questionDetails.slice(0, 10).map((detail, index) => (
               <AccordionItem key={`question-${detail.questionId}-${index}`} value={`question-${index}`}>
                 <AccordionTrigger className="py-3 hover:bg-darkBlue-800/30 px-3 rounded-md">
                   <div className="flex items-center text-left">
@@ -262,6 +299,11 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 </AccordionContent>
               </AccordionItem>
             ))}
+            {questionDetails.length > 10 && (
+              <div className="text-sm text-center mt-2 text-white/60">
+                Showing 10 of {questionDetails.length} questions
+              </div>
+            )}
           </Accordion>
         </div>
       )}
@@ -283,9 +325,15 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           className="bg-primary hover:bg-primary/90"
         >
           {isSubmitting ? (
-            <>Processing...</>
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
           ) : isSubmitted ? (
-            <>Results Saved</>
+            <>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Results Saved
+            </>
           ) : (
             <>
               <Send className="mr-2 h-4 w-4" />

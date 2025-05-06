@@ -9,6 +9,7 @@ export function useQuizTimer(isRunning: boolean) {
   const previousTimeRef = useRef<number | null>(null);
   const pausedTimeRef = useRef<number>(0);
   const elapsedTimeRef = useRef<number>(0);
+  const isUnmountingRef = useRef<boolean>(false);
 
   // Format milliseconds to mm:ss format - memoized to avoid recreations
   const formatTime = useCallback((milliseconds: number): string => {
@@ -23,6 +24,8 @@ export function useQuizTimer(isRunning: boolean) {
 
   // Animation frame callback - optimized to use refs for better performance
   const animate = useCallback((time: number) => {
+    if (isUnmountingRef.current) return;
+    
     if (previousTimeRef.current === null) {
       previousTimeRef.current = time;
       startTimeRef.current = time;
@@ -36,23 +39,27 @@ export function useQuizTimer(isRunning: boolean) {
       setElapsedTime(elapsedTimeRef.current);
     }
     
-    requestRef.current = requestAnimationFrame(animate);
-  }, [isPaused]);
+    // If we're still running and not unmounted, continue the animation
+    if (isRunning && !isPaused && !isUnmountingRef.current) {
+      requestRef.current = requestAnimationFrame(animate);
+    }
+  }, [isPaused, isRunning]);
 
   // Start/stop timer based on isRunning prop - optimized with better cleanup
   useEffect(() => {
-    if (isRunning && !isPaused) {
-      requestRef.current = requestAnimationFrame(animate);
+    if (isRunning && !isPaused && !isUnmountingRef.current) {
+      // Cancel any existing animation frame before starting a new one
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
       
-      return () => {
-        if (requestRef.current !== null) {
-          cancelAnimationFrame(requestRef.current);
-          requestRef.current = null;
-        }
-      };
+      requestRef.current = requestAnimationFrame(animate);
+    } else if (requestRef.current !== null) {
+      cancelAnimationFrame(requestRef.current);
+      requestRef.current = null;
     }
     
-    // Make sure to clean up on unmount even if not running
+    // Make sure to clean up on unmount
     return () => {
       if (requestRef.current !== null) {
         cancelAnimationFrame(requestRef.current);
@@ -60,6 +67,13 @@ export function useQuizTimer(isRunning: boolean) {
       }
     };
   }, [isRunning, animate, isPaused]);
+  
+  // Set unmouting flag when component unmounts
+  useEffect(() => {
+    return () => {
+      isUnmountingRef.current = true;
+    };
+  }, []);
 
   // Reset timer state - optimized to update refs directly
   const resetTimer = useCallback(() => {
@@ -92,9 +106,14 @@ export function useQuizTimer(isRunning: boolean) {
 
   // Resume timer - optimized
   const resumeTimer = useCallback(() => {
-    if (isPaused) {
+    if (isPaused && !isUnmountingRef.current) {
       setIsPaused(false);
       previousTimeRef.current = null;
+      
+      if (requestRef.current !== null) {
+        cancelAnimationFrame(requestRef.current);
+      }
+      
       requestRef.current = requestAnimationFrame(animate);
     }
   }, [isPaused, animate]);
@@ -104,6 +123,7 @@ export function useQuizTimer(isRunning: boolean) {
     formatTime,
     resetTimer,
     pauseTimer,
-    resumeTimer
+    resumeTimer,
+    isPaused
   };
 }
