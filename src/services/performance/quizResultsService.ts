@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 // Define the QuizResult type that matches our Supabase table
 export interface QuizResult {
@@ -23,7 +24,7 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
       .from('quiz_results')
       .select('*')
       .eq('user_id', userId)
-      .order('submitted_at', { ascending: false });
+      .order('date', { ascending: false });
 
     if (error) {
       console.error('Error fetching quiz results:', error);
@@ -36,10 +37,10 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
       user_id: item.user_id,
       topic: item.topic,
       score: item.score,
-      total_questions: item.total_questions || 0,
-      correct_answers: item.correct_answers || 0,
-      incorrect_answers: item.incorrect_answers || 0,
-      skipped_questions: item.skipped_questions || 0,
+      total_questions: 0, // Default values since these columns don't exist in the DB
+      correct_answers: 0,
+      incorrect_answers: 0,
+      skipped_questions: 0,
       accuracy: item.score, // Using score as accuracy since they're equivalent
       completion_time: item.completion_time || 0,
       submitted_at: item.date
@@ -57,7 +58,7 @@ export const getRecentQuizResults = async (userId: string, limit: number = 5): P
       .from('quiz_results')
       .select('*')
       .eq('user_id', userId)
-      .order('submitted_at', { ascending: false })
+      .order('date', { ascending: false })
       .limit(limit);
 
     if (error) {
@@ -71,10 +72,10 @@ export const getRecentQuizResults = async (userId: string, limit: number = 5): P
       user_id: item.user_id,
       topic: item.topic,
       score: item.score,
-      total_questions: item.total_questions || 0,
-      correct_answers: item.correct_answers || 0,
-      incorrect_answers: item.incorrect_answers || 0,
-      skipped_questions: item.skipped_questions || 0,
+      total_questions: 0, // Default values since these columns don't exist in the DB
+      correct_answers: 0,
+      incorrect_answers: 0,
+      skipped_questions: 0,
       accuracy: item.score, // Using score as accuracy since they're equivalent
       completion_time: item.completion_time || 0,
       submitted_at: item.date
