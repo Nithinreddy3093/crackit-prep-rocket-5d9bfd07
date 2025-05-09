@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
+import { submitQuizResult } from "@/services/performance/quizResultsService";
 import { updateUserPerformance } from "@/services/performance";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from '@tanstack/react-query';
@@ -60,40 +61,29 @@ export function useQuizSubmission() {
       const skipped = questionDetails?.filter(q => q.userAnswer === '').length || 0;
       const incorrect = questionDetails?.filter(q => !q.isCorrect && q.userAnswer !== '').length || 0;
       
-      // Prepare analytics data
-      const analyticsData = {
-        correct: correctAnswers,
-        incorrect: incorrect,
-        skipped: skipped,
+      // Create detailed quiz result record
+      const quizResult = {
+        user_id: userId,
+        topic: quizTopic,
+        score: quizScore,
+        total_questions: totalQuestions,
+        correct_answers: correctAnswers,
+        incorrect_answers: incorrect,
+        skipped_questions: skipped,
         accuracy: quizScore,
-        timePerQuestion: Math.round(completionTime / totalQuestions),
+        completion_time: completionTime
       };
       
-      console.log('Submitting quiz results:', {
-        quizTopic,
-        quizScore,
-        completionTime,
-        analyticsData
-      });
+      console.log('Submitting quiz result:', quizResult);
       
-      // Save detailed quiz results
-      const { error: quizResultError } = await supabase
-        .from('quiz_results')
-        .insert({
-          user_id: userId,
-          topic: quizTopic,
-          score: quizScore,
-          completion_time: completionTime,
-          question_details: questionDetails || [],
-          date: new Date().toISOString()
-        });
+      // Submit to quiz_results table
+      const submitted = await submitQuizResult(quizResult);
       
-      if (quizResultError) {
-        console.error("Error saving quiz details:", quizResultError);
-        throw new Error(`Failed to save quiz results: ${quizResultError.message}`);
+      if (!submitted) {
+        throw new Error("Failed to save quiz results to database");
       }
       
-      // Update the user's performance metrics in Supabase
+      // Also update the user's performance metrics in Supabase
       const performanceData = await updateUserPerformance(userId, quizTopic, quizScore, completionTime);
       
       console.log('Updated performance data:', performanceData);
@@ -113,6 +103,7 @@ export function useQuizSubmission() {
         queryClient.invalidateQueries({ queryKey: ['topicScores'] }),
         queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] }),
         queryClient.invalidateQueries({ queryKey: ['userActivities'] }),
+        queryClient.invalidateQueries({ queryKey: ['userBadges'] })
       ]);
       
       toast({

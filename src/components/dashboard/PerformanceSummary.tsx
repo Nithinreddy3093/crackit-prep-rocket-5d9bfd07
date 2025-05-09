@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { Clock, CheckCircle, LineChart, Award } from 'lucide-react';
@@ -9,20 +9,20 @@ import {
   getUserPerformance, 
   getPerformanceHistory, 
   getAIRecommendations, 
-  getRecentQuizDetails 
 } from '@/services/performance';
+import { getRecentQuizResults } from '@/services/performance/quizResultsService'; 
 
 // Import custom components
 import StatCard from './performance-summary/StatCard';
 import StrengthAreas from './performance-summary/StrengthAreas';
 import ImprovementAreas from './performance-summary/ImprovementAreas';
 import AISummary from './performance-summary/AISummary';
+import QuizResultSummary from './QuizResultSummary';
 
 interface PerformanceSummaryProps {
   forceRefresh?: boolean;
 }
 
-// Use memo to prevent unnecessary re-renders
 const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh }) => {
   const { user } = useAuth();
   const [quizzesTaken, setQuizzesTaken] = useState(0);
@@ -55,9 +55,9 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh })
     staleTime: 30000
   });
 
-  const { data: recentQuizDetails, isLoading: quizDetailsLoading, refetch: refetchQuizDetails } = useQuery({
+  const { data: recentQuizResults, isLoading: quizResultsLoading, refetch: refetchQuizResults } = useQuery({
     queryKey: ['quizResults', user?.id],
-    queryFn: () => user ? getRecentQuizDetails(user.id) : [],
+    queryFn: () => user ? getRecentQuizResults(user.id, 1) : [],
     enabled: !!user,
     staleTime: 30000
   });
@@ -80,15 +80,16 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh })
           refetchPerformance(),
           refetchHistory(),
           refetchAiSummary(),
-          refetchQuizDetails()
+          refetchQuizResults()
         ]);
       };
       
       refreshData();
     }
-  }, [forceRefresh, user, queryClient, refetchPerformance, refetchHistory, refetchAiSummary, refetchQuizDetails]);
+  }, [forceRefresh, user, queryClient, refetchPerformance, refetchHistory, refetchAiSummary, refetchQuizResults]);
   
-  const isLoading = performanceLoading || historyLoading || aiSummaryLoading || quizDetailsLoading;
+  const isLoading = performanceLoading || historyLoading || aiSummaryLoading || quizResultsLoading;
+  const latestQuiz = recentQuizResults && recentQuizResults.length > 0 ? recentQuizResults[0] : null;
 
   // Process data whenever it changes
   useEffect(() => {
@@ -125,53 +126,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh })
     }
   }, [history]);
 
-  // Process quiz details
-  useEffect(() => {
-    if (recentQuizDetails && recentQuizDetails.length > 0) {
-      // Process quiz details to find strengths and weaknesses
-      const topicStats: Record<string, { correct: number; total: number }> = {};
-      
-      recentQuizDetails.forEach(quiz => {
-        if (!quiz.question_details) return;
-        
-        (quiz.question_details as any[]).forEach((detail: any) => {
-          let topic = quiz.topic;
-          
-          // Try to extract topic from questionId if available
-          if (detail.questionId && detail.questionId.includes('-')) {
-            topic = detail.questionId.split('-')[0]; // Assuming format like "dsa-1"
-          }
-          
-          if (!topicStats[topic]) {
-            topicStats[topic] = { correct: 0, total: 0 };
-          }
-          
-          topicStats[topic].total += 1;
-          if (detail.isCorrect) {
-            topicStats[topic].correct += 1;
-          }
-        });
-      });
-      
-      // Sort topics by accuracy
-      const sortedTopics = Object.entries(topicStats)
-        .map(([topic, stats]) => ({
-          topic,
-          accuracy: stats.total > 0 ? (stats.correct / stats.total) * 100 : 0
-        }))
-        .sort((a, b) => b.accuracy - a.accuracy);
-      
-      // Set strengths (top 2) and weaknesses (bottom 2) if we have enough data
-      if (sortedTopics.length > 0) {
-        setStrengthAreas(sortedTopics.slice(0, Math.min(2, sortedTopics.length)).map(t => t.topic.toUpperCase()));
-        if (sortedTopics.length > 1) {
-          setImprovementAreas(sortedTopics.slice(-Math.min(2, sortedTopics.length)).map(t => t.topic.toUpperCase()));
-        }
-      }
-    }
-  }, [recentQuizDetails]);
-
-  const formatTime = useCallback((seconds: number): string => {
+  const formatTime = (seconds: number): string => {
     if (seconds === 0) return 'N/A';
     
     const minutes = Math.floor(seconds / 60);
@@ -182,7 +137,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh })
     }
     
     return `${minutes} min ${remainingSeconds} sec`;
-  }, []);
+  };
 
   return (
     <Card className="bg-darkBlue-800 border-darkBlue-700">
@@ -235,14 +190,19 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh })
             )}
           </div>
         </div>
-        
-        {/* Performance Insights */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Strengths */}
-          <StrengthAreas areas={strengthAreas} loading={isLoading} />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Latest Quiz Result */}
+          <QuizResultSummary latestQuiz={latestQuiz} loading={isLoading} />
           
-          {/* Areas to Improve */}
-          <ImprovementAreas areas={improvementAreas} loading={isLoading} />
+          {/* Performance Insights */}
+          <div className="space-y-4">
+            {/* Strengths */}
+            <StrengthAreas areas={strengthAreas} loading={isLoading} />
+            
+            {/* Areas to Improve */}
+            <ImprovementAreas areas={improvementAreas} loading={isLoading} />
+          </div>
         </div>
         
         {/* AI Summary */}
@@ -252,4 +212,4 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh })
   );
 };
 
-export default React.memo(PerformanceSummary);
+export default PerformanceSummary;

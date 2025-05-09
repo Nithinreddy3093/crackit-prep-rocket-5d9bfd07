@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import RecentActivity, { ActivityItem } from '@/components/dashboard/RecentActivity';
 import UpcomingQuizzes from '@/components/dashboard/UpcomingQuizzes';
 import AiRecommendations from '@/components/dashboard/AiRecommendations';
-import PopularTopics from '@/components/dashboard/PopularTopics';
 import PerformanceSummary from '@/components/dashboard/PerformanceSummary';
 
 interface OverviewTabProps {
@@ -93,14 +92,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ activities, isLoading, setAct
           AI Recommendations
         </h3>
         <AiRecommendations forceRefresh={forceRefresh} />
-      </div>
-
-      <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
-        <h3 className="section-title">
-          <Trophy className="section-icon" />
-          Popular Topics
-        </h3>
-        <PopularTopics />
       </div>
     </>
   );
