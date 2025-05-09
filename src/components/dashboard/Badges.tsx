@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { Code, Database, Cpu, Brain, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { getUserBadges } from '@/services/performance/badgeService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface BadgeType {
   id: string;
@@ -14,16 +14,27 @@ export interface BadgeType {
   earnedDate?: string;
 }
 
-const Badges: React.FC = () => {
+interface BadgesProps {
+  forceRefresh?: boolean;
+}
+
+const Badges: React.FC<BadgesProps> = ({ forceRefresh }) => {
   const { user } = useAuth();
   const [badges, setBadges] = useState<BadgeType[]>([]);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchBadges = async () => {
       try {
         setLoading(true);
         if (user) {
+          // Force refresh the cache if needed
+          if (forceRefresh) {
+            console.log('Forcing refresh of badges data');
+            await queryClient.invalidateQueries({ queryKey: ['userBadges'] });
+          }
+          
           const userBadges = await getUserBadges(user.id);
           
           // Add some default badges if none exist
@@ -70,7 +81,7 @@ const Badges: React.FC = () => {
     };
 
     fetchBadges();
-  }, [user]);
+  }, [user, forceRefresh, queryClient]);
 
   // Helper function to get the appropriate icon
   const getIconComponent = (iconName: string) => {
