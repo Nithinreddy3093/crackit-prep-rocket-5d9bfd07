@@ -1,7 +1,12 @@
 
 // Export services without the types to avoid ambiguity
 export * from './userPerformanceService';
-export * from './quizResultsService';
+export { 
+  getUserQuizResults, 
+  getRecentQuizResults, 
+  submitQuizResult,
+  getQuizPerformanceByTopic 
+} from './quizResultsService';
 export * from './learningResourcesService';
 export * from './aiRecommendationsService';
 export * from './badgeService';

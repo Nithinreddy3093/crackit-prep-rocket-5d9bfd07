@@ -30,8 +30,20 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
       return [];
     }
 
-    // Ensure returned data matches the QuizResult interface
-    return (data || []) as QuizResult[];
+    // Transform the data to match the QuizResult interface
+    return (data || []).map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      topic: item.topic,
+      score: item.score,
+      total_questions: item.total_questions || 0,
+      correct_answers: item.correct_answers || 0,
+      incorrect_answers: item.incorrect_answers || 0,
+      skipped_questions: item.skipped_questions || 0,
+      accuracy: item.score, // Using score as accuracy since they're equivalent
+      completion_time: item.completion_time || 0,
+      submitted_at: item.date
+    }));
   } catch (error) {
     console.error('Error in getUserQuizResults:', error);
     return [];
@@ -53,8 +65,20 @@ export const getRecentQuizResults = async (userId: string, limit: number = 5): P
       return [];
     }
 
-    // Ensure returned data matches the QuizResult interface
-    return (data || []) as QuizResult[];
+    // Transform the data to match the QuizResult interface
+    return (data || []).map(item => ({
+      id: item.id,
+      user_id: item.user_id,
+      topic: item.topic,
+      score: item.score,
+      total_questions: item.total_questions || 0,
+      correct_answers: item.correct_answers || 0,
+      incorrect_answers: item.incorrect_answers || 0,
+      skipped_questions: item.skipped_questions || 0,
+      accuracy: item.score, // Using score as accuracy since they're equivalent
+      completion_time: item.completion_time || 0,
+      submitted_at: item.date
+    }));
   } catch (error) {
     console.error('Error in getRecentQuizResults:', error);
     return [];
@@ -85,7 +109,7 @@ export const getQuizPerformanceByTopic = async (userId: string): Promise<Record<
   try {
     const { data, error } = await supabase
       .from('quiz_results')
-      .select('topic, accuracy')
+      .select('topic, score')
       .eq('user_id', userId);
 
     if (error) {
@@ -102,7 +126,7 @@ export const getQuizPerformanceByTopic = async (userId: string): Promise<Record<
           topicPerformance[item.topic] = { accuracy: 0, attempts: 0 };
         }
         
-        topicPerformance[item.topic].accuracy += item.accuracy;
+        topicPerformance[item.topic].accuracy += item.score;
         topicPerformance[item.topic].attempts += 1;
       });
       
