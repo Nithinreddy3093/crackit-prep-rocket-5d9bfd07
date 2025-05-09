@@ -1,322 +1,275 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Book, FileText, Download, Monitor, Brain, Clock, CheckCircle, BookOpen } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/components/ui/use-toast';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { BookOpen, Code, Database, Cpu, Search, Download, BookOpenCheck } from 'lucide-react';
 
 interface StudyGuide {
   id: string;
   title: string;
   description: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  pages: number;
-  downloadUrl: string;
   category: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  pageCount: number;
+  format: 'PDF' | 'EPUB' | 'HTML';
+  icon: React.ReactNode;
 }
 
-const studyGuidesMock: StudyGuide[] = [
+const studyGuides: StudyGuide[] = [
   {
-    id: 'dsa-101',
+    id: 'guide-1',
     title: 'Data Structures & Algorithms Fundamentals',
-    description: 'A comprehensive guide covering all basic data structures and algorithms concepts with examples and practice problems.',
-    difficulty: 'Beginner',
-    pages: 65,
-    downloadUrl: '#',
-    category: 'DSA'
+    description: 'A comprehensive guide covering arrays, linked lists, trees, graphs, sorting, and searching algorithms with examples.',
+    category: 'DSA',
+    difficulty: 'beginner',
+    pageCount: 45,
+    format: 'PDF',
+    icon: <Code className="h-6 w-6" />
   },
   {
-    id: 'dbms-basics',
-    title: 'Database Management Systems',
-    description: 'Learn the core concepts of database design, normalization, SQL queries, and transaction management.',
-    difficulty: 'Intermediate',
-    pages: 48,
-    downloadUrl: '#',
-    category: 'DBMS'
+    id: 'guide-2',
+    title: 'Advanced Data Structures & Algorithms',
+    description: 'Dive into complex algorithms, dynamic programming, and algorithmic design techniques for technical interviews.',
+    category: 'DSA',
+    difficulty: 'advanced',
+    pageCount: 68,
+    format: 'PDF',
+    icon: <Code className="h-6 w-6" />
   },
   {
-    id: 'os-concepts',
-    title: 'Operating Systems Core Concepts',
-    description: 'Understand process management, memory management, file systems and other essential OS topics.',
-    difficulty: 'Intermediate',
-    pages: 72,
-    downloadUrl: '#',
-    category: 'OS'
+    id: 'guide-3',
+    title: 'Database Systems: SQL & NoSQL',
+    description: 'Master relational databases, learn SQL query optimization, and understand NoSQL database concepts.',
+    category: 'Databases',
+    difficulty: 'intermediate',
+    pageCount: 52,
+    format: 'PDF',
+    icon: <Database className="h-6 w-6" />
   },
   {
-    id: 'advanced-algos',
-    title: 'Advanced Algorithms & Problem Solving',
-    description: 'Deep dive into complex algorithms, optimization techniques, and advanced problem-solving strategies.',
-    difficulty: 'Advanced',
-    pages: 85,
-    downloadUrl: '#',
-    category: 'DSA'
+    id: 'guide-4',
+    title: 'Operating Systems Concepts',
+    description: 'Understand process management, memory management, file systems, and synchronization techniques.',
+    category: 'OS',
+    difficulty: 'intermediate',
+    pageCount: 60,
+    format: 'PDF',
+    icon: <Cpu className="h-6 w-6" />
   },
   {
-    id: 'ai-ml-basics',
-    title: 'AI & Machine Learning Fundamentals',
-    description: 'Introduction to AI concepts, machine learning algorithms, neural networks, and practical applications.',
-    difficulty: 'Intermediate',
-    pages: 56,
-    downloadUrl: '#',
-    category: 'AI'
-  }
+    id: 'guide-5',
+    title: 'System Design Interview Guide',
+    description: 'Learn how to approach system design questions, with examples of commonly asked interview scenarios.',
+    category: 'System Design',
+    difficulty: 'advanced',
+    pageCount: 75,
+    format: 'PDF',
+    icon: <BookOpen className="h-6 w-6" />
+  },
+  {
+    id: 'guide-6',
+    title: 'Web Development Fundamentals',
+    description: 'Cover HTML, CSS, JavaScript, and modern frameworks with examples for front-end interviews.',
+    category: 'Web Dev',
+    difficulty: 'beginner',
+    pageCount: 48,
+    format: 'PDF',
+    icon: <Code className="h-6 w-6" />
+  },
+  {
+    id: 'guide-7',
+    title: 'Machine Learning Concepts',
+    description: 'Understand ML algorithms, neural networks, and common ML interview questions with examples.',
+    category: 'ML',
+    difficulty: 'advanced',
+    pageCount: 82,
+    format: 'PDF',
+    icon: <BookOpen className="h-6 w-6" />
+  },
+  {
+    id: 'guide-8',
+    title: 'Object-Oriented Programming',
+    description: 'Master OOP principles, design patterns, and best practices for software engineering interviews.',
+    category: 'Programming',
+    difficulty: 'intermediate',
+    pageCount: 55,
+    format: 'PDF',
+    icon: <Code className="h-6 w-6" />
+  },
 ];
 
-const StudyGuides: React.FC = () => {
-  const [guides, setGuides] = useState<StudyGuide[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [loading, setLoading] = useState<boolean>(true);
+const StudyGuides = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
+
+  // Get all unique categories
+  const categories = Array.from(new Set(studyGuides.map(guide => guide.category)));
   
-  useEffect(() => {
-    // Simulate API fetch with a delay
-    const timer = setTimeout(() => {
-      setGuides(studyGuidesMock);
-      setLoading(false);
-    }, 1000);
+  // Filter guides based on search query, category and difficulty
+  const filteredGuides = studyGuides.filter(guide => {
+    const matchesSearch = guide.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          guide.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory ? guide.category === selectedCategory : true;
+    const matchesDifficulty = selectedDifficulty ? guide.difficulty === selectedDifficulty : true;
     
-    return () => clearTimeout(timer);
-  }, []);
-  
-  const filteredGuides = activeCategory === 'all' 
-    ? guides 
-    : guides.filter(guide => guide.category.toLowerCase() === activeCategory.toLowerCase());
-  
-  const handleDownload = (guide: StudyGuide) => {
-    toast({
-      title: 'Download Started',
-      description: `Your study guide "${guide.title}" is downloading.`,
-    });
+    return matchesSearch && matchesCategory && matchesDifficulty;
+  });
+
+  const handleDownload = (guideId: string) => {
+    alert(`Downloading guide ${guideId}`);
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(selectedCategory === category ? null : category);
+  };
+
+  const handleDifficultyClick = (difficulty: string) => {
+    setSelectedDifficulty(selectedDifficulty === difficulty ? null : difficulty);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
       <Navbar />
       
-      <main className="container max-w-7xl mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Study Guides & Learning Resources
-          </h1>
+          <div className="inline-flex p-3 rounded-full bg-primary/10 mb-4">
+            <BookOpenCheck className="h-8 w-8 text-primary" />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Study Guides</h1>
           <p className="text-blue-200 max-w-2xl mx-auto">
-            Comprehensive study materials to help you master key concepts and ace your technical interviews.
-            Download, study offline, and track your progress.
+            Access our comprehensive collection of study guides to prepare for technical interviews.
+            Each guide is carefully crafted by industry experts to help you succeed.
           </p>
         </div>
         
-        <Tabs defaultValue="all" className="w-full mb-12" onValueChange={setActiveCategory}>
-          <div className="flex justify-center mb-8">
-            <TabsList className="bg-darkBlue-800/50 border border-darkBlue-700">
-              <TabsTrigger value="all" className="data-[state=active]:bg-primary/20">
-                All Guides
-              </TabsTrigger>
-              <TabsTrigger value="dsa" className="data-[state=active]:bg-primary/20">
-                DSA
-              </TabsTrigger>
-              <TabsTrigger value="dbms" className="data-[state=active]:bg-primary/20">
-                DBMS
-              </TabsTrigger>
-              <TabsTrigger value="os" className="data-[state=active]:bg-primary/20">
-                OS
-              </TabsTrigger>
-              <TabsTrigger value="ai" className="data-[state=active]:bg-primary/20">
-                AI & ML
-              </TabsTrigger>
-            </TabsList>
+        {/* Search and Filter */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input
+                placeholder="Search study guides..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-darkBlue-700/50 border-darkBlue-600"
+              />
+            </div>
+            <Button 
+              variant={!selectedCategory && !selectedDifficulty && !searchQuery ? "default" : "outline"}
+              className={!selectedCategory && !selectedDifficulty && !searchQuery ? "bg-primary" : "border-primary/50 text-primary"}
+              onClick={() => {
+                setSelectedCategory(null);
+                setSelectedDifficulty(null);
+                setSearchQuery('');
+              }}
+            >
+              Clear Filters
+            </Button>
           </div>
           
-          <TabsContent value="all" className="mt-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {loading ? (
-                Array(6).fill(0).map((_, index) => (
-                  <Card key={index} className="bg-darkBlue-800 border-darkBlue-700">
-                    <CardHeader>
-                      <Skeleton className="h-6 w-3/4 bg-darkBlue-600 mb-2" />
-                      <Skeleton className="h-4 w-1/2 bg-darkBlue-600" />
-                    </CardHeader>
-                    <CardContent>
-                      <Skeleton className="h-20 w-full bg-darkBlue-600 mb-4" />
-                      <Skeleton className="h-10 w-full bg-darkBlue-600" />
-                    </CardContent>
-                  </Card>
-                ))
-              ) : filteredGuides.length > 0 ? (
-                filteredGuides.map((guide) => (
-                  <StudyGuideCard 
-                    key={guide.id} 
-                    guide={guide} 
-                    onDownload={() => handleDownload(guide)} 
-                  />
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-12">
-                  <BookOpen className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                  <h3 className="text-xl text-white">No study guides found</h3>
-                  <p className="text-gray-400 mt-2">
-                    There are no study guides available for this category yet.
-                  </p>
-                </div>
-              )}
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-white/80 mb-2">Categories</h3>
+              <div className="flex flex-wrap gap-2">
+                {categories.map(category => (
+                  <Badge
+                    key={category}
+                    className={`cursor-pointer ${selectedCategory === category ? 
+                      'bg-primary text-white' : 
+                      'bg-darkBlue-700 text-white/70 hover:text-white border border-darkBlue-600'}`}
+                    onClick={() => handleCategoryClick(category)}
+                  >
+                    {category}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </TabsContent>
-          
-          {['dsa', 'dbms', 'os', 'ai'].map(category => (
-            <TabsContent key={category} value={category} className="mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loading ? (
-                  Array(2).fill(0).map((_, index) => (
-                    <Card key={index} className="bg-darkBlue-800 border-darkBlue-700">
-                      <CardHeader>
-                        <Skeleton className="h-6 w-3/4 bg-darkBlue-600 mb-2" />
-                        <Skeleton className="h-4 w-1/2 bg-darkBlue-600" />
-                      </CardHeader>
-                      <CardContent>
-                        <Skeleton className="h-20 w-full bg-darkBlue-600 mb-4" />
-                        <Skeleton className="h-10 w-full bg-darkBlue-600" />
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : filteredGuides.length > 0 ? (
-                  filteredGuides.map((guide) => (
-                    <StudyGuideCard 
-                      key={guide.id} 
-                      guide={guide} 
-                      onDownload={() => handleDownload(guide)} 
-                    />
-                  ))
-                ) : (
-                  <div className="col-span-3 text-center py-12">
-                    <BookOpen className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                    <h3 className="text-xl text-white">No study guides found</h3>
-                    <p className="text-gray-400 mt-2">
-                      There are no study guides available for this category yet.
-                    </p>
-                  </div>
-                )}
+            
+            <div>
+              <h3 className="text-sm font-medium text-white/80 mb-2">Difficulty</h3>
+              <div className="flex flex-wrap gap-2">
+                {['beginner', 'intermediate', 'advanced'].map(difficulty => (
+                  <Badge
+                    key={difficulty}
+                    className={`cursor-pointer ${selectedDifficulty === difficulty ? 
+                      'bg-primary text-white' : 
+                      'bg-darkBlue-700 text-white/70 hover:text-white border border-darkBlue-600'}`}
+                    onClick={() => handleDifficultyClick(difficulty)}
+                  >
+                    {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+                  </Badge>
+                ))}
               </div>
-            </TabsContent>
-          ))}
-        </Tabs>
-        
-        <div className="max-w-3xl mx-auto mb-16">
-          <Card className="bg-darkBlue-800 border-darkBlue-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-2xl text-white flex items-center">
-                <Brain className="h-6 w-6 text-primary mr-2" />
-                Why Use Our Study Guides?
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-white">Expert-Crafted Content</h4>
-                    <p className="text-sm text-gray-400">Created by industry professionals with years of experience</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-white">Regularly Updated</h4>
-                    <p className="text-sm text-gray-400">All materials are reviewed and updated quarterly</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-white">Practice Problems</h4>
-                    <p className="text-sm text-gray-400">Each guide includes practice problems with solutions</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-white">Interview Focus</h4>
-                    <p className="text-sm text-gray-400">Designed to prepare you for technical interviews</p>
-                  </div>
-                </div>
-              </div>
-              
-              <Button 
-                variant="default" 
-                className="w-full"
-              >
-                Subscribe for Premium Access
-              </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
+        
+        {/* Study Guides Grid */}
+        {filteredGuides.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredGuides.map((guide) => (
+              <Card key={guide.id} className="bg-darkBlue-800/50 border-darkBlue-700 backdrop-blur-sm overflow-hidden hover:border-primary/30 transition-all">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="bg-primary/10 p-3 rounded-lg">
+                      {guide.icon}
+                    </div>
+                    <Badge className={`
+                      ${guide.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
+                        guide.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 
+                        'bg-red-500/20 text-red-400 border-red-500/30'}
+                    `}>
+                      {guide.difficulty.charAt(0).toUpperCase() + guide.difficulty.slice(1)}
+                    </Badge>
+                  </div>
+                  
+                  <h3 className="text-lg font-semibold text-white mb-2">{guide.title}</h3>
+                  <p className="text-gray-300 text-sm mb-4 line-clamp-3">{guide.description}</p>
+                  
+                  <div className="flex items-center justify-between text-sm text-white/60">
+                    <div className="flex items-center">
+                      <Badge variant="outline" className="bg-transparent border-white/20">
+                        {guide.category}
+                      </Badge>
+                    </div>
+                    <div>
+                      {guide.pageCount} pages • {guide.format}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-darkBlue-700/50 border-t border-darkBlue-600">
+                  <Button 
+                    onClick={() => handleDownload(guide.id)}
+                    className="w-full"
+                    variant="default"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Guide
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-darkBlue-800/50 backdrop-blur-sm border border-darkBlue-700 rounded-xl">
+            <BookOpen className="h-12 w-12 text-white/30 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-white mb-2">No Study Guides Found</h2>
+            <p className="text-white/70 max-w-md mx-auto">
+              We couldn't find any study guides matching your search criteria. Try adjusting your filters or search term.
+            </p>
+          </div>
+        )}
       </main>
       
       <Footer />
     </div>
-  );
-};
-
-interface StudyGuideCardProps {
-  guide: StudyGuide;
-  onDownload: () => void;
-}
-
-const StudyGuideCard: React.FC<StudyGuideCardProps> = ({ guide, onDownload }) => {
-  const difficultyColor = {
-    'Beginner': 'bg-green-500',
-    'Intermediate': 'bg-yellow-500',
-    'Advanced': 'bg-red-500',
-  }[guide.difficulty];
-  
-  return (
-    <Card className="bg-darkBlue-800 border-darkBlue-700 hover:border-primary/50 transition-colors">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <div>
-            <span className={`inline-block px-2 py-1 text-xs rounded-md text-white ${difficultyColor} mb-2`}>
-              {guide.difficulty}
-            </span>
-            <CardTitle className="text-lg text-white">{guide.title}</CardTitle>
-          </div>
-          <Book className="h-6 w-6 text-primary" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-gray-400 text-sm mb-4 h-16 overflow-hidden">{guide.description}</p>
-        
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center text-gray-400 text-xs">
-            <FileText className="h-4 w-4 mr-1" />
-            {guide.pages} pages
-          </div>
-          <div className="flex items-center text-gray-400 text-xs">
-            <Clock className="h-4 w-4 mr-1" />
-            {Math.round(guide.pages / 10)} hrs read time
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="border-darkBlue-700 hover:bg-darkBlue-700"
-          >
-            <Monitor className="h-4 w-4 mr-2" />
-            Preview
-          </Button>
-          <Button 
-            variant="default" 
-            size="sm"
-            onClick={onDownload}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 

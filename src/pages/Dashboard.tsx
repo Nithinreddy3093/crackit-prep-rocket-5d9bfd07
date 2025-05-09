@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from "@/components/ui/use-toast";
 import { Layout, BarChart3, BookMarked, Trophy } from 'lucide-react';
 import { getPerformanceHistory } from '@/services/performance/userPerformanceService';
+import { useLocation } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 // Import dashboard tab content components
 import OverviewTab from '@/components/dashboard/tabs/OverviewTab';
@@ -29,60 +31,69 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  
+  const { data: activities, isLoading, refetch } = useQuery({
+    queryKey: ['userActivities', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      try {
+        const history = await getPerformanceHistory(user.id);
+        return history.map((item, index) => ({
+          id: index + 1,
+          type: 'quiz' as const,
+          name: `${item.topic} Quiz`,
+          score: `${item.score}/100`,
+          date: item.date,
+          topic: item.topic.split(' ')[0]
+        }));
+      } catch (error) {
+        console.error('Error fetching activities:', error);
+        return [];
+      }
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Effect to handle refreshed data flag from location state after quiz submission
+  useEffect(() => {
+    if (location.state?.refreshData) {
+      console.log('Refreshing dashboard data after quiz submission');
+      queryClient.invalidateQueries({ queryKey: ['userPerformance'] });
+      queryClient.invalidateQueries({ queryKey: ['performanceHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['quizResults'] });
+      queryClient.invalidateQueries({ queryKey: ['topicScores'] });
+      queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] });
+      queryClient.invalidateQueries({ queryKey: ['userActivities'] });
+      refetch();
+      
+      // Clear the state to avoid unnecessary refreshes
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, queryClient, refetch]);
+
+  useEffect(() => {
+    if (activities) {
+      setRecentActivities(activities);
+    }
+  }, [activities]);
 
   useEffect(() => {
     // Only show welcome toast once per session
     const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
-    if (!hasSeenWelcome) {
+    if (!hasSeenWelcome && user) {
       setTimeout(() => {
         toast({
-          title: `Welcome back, ${user?.name}!`,
+          title: `Welcome back, ${user.name}!`,
           description: "Your dashboard has been updated with new features.",
           variant: "default",
         });
         sessionStorage.setItem('hasSeenWelcome', 'true');
       }, 1000);
     }
-
-    // Fetch real activity data
-    const fetchActivities = async () => {
-      if (user) {
-        try {
-          setIsLoading(true);
-          const history = await getPerformanceHistory(user.id);
-          
-          // Convert to activity items with proper type casting
-          const activities: ActivityItem[] = history.map((item, index) => ({
-            id: index + 1,
-            type: 'quiz' as const, // Explicitly type as 'quiz'
-            name: `${item.topic} Quiz`,
-            score: `${item.score}/100`,
-            date: item.date,
-            topic: item.topic.split(' ')[0] // Just use the first word as shorthand
-          }));
-          
-          setRecentActivities(activities);
-        } catch (error) {
-          console.error('Error fetching activities:', error);
-          // Use mock data as fallback with proper typing
-          setRecentActivities(mockRecentActivities);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-    
-    fetchActivities();
   }, [user]);
-
-  // Mock data as fallbacks with proper typing
-  const mockRecentActivities: ActivityItem[] = [
-    { id: 1, type: 'quiz', name: 'Data Structures Quiz', score: '8/10', date: '2025-04-10', topic: 'DSA' },
-    { id: 2, type: 'resource', name: 'Database Normalization Article', date: '2025-04-08', topic: 'DBMS' },
-    { id: 3, type: 'quiz', name: 'Operating Systems Quiz', score: '7/10', date: '2025-04-05', topic: 'OS' },
-    { id: 4, type: 'resource', name: 'Algorithm Complexity Video', date: '2025-04-03', topic: 'DSA' },
-  ];
 
   // Shared data for different tabs
   const sharedProps = {

@@ -101,15 +101,16 @@ export function useQuizSubmission() {
       // Clear any stored in-progress quiz data
       localStorage.removeItem('inProgressQuiz');
       localStorage.removeItem(`quiz_progress_${quizTopic}`);
+      localStorage.removeItem('lastQuizResults');
       
       setIsSubmitted(true);
       
-      // Invalidate and refetch all relevant queries to ensure dashboard is updated
-      queryClient.invalidateQueries({ queryKey: ['userPerformance'] });
-      queryClient.invalidateQueries({ queryKey: ['performanceHistory'] });
-      queryClient.invalidateQueries({ queryKey: ['quizResults'] });
-      queryClient.invalidateQueries({ queryKey: ['topicScores'] });
-      queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] });
+      // Force invalidate and refetch all relevant queries to ensure dashboard is updated
+      await queryClient.invalidateQueries({ queryKey: ['userPerformance'] });
+      await queryClient.invalidateQueries({ queryKey: ['performanceHistory'] });
+      await queryClient.invalidateQueries({ queryKey: ['quizResults'] });
+      await queryClient.invalidateQueries({ queryKey: ['topicScores'] });
+      await queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] });
       
       toast({
         title: "Quiz Submitted Successfully",
@@ -119,7 +120,7 @@ export function useQuizSubmission() {
       
       // Navigate to dashboard after short delay to allow toast to be seen
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/dashboard', { state: { refreshData: true } });
       }, 1500);
       
       return true;

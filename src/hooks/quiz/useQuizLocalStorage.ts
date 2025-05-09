@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from "@/components/ui/use-toast";
 
 export interface QuizLocalStorageData {
@@ -24,8 +24,14 @@ export function useQuizLocalStorage(
   quizCompleted: boolean,
   startQuiz: () => void
 ) {
+  const hasCheckedStorage = useRef(false);
+
   // Check if there's a saved quiz in localStorage to restore
   useEffect(() => {
+    // Prevent multiple checks/toasts during re-renders
+    if (hasCheckedStorage.current) return;
+    hasCheckedStorage.current = true;
+
     const savedResults = localStorage.getItem('lastQuizResults');
     if (savedResults && quizCompleted) {
       try {
@@ -46,17 +52,22 @@ export function useQuizLocalStorage(
       try {
         const quizData = JSON.parse(inProgressQuiz);
         if (quizData.topicId === topicId) {
+          // Show toast only once
           toast({
             title: "Quiz in Progress",
             description: "Continuing your in-progress quiz.",
             variant: "default",
           });
           
-          // Automatically start the quiz
+          // Automatically start the quiz after a short delay
           setTimeout(() => startQuiz(), 500);
+        } else {
+          // Clear if topic doesn't match
+          localStorage.removeItem('inProgressQuiz');
         }
       } catch (error) {
         console.error('Error parsing in-progress quiz:', error);
+        localStorage.removeItem('inProgressQuiz');
       }
     }
   }, [quizStarted, quizCompleted, topicId, startQuiz]);
@@ -79,6 +90,7 @@ export function useQuizLocalStorage(
 
   const saveSubmittedQuizStatus = (topicId: string | undefined) => {
     localStorage.removeItem('lastQuizResults');
+    localStorage.removeItem('inProgressQuiz');
     localStorage.setItem('lastSubmittedQuiz', JSON.stringify({
       topicId,
       timestamp: new Date().toISOString()

@@ -29,6 +29,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Careers from "./pages/Careers";
 import Features from "./pages/Features";
+import CookiePolicy from "./pages/CookiePolicy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -103,6 +104,7 @@ const App = () => {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/careers" element={<Careers />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/quiz" element={<Quiz />} />
                 <Route path="/quiz/:topicId" element={<Quiz />} />
                 <Route path="/resources" element={

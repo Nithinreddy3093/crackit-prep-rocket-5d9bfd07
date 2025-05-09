@@ -13,13 +13,13 @@ const Footer = () => {
               Preparing the next generation of software engineers for technical interviews.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-blue-400 hover:text-blue-300">
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
                 <i className="fab fa-twitter"></i>
               </a>
-              <a href="#" className="text-blue-400 hover:text-blue-300">
+              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
                 <i className="fab fa-linkedin"></i>
               </a>
-              <a href="#" className="text-blue-400 hover:text-blue-300">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
                 <i className="fab fa-github"></i>
               </a>
             </div>
@@ -41,7 +41,7 @@ const Footer = () => {
                 <Link to="/careers" className="text-blue-400 hover:text-blue-300">Careers</Link>
               </li>
               <li>
-                <Link to="/contact" className="text-blue-400 hover:text-blue-300">Contact</Link>
+                <Link to="/support" className="text-blue-400 hover:text-blue-300">Contact</Link>
               </li>
             </ul>
           </div>
