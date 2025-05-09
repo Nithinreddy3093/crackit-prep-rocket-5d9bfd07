@@ -102,11 +102,6 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
           <Progress
             value={score}
             className="h-2 bg-darkBlue-700"
-            // Fix: remove indicatorClassName as it's not supported
-            // Use a style or another approach instead
-            style={{
-              '--progress-background': score >= 70 ? 'bg-green-500' : score >= 40 ? 'bg-amber-500' : 'bg-red-500'
-            } as React.CSSProperties}
           />
         </div>
         
@@ -144,7 +139,6 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
           </div>
         </div>
         
-        {/* Fix: Remove duplicate className attribute and combine into one */}
         <div className={`py-3 px-4 rounded-lg text-sm border ${
           score >= 70 
             ? 'bg-green-500/10 border-green-500/30 text-green-400' 
