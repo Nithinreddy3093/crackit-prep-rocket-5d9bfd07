@@ -31,6 +31,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
+  const [forceRefresh, setForceRefresh] = useState(false);
   const location = useLocation();
   const queryClient = useQueryClient();
   
@@ -46,7 +47,7 @@ const Dashboard = () => {
           name: `${item.topic} Quiz`,
           score: `${item.score}/100`,
           date: item.date,
-          topic: item.topic.split(' ')[0]
+          topic: item.topic
         }));
       } catch (error) {
         console.error('Error fetching activities:', error);
@@ -61,13 +62,35 @@ const Dashboard = () => {
   useEffect(() => {
     if (location.state?.refreshData) {
       console.log('Refreshing dashboard data after quiz submission');
-      queryClient.invalidateQueries({ queryKey: ['userPerformance'] });
-      queryClient.invalidateQueries({ queryKey: ['performanceHistory'] });
-      queryClient.invalidateQueries({ queryKey: ['quizResults'] });
-      queryClient.invalidateQueries({ queryKey: ['topicScores'] });
-      queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] });
-      queryClient.invalidateQueries({ queryKey: ['userActivities'] });
-      refetch();
+      
+      // Invalidate all relevant queries
+      const refreshQueries = async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
+          queryClient.invalidateQueries({ queryKey: ['performanceHistory'] }),
+          queryClient.invalidateQueries({ queryKey: ['quizResults'] }),
+          queryClient.invalidateQueries({ queryKey: ['topicScores'] }),
+          queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] }),
+          queryClient.invalidateQueries({ queryKey: ['userActivities'] }),
+        ]);
+        
+        // Trigger refetch
+        await refetch();
+        
+        // Trigger a force refresh for components
+        setForceRefresh(prev => !prev);
+      };
+      
+      refreshQueries();
+      
+      // If there's specific quiz completion data, show a toast
+      if (location.state?.quizCompleted && location.state?.topic) {
+        toast({
+          title: "Quiz Results Updated",
+          description: `Your ${location.state.topic} quiz has been recorded in your profile.`,
+          variant: "default",
+        });
+      }
       
       // Clear the state to avoid unnecessary refreshes
       window.history.replaceState({}, document.title);
@@ -100,7 +123,8 @@ const Dashboard = () => {
     activities: recentActivities,
     isLoading,
     setActiveTab,
-    user
+    user,
+    forceRefresh
   };
 
   return (
@@ -139,7 +163,7 @@ const Dashboard = () => {
               </TabsContent>
               
               <TabsContent value="progress" className="space-y-8 animate-fade-in-up">
-                <ProgressTab activities={recentActivities} />
+                <ProgressTab activities={recentActivities} forceRefresh={forceRefresh} />
               </TabsContent>
               
               <TabsContent value="resources" className="space-y-8 animate-fade-in-up">
@@ -147,7 +171,7 @@ const Dashboard = () => {
               </TabsContent>
               
               <TabsContent value="achievements" className="space-y-8 animate-fade-in-up">
-                <AchievementsTab />
+                <AchievementsTab forceRefresh={forceRefresh} />
               </TabsContent>
             </Tabs>
           </div>

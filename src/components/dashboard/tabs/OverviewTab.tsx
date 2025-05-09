@@ -13,20 +13,21 @@ interface OverviewTabProps {
   isLoading: boolean;
   setActiveTab: (tab: string) => void;
   user: any;
+  forceRefresh?: boolean;
 }
 
 // Mock data
 const upcomingQuizzes = [
-  { id: 1, name: 'Advanced Data Structures', date: '2025-04-15', timeEstimate: '30 min' },
-  { id: 2, name: 'SQL Query Optimization', date: '2025-04-18', timeEstimate: '25 min' },
-  { id: 3, name: 'Process Scheduling Algorithms', date: '2025-04-20', timeEstimate: '20 min' },
+  { id: 1, name: 'Advanced Data Structures', date: '2025-05-15', timeEstimate: '30 min' },
+  { id: 2, name: 'SQL Query Optimization', date: '2025-05-18', timeEstimate: '25 min' },
+  { id: 3, name: 'Process Scheduling Algorithms', date: '2025-05-20', timeEstimate: '20 min' },
 ];
 
-const OverviewTab: React.FC<OverviewTabProps> = ({ activities, isLoading, setActiveTab }) => {
+const OverviewTab: React.FC<OverviewTabProps> = ({ activities, isLoading, setActiveTab, forceRefresh }) => {
   return (
     <>
       {/* Performance Summary */}
-      <PerformanceSummary />
+      <PerformanceSummary forceRefresh={forceRefresh} />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
@@ -63,7 +64,15 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ activities, isLoading, setAct
             <div className="flex items-center justify-between">
               <span className="text-white/80">Total Score</span>
               <span className="font-bold text-primary">
-                {isLoading ? '...' : '85%'}
+                {isLoading ? '...' : (() => {
+                  const quizzes = activities.filter(a => a.type === 'quiz');
+                  if (quizzes.length === 0) return '0%';
+                  const totalScore = quizzes.reduce((sum, quiz) => {
+                    const score = parseInt(quiz.score?.split('/')[0] || '0');
+                    return sum + score;
+                  }, 0);
+                  return Math.round(totalScore / quizzes.length) + '%';
+                })()}
               </span>
             </div>
             <Button
@@ -83,7 +92,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ activities, isLoading, setAct
           <Trophy className="section-icon" />
           AI Recommendations
         </h3>
-        <AiRecommendations />
+        <AiRecommendations forceRefresh={forceRefresh} />
       </div>
 
       <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">

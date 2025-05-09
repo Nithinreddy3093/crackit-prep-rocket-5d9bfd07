@@ -25,6 +25,7 @@ export function useQuizLocalStorage(
   startQuiz: () => void
 ) {
   const hasCheckedStorage = useRef(false);
+  const hasShownProgressToast = useRef(false);
 
   // Check if there's a saved quiz in localStorage to restore
   useEffect(() => {
@@ -51,13 +52,17 @@ export function useQuizLocalStorage(
     if (inProgressQuiz && !quizStarted && !quizCompleted) {
       try {
         const quizData = JSON.parse(inProgressQuiz);
+        // Only continue if the topic ID matches
         if (quizData.topicId === topicId) {
           // Show toast only once
-          toast({
-            title: "Quiz in Progress",
-            description: "Continuing your in-progress quiz.",
-            variant: "default",
-          });
+          if (!hasShownProgressToast.current) {
+            hasShownProgressToast.current = true;
+            toast({
+              title: "Quiz in Progress",
+              description: "Continuing your in-progress quiz.",
+              variant: "default",
+            });
+          }
           
           // Automatically start the quiz after a short delay
           setTimeout(() => startQuiz(), 500);

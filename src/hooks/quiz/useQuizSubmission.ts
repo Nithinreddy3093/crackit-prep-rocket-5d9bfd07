@@ -106,11 +106,14 @@ export function useQuizSubmission() {
       setIsSubmitted(true);
       
       // Force invalidate and refetch all relevant queries to ensure dashboard is updated
-      await queryClient.invalidateQueries({ queryKey: ['userPerformance'] });
-      await queryClient.invalidateQueries({ queryKey: ['performanceHistory'] });
-      await queryClient.invalidateQueries({ queryKey: ['quizResults'] });
-      await queryClient.invalidateQueries({ queryKey: ['topicScores'] });
-      await queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
+        queryClient.invalidateQueries({ queryKey: ['performanceHistory'] }),
+        queryClient.invalidateQueries({ queryKey: ['quizResults'] }),
+        queryClient.invalidateQueries({ queryKey: ['topicScores'] }),
+        queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] }),
+        queryClient.invalidateQueries({ queryKey: ['userActivities'] }),
+      ]);
       
       toast({
         title: "Quiz Submitted Successfully",
@@ -120,8 +123,15 @@ export function useQuizSubmission() {
       
       // Navigate to dashboard after short delay to allow toast to be seen
       setTimeout(() => {
-        navigate('/dashboard', { state: { refreshData: true } });
-      }, 1500);
+        navigate('/dashboard', { 
+          state: { 
+            refreshData: true,
+            quizCompleted: true, 
+            topic: quizTopic,
+            score: quizScore
+          } 
+        });
+      }, 1000);
       
       return true;
     } catch (error: any) {

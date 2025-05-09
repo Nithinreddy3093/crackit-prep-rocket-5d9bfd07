@@ -22,12 +22,13 @@ const AISummary: React.FC<AISummaryProps> = ({ summary: propSummary, loading: pr
       return getAIRecommendations(user.id);
     },
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   // Force refresh when requested (e.g. after quiz submission)
   useEffect(() => {
     if (forceRefresh) {
+      console.log('Forcing refresh of AI recommendations');
       refetch();
     }
   }, [forceRefresh, refetch]);

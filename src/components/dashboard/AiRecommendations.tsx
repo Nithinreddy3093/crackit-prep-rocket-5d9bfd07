@@ -1,37 +1,64 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Brain, Target, BookOpen, ExternalLink, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { getSuggestedResources, getUserPerformance, getAIRecommendations } from '@/services/performance';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const AiRecommendations = () => {
+interface AiRecommendationsProps {
+  forceRefresh?: boolean;
+}
+
+const AiRecommendations: React.FC<AiRecommendationsProps> = ({ forceRefresh }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Use React Query for optimal data fetching and caching
-  const { data: performance, isLoading: performanceLoading } = useQuery({
+  const { data: performance, isLoading: performanceLoading, refetch: refetchPerformance } = useQuery({
     queryKey: ['userPerformance', user?.id],
     queryFn: () => user ? getUserPerformance(user.id) : null,
     enabled: !!user,
     staleTime: 30000 // 30 seconds
   });
   
-  const { data: resources, isLoading: resourcesLoading } = useQuery({
+  const { data: resources, isLoading: resourcesLoading, refetch: refetchResources } = useQuery({
     queryKey: ['suggestedResources', user?.id],
     queryFn: () => user ? getSuggestedResources(user.id) : [],
     enabled: !!user,
     staleTime: 30000
   });
   
-  const { data: aiRecommendation, isLoading: aiRecommendationLoading } = useQuery({
+  const { data: aiRecommendation, isLoading: aiRecommendationLoading, refetch: refetchAi } = useQuery({
     queryKey: ['aiRecommendations', user?.id],
     queryFn: () => user ? getAIRecommendations(user.id) : "",
     enabled: !!user,
     staleTime: 30000
   });
+
+  // Force refetch when forceRefresh prop changes
+  useEffect(() => {
+    if (forceRefresh && user) {
+      console.log('Force refreshing AI recommendations data');
+      const refreshData = async () => {
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
+          queryClient.invalidateQueries({ queryKey: ['suggestedResources'] }),
+          queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] })
+        ]);
+        
+        await Promise.all([
+          refetchPerformance(),
+          refetchResources(),
+          refetchAi()
+        ]);
+      };
+      
+      refreshData();
+    }
+  }, [forceRefresh, user, queryClient, refetchPerformance, refetchResources, refetchAi]);
   
   const loading = performanceLoading || resourcesLoading || aiRecommendationLoading;
   const weakTopics = performance?.weakTopics || [];

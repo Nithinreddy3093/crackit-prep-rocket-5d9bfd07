@@ -20,8 +20,12 @@ export const getAIRecommendations = async (userId: string): Promise<string> => {
     recentQuizzes.forEach(quiz => {
       if (!quiz.question_details) return;
       
-      (quiz.question_details as any[]).forEach(detail => {
-        const topic = detail.questionId.split('-')[0]; // e.g., "dsa-1" -> "dsa"
+      const details = quiz.question_details as any[];
+      
+      details.forEach(detail => {
+        // If there's no questionId pattern with hyphen, use topic as key
+        const idParts = detail.questionId?.split('-') || [];
+        const topic = idParts.length > 1 ? idParts[0] : quiz.topic;
         
         if (!topicPerformance[topic]) {
           topicPerformance[topic] = { correct: 0, total: 0 };
@@ -60,11 +64,11 @@ export const getAIRecommendations = async (userId: string): Promise<string> => {
       
       // Add specific advice based on weak areas
       weaknesses.forEach(weak => {
-        if (weak.topic === 'dsa') {
+        if (weak.topic.toLowerCase().includes('dsa')) {
           recommendation += "Try practicing more algorithm problems and data structure implementations. ";
-        } else if (weak.topic === 'dbms') {
+        } else if (weak.topic.toLowerCase().includes('dbms')) {
           recommendation += "Review database normalization concepts and practice more SQL queries. ";
-        } else if (weak.topic === 'os') {
+        } else if (weak.topic.toLowerCase().includes('os')) {
           recommendation += "Study process scheduling and memory management concepts more thoroughly. ";
         }
       });

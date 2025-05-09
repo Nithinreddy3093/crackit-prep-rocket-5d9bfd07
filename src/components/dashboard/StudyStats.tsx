@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserPerformance, getPerformanceHistory } from '@/services/performance';
 import { PerformanceStat } from '@/services/performance/types';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Import sub-components
 import TopicProgress from './study-stats/TopicProgress';
@@ -15,20 +16,28 @@ import SectionHeader from './study-stats/SectionHeader';
 
 interface StudyStatsProps {
   performanceStats?: PerformanceStat[];
+  forceRefresh?: boolean;
 }
 
-const StudyStats: React.FC<StudyStatsProps> = ({ performanceStats: propStats }) => {
+const StudyStats: React.FC<StudyStatsProps> = ({ performanceStats: propStats, forceRefresh }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<PerformanceStat[]>([]);
   const [historyData, setHistoryData] = useState<any[]>([]);
   const [overallScore, setOverallScore] = useState(0);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         if (user) {
+          // If forceRefresh is true, invalidate the cache first
+          if (forceRefresh) {
+            await queryClient.invalidateQueries({ queryKey: ['userPerformance'] });
+            await queryClient.invalidateQueries({ queryKey: ['performanceHistory'] });
+          }
+
           if (propStats) {
             setStats(propStats);
           } else {
@@ -77,7 +86,7 @@ const StudyStats: React.FC<StudyStatsProps> = ({ performanceStats: propStats }) 
     };
 
     fetchData();
-  }, [user, propStats]);
+  }, [user, propStats, forceRefresh, queryClient]);
 
   if (loading) {
     return (

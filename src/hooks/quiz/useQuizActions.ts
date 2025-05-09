@@ -106,6 +106,13 @@ export function useQuizActions(
     };
     
     try {
+      // Clear storage immediately to prevent "continue quiz" popup on reload
+      clearQuizProgress();
+      localStorage.removeItem(`quiz_progress_${currentTopicTitle}`);
+      localStorage.removeItem('lastQuizResults');
+      localStorage.removeItem('inProgressQuiz');
+      
+      // Submit quiz results
       await submitQuiz(quizData);
       
       // Save submission status to prevent resubmission

@@ -12,7 +12,7 @@ export const getUserPerformance = async (userId: string): Promise<UserPerformanc
       .from('user_performance')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .limit(1);
 
     if (performanceError) {
       console.error('Error fetching user performance:', performanceError);
@@ -41,6 +41,11 @@ export const getUserPerformance = async (userId: string): Promise<UserPerformanc
     if (historyError) {
       console.error('Error fetching performance history:', historyError);
     }
+
+    // Deal with potential multiple rows (should only be one)
+    const userPerformance = performanceData && performanceData.length > 0 
+      ? performanceData[0]
+      : { overall_score: 0, quizzes_taken: 0, last_quiz_date: new Date().toISOString() };
 
     // Calculate average completion time
     let avgCompletionTime = 0;
@@ -74,10 +79,10 @@ export const getUserPerformance = async (userId: string): Promise<UserPerformanc
 
     return {
       userId,
-      overallScore: performanceData?.overall_score || 0,
+      overallScore: userPerformance?.overall_score || 0,
       topicScores,
-      quizzesTaken: performanceData?.quizzes_taken || 0,
-      lastQuizDate: performanceData?.last_quiz_date || new Date().toISOString(),
+      quizzesTaken: userPerformance?.quizzes_taken || 0,
+      lastQuizDate: userPerformance?.last_quiz_date || new Date().toISOString(),
       strongTopics,
       weakTopics,
       averageCompletionTime: Math.round(avgCompletionTime),
@@ -155,9 +160,11 @@ export const updateUserPerformance = async (
       .from('user_performance')
       .select('quizzes_taken')
       .eq('user_id', userId)
-      .single();
+      .limit(1);
       
-    const quizzesTaken = performanceData?.quizzes_taken || 1;
+    const quizzesTaken = performanceData && performanceData.length > 0 
+      ? performanceData[0].quizzes_taken 
+      : 1;
     
     // Check and award badges based on performance
     await checkAndAwardBadges(userId, topic, score, quizzesTaken);

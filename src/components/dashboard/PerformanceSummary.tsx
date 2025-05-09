@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { Clock, CheckCircle, LineChart, Award } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   getUserPerformance, 
   getPerformanceHistory, 
@@ -18,8 +18,12 @@ import StrengthAreas from './performance-summary/StrengthAreas';
 import ImprovementAreas from './performance-summary/ImprovementAreas';
 import AISummary from './performance-summary/AISummary';
 
+interface PerformanceSummaryProps {
+  forceRefresh?: boolean;
+}
+
 // Use memo to prevent unnecessary re-renders
-const PerformanceSummary: React.FC = () => {
+const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh }) => {
   const { user } = useAuth();
   const [quizzesTaken, setQuizzesTaken] = useState(0);
   const [accuracy, setAccuracy] = useState(0);
@@ -27,35 +31,62 @@ const PerformanceSummary: React.FC = () => {
   const [recentSubjects, setRecentSubjects] = useState<string[]>([]);
   const [improvementAreas, setImprovementAreas] = useState<string[]>([]);
   const [strengthAreas, setStrengthAreas] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
   // Use React Query for data fetching with automatic refetching
-  const { data: performance, isLoading: performanceLoading } = useQuery({
+  const { data: performance, isLoading: performanceLoading, refetch: refetchPerformance } = useQuery({
     queryKey: ['userPerformance', user?.id],
     queryFn: () => user ? getUserPerformance(user.id) : null,
     enabled: !!user,
     staleTime: 30000 // 30 seconds
   });
 
-  const { data: history, isLoading: historyLoading } = useQuery({
+  const { data: history, isLoading: historyLoading, refetch: refetchHistory } = useQuery({
     queryKey: ['performanceHistory', user?.id],
     queryFn: () => user ? getPerformanceHistory(user.id) : [],
     enabled: !!user,
     staleTime: 30000
   });
 
-  const { data: aiSummary, isLoading: aiSummaryLoading } = useQuery({
+  const { data: aiSummary, isLoading: aiSummaryLoading, refetch: refetchAiSummary } = useQuery({
     queryKey: ['aiRecommendations', user?.id],
     queryFn: () => user ? getAIRecommendations(user.id) : '',
     enabled: !!user,
     staleTime: 30000
   });
 
-  const { data: recentQuizDetails, isLoading: quizDetailsLoading } = useQuery({
+  const { data: recentQuizDetails, isLoading: quizDetailsLoading, refetch: refetchQuizDetails } = useQuery({
     queryKey: ['quizResults', user?.id],
     queryFn: () => user ? getRecentQuizDetails(user.id) : [],
     enabled: !!user,
     staleTime: 30000
   });
+
+  // Force refresh when the prop changes
+  useEffect(() => {
+    if (forceRefresh && user) {
+      console.log('Forcing refresh of performance summary data');
+      const refreshData = async () => {
+        // Invalidate all caches first
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
+          queryClient.invalidateQueries({ queryKey: ['performanceHistory'] }),
+          queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] }),
+          queryClient.invalidateQueries({ queryKey: ['quizResults'] }),
+        ]);
+
+        // Trigger refetches
+        await Promise.all([
+          refetchPerformance(),
+          refetchHistory(),
+          refetchAiSummary(),
+          refetchQuizDetails()
+        ]);
+      };
+      
+      refreshData();
+    }
+  }, [forceRefresh, user, queryClient, refetchPerformance, refetchHistory, refetchAiSummary, refetchQuizDetails]);
   
   const isLoading = performanceLoading || historyLoading || aiSummaryLoading || quizDetailsLoading;
 
@@ -103,8 +134,13 @@ const PerformanceSummary: React.FC = () => {
       recentQuizDetails.forEach(quiz => {
         if (!quiz.question_details) return;
         
-        quiz.question_details.forEach((detail: any) => {
-          const topic = detail.questionId.split('-')[0]; // Assuming format like "dsa-1"
+        (quiz.question_details as any[]).forEach((detail: any) => {
+          let topic = quiz.topic;
+          
+          // Try to extract topic from questionId if available
+          if (detail.questionId && detail.questionId.includes('-')) {
+            topic = detail.questionId.split('-')[0]; // Assuming format like "dsa-1"
+          }
           
           if (!topicStats[topic]) {
             topicStats[topic] = { correct: 0, total: 0 };
@@ -210,7 +246,7 @@ const PerformanceSummary: React.FC = () => {
         </div>
         
         {/* AI Summary */}
-        <AISummary summary={aiSummary || ''} loading={isLoading} />
+        <AISummary summary={aiSummary || ''} loading={isLoading} forceRefresh={forceRefresh} />
       </CardContent>
     </Card>
   );
