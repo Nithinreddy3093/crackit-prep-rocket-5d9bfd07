@@ -30,7 +30,8 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
       return [];
     }
 
-    return data || [];
+    // Ensure returned data matches the QuizResult interface
+    return (data || []) as QuizResult[];
   } catch (error) {
     console.error('Error in getUserQuizResults:', error);
     return [];
@@ -52,7 +53,8 @@ export const getRecentQuizResults = async (userId: string, limit: number = 5): P
       return [];
     }
 
-    return data || [];
+    // Ensure returned data matches the QuizResult interface
+    return (data || []) as QuizResult[];
   } catch (error) {
     console.error('Error in getRecentQuizResults:', error);
     return [];
@@ -94,20 +96,22 @@ export const getQuizPerformanceByTopic = async (userId: string): Promise<Record<
     // Group by topic and calculate average accuracy
     const topicPerformance: Record<string, { accuracy: number, attempts: number }> = {};
     
-    data?.forEach(item => {
-      if (!topicPerformance[item.topic]) {
-        topicPerformance[item.topic] = { accuracy: 0, attempts: 0 };
-      }
+    if (data) {
+      data.forEach(item => {
+        if (!topicPerformance[item.topic]) {
+          topicPerformance[item.topic] = { accuracy: 0, attempts: 0 };
+        }
+        
+        topicPerformance[item.topic].accuracy += item.accuracy;
+        topicPerformance[item.topic].attempts += 1;
+      });
       
-      topicPerformance[item.topic].accuracy += item.accuracy;
-      topicPerformance[item.topic].attempts += 1;
-    });
-    
-    // Calculate averages
-    Object.keys(topicPerformance).forEach(topic => {
-      const { accuracy, attempts } = topicPerformance[topic];
-      topicPerformance[topic].accuracy = accuracy / attempts;
-    });
+      // Calculate averages
+      Object.keys(topicPerformance).forEach(topic => {
+        const { accuracy, attempts } = topicPerformance[topic];
+        topicPerformance[topic].accuracy = accuracy / attempts;
+      });
+    }
 
     return topicPerformance;
   } catch (error) {

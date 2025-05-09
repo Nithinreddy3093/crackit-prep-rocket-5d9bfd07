@@ -1,6 +1,6 @@
 
 import { getUserPerformance } from "./userPerformanceService";
-import { getRecentQuizDetails } from "./quizResultsService";
+import { getRecentQuizResults } from "./quizResultsService";
 
 // Get AI recommendations based on performance and quiz details
 export const getAIRecommendations = async (userId: string): Promise<string> => {
@@ -12,30 +12,20 @@ export const getAIRecommendations = async (userId: string): Promise<string> => {
     }
     
     // Get recent quiz details to provide more accurate recommendations
-    const recentQuizzes = await getRecentQuizDetails(userId);
+    const recentQuizzes = await getRecentQuizResults(userId);
     
     // Calculate topic-specific accuracies
     const topicPerformance: Record<string, { correct: number; total: number }> = {};
     
     recentQuizzes.forEach(quiz => {
-      if (!quiz.question_details) return;
+      // Make sure the topic exists in our tracking object
+      if (!topicPerformance[quiz.topic]) {
+        topicPerformance[quiz.topic] = { correct: 0, total: 0 };
+      }
       
-      const details = quiz.question_details as any[];
-      
-      details.forEach(detail => {
-        // If there's no questionId pattern with hyphen, use topic as key
-        const idParts = detail.questionId?.split('-') || [];
-        const topic = idParts.length > 1 ? idParts[0] : quiz.topic;
-        
-        if (!topicPerformance[topic]) {
-          topicPerformance[topic] = { correct: 0, total: 0 };
-        }
-        
-        topicPerformance[topic].total += 1;
-        if (detail.isCorrect) {
-          topicPerformance[topic].correct += 1;
-        }
-      });
+      // Track accuracy by topic
+      topicPerformance[quiz.topic].correct += quiz.correct_answers;
+      topicPerformance[quiz.topic].total += quiz.total_questions;
     });
     
     // Identify specific strengths and weaknesses by topic
