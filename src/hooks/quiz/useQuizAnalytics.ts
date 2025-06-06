@@ -11,10 +11,11 @@ interface QuestionDetail {
 }
 
 interface QuizAnalytics {
+  totalQuestions: number;
+  attemptedQuestions: number;
   correctCount: number;
   incorrectCount: number;
   skippedCount: number;
-  answeredCount: number;
   accuracyPercentage: number;
   overallScorePercentage: number;
   averageTimePerQuestion?: number;
@@ -28,10 +29,11 @@ interface QuizAnalytics {
 
 export function useQuizAnalytics() {
   const [analytics, setAnalytics] = useState<QuizAnalytics>({
+    totalQuestions: 0,
+    attemptedQuestions: 0,
     correctCount: 0,
     incorrectCount: 0,
     skippedCount: 0,
-    answeredCount: 0,
     accuracyPercentage: 0,
     overallScorePercentage: 0,
     timeEfficiency: 'Average',
@@ -46,13 +48,20 @@ export function useQuizAnalytics() {
     totalQuestions: number,
     elapsedTime?: number
   ): QuizAnalytics => {
+    console.log('Calculating quiz analytics:', {
+      questionDetailsCount: questionDetails.length,
+      totalQuestions,
+      elapsedTime
+    });
+
     if (!questionDetails || questionDetails.length === 0) {
-      // Return basic analytics if no detailed data
+      console.warn('No question details provided for analytics');
       return {
+        totalQuestions,
+        attemptedQuestions: 0,
         correctCount: 0,
         incorrectCount: 0,
         skippedCount: totalQuestions,
-        answeredCount: 0,
         accuracyPercentage: 0,
         overallScorePercentage: 0,
         timeEfficiency: 'Average',
@@ -60,16 +69,35 @@ export function useQuizAnalytics() {
       };
     }
 
-    // Calculate basic counts
-    const correctCount = questionDetails.filter(q => q.isCorrect).length;
-    const answeredQuestions = questionDetails.filter(q => q.userAnswer !== '');
-    const answeredCount = answeredQuestions.length;
-    const incorrectCount = answeredQuestions.filter(q => !q.isCorrect).length;
-    const skippedCount = questionDetails.filter(q => q.userAnswer === '').length;
+    // Ensure unique questions by ID to prevent double counting
+    const uniqueQuestions = questionDetails.reduce((acc, current) => {
+      const existing = acc.find(item => item.questionId === current.questionId);
+      if (!existing) {
+        acc.push(current);
+      } else {
+        console.warn('Duplicate question detected:', current.questionId);
+      }
+      return acc;
+    }, [] as QuestionDetail[]);
+
+    console.log('Unique questions after deduplication:', uniqueQuestions.length);
+
+    // Calculate metrics based on actual answers
+    const answeredQuestions = uniqueQuestions.filter(q => q.userAnswer !== '');
+    const correctAnswers = uniqueQuestions.filter(q => q.isCorrect);
+    const incorrectAnswers = uniqueQuestions.filter(q => !q.isCorrect && q.userAnswer !== '');
+    const skippedQuestions = uniqueQuestions.filter(q => q.userAnswer === '');
+
+    const attemptedQuestions = answeredQuestions.length;
+    const correctCount = correctAnswers.length;
+    const incorrectCount = incorrectAnswers.length;
+    const skippedCount = skippedQuestions.length;
 
     // Calculate percentages
-    const accuracyPercentage = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
-    const overallScorePercentage = Math.round((correctCount / totalQuestions) * 100);
+    const accuracyPercentage = attemptedQuestions > 0 ? 
+      Math.round((correctCount / attemptedQuestions) * 100) : 0;
+    const overallScorePercentage = totalQuestions > 0 ? 
+      Math.round((correctCount / totalQuestions) * 100) : 0;
 
     // Calculate time metrics
     let averageTimePerQuestion: number | undefined;
@@ -77,7 +105,7 @@ export function useQuizAnalytics() {
     let fastQuestions = 0;
     let slowQuestions = 0;
 
-    if (elapsedTime) {
+    if (elapsedTime && totalQuestions > 0) {
       averageTimePerQuestion = Math.round(elapsedTime / totalQuestions / 1000);
       
       // Classify time efficiency
@@ -88,7 +116,7 @@ export function useQuizAnalytics() {
       }
 
       // Count fast and slow individual questions if time data available
-      questionDetails.forEach(q => {
+      uniqueQuestions.forEach(q => {
         if (q.timeSpent) {
           if (q.timeSpent <= 20) fastQuestions++;
           if (q.timeSpent >= 90) slowQuestions++;
@@ -110,7 +138,7 @@ export function useQuizAnalytics() {
       performanceLevel = 'Needs Improvement';
     }
 
-    // Analyze topic strengths and weaknesses (basic implementation)
+    // Analyze topic strengths and weaknesses
     const topicStrengths: string[] = [];
     const topicWeaknesses: string[] = [];
 
@@ -135,10 +163,11 @@ export function useQuizAnalytics() {
     }
 
     const analyticsResult: QuizAnalytics = {
+      totalQuestions,
+      attemptedQuestions,
       correctCount,
       incorrectCount,
       skippedCount,
-      answeredCount,
       accuracyPercentage,
       overallScorePercentage,
       averageTimePerQuestion,
@@ -150,6 +179,7 @@ export function useQuizAnalytics() {
       performanceLevel
     };
 
+    console.log('Calculated analytics:', analyticsResult);
     setAnalytics(analyticsResult);
     return analyticsResult;
   };

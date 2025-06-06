@@ -91,19 +91,22 @@ export function useQuizActions(
       return;
     }
     
-    // Calculate analytics with correct number of arguments (3 parameters: questionDetails, totalQuestions, elapsedTime)
+    // Calculate analytics with the correct parameters
     const analytics = calculateQuizAnalytics(questionDetails, questions.length, elapsedTime);
     
-    console.log('Quiz analytics:', analytics);
+    console.log('Quiz analytics calculated:', analytics);
+    console.log('Question details for submission:', questionDetails);
     
     const quizData: QuizSubmissionData = {
       userId: userId,
       topicTitle: currentTopicTitle || 'General Knowledge',
-      correctAnswers,
+      correctAnswers: analytics.correctCount, // Use analytics for accurate count
       totalQuestions: questions.length,
       timeInMs: elapsedTime,
       questionDetails
     };
+    
+    console.log('Submitting quiz data:', quizData);
     
     try {
       // Clear storage immediately to prevent "continue quiz" popup on reload

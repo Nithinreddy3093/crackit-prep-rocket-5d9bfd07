@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,26 +51,60 @@ const QuizResults: React.FC<QuizResultsProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   
-  // Calculate accurate metrics from question details
+  // Calculate accurate metrics from question details with deduplication
   const analytics = useMemo(() => {
+    console.log('Calculating result analytics:', {
+      questionDetailsCount: questionDetails.length,
+      totalQuestions,
+      correctAnswers
+    });
+
     if (questionDetails.length > 0) {
-      const answeredQuestions = questionDetails.filter(q => q.userAnswer !== '');
-      const correctCount = questionDetails.filter(q => q.isCorrect).length;
-      const incorrectCount = questionDetails.filter(q => !q.isCorrect && q.userAnswer !== '').length;
-      const skippedCount = questionDetails.filter(q => q.userAnswer === '').length;
+      // Ensure unique questions by ID to prevent double counting
+      const uniqueQuestions = questionDetails.reduce((acc, current) => {
+        const existing = acc.find(item => item.questionId === current.questionId);
+        if (!existing) {
+          acc.push(current);
+        } else {
+          console.warn('Duplicate question found in results:', current.questionId);
+        }
+        return acc;
+      }, [] as typeof questionDetails);
+
+      console.log('Unique questions after deduplication:', uniqueQuestions.length);
+
+      const answeredQuestions = uniqueQuestions.filter(q => q.userAnswer && q.userAnswer !== '');
+      const correctCount = uniqueQuestions.filter(q => q.isCorrect).length;
+      const incorrectCount = uniqueQuestions.filter(q => !q.isCorrect && q.userAnswer && q.userAnswer !== '').length;
+      const skippedCount = uniqueQuestions.filter(q => !q.userAnswer || q.userAnswer === '').length;
       
+      const attemptedCount = answeredQuestions.length;
+      const accuracyPercentage = attemptedCount > 0 ? Math.round((correctCount / attemptedCount) * 100) : 0;
+      const overallScore = Math.round((correctCount / totalQuestions) * 100);
+
+      console.log('Calculated metrics:', {
+        totalQuestions,
+        attempted: attemptedCount,
+        correct: correctCount,
+        incorrect: incorrectCount,
+        skipped: skippedCount,
+        accuracy: accuracyPercentage,
+        score: overallScore
+      });
+
       return {
-        totalQuestions: questionDetails.length,
-        answeredQuestions: answeredQuestions.length,
+        totalQuestions,
+        answeredQuestions: attemptedCount,
         correctCount,
         incorrectCount, 
         skippedCount,
-        accuracyPercentage: answeredQuestions.length > 0 ? Math.round((correctCount / answeredQuestions.length) * 100) : 0,
-        overallScore: Math.round((correctCount / questionDetails.length) * 100)
+        accuracyPercentage,
+        overallScore
       };
     }
     
-    // Fallback to basic calculations
+    // Fallback to basic calculations if no detailed data
+    console.warn('Using fallback calculations - no question details available');
     return {
       totalQuestions,
       answeredQuestions: totalQuestions,
@@ -225,7 +258,11 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       {/* Detailed Answer Breakdown */}
       <div className="bg-darkBlue-800/30 p-4 rounded-xl">
         <h3 className="text-lg font-medium text-white mb-3">Answer Breakdown</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
+          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg text-center">
+            <div className="text-xl font-bold text-blue-400">{analytics.answeredQuestions}</div>
+            <div className="text-xs text-white/70">Attempted ({Math.round((analytics.answeredQuestions / analytics.totalQuestions) * 100)}%)</div>
+          </div>
           <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg text-center">
             <div className="text-xl font-bold text-green-400">{analytics.correctCount}</div>
             <div className="text-xs text-white/70">Correct ({Math.round((analytics.correctCount / analytics.totalQuestions) * 100)}%)</div>
@@ -251,6 +288,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
+              <span className="text-white/70 text-sm">Total time:</span>
+              <span className="text-white font-medium">{formatTime(elapsedTime)}</span>
+            </div>
+            <div className="flex justify-between items-center">
               <span className="text-white/70 text-sm">Average per question:</span>
               <span className="text-white font-medium">{timeMetrics.averageTimePerQuestion}s</span>
             </div>
@@ -260,20 +301,6 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                 timeMetrics.timeEfficiency === 'Fast' ? 'text-green-400' :
                 timeMetrics.timeEfficiency === 'Average' ? 'text-yellow-400' : 'text-red-400'
               }`}>{timeMetrics.timeEfficiency}</span>
-            </div>
-            <div className="h-2 bg-darkBlue-900/50 rounded-full">
-              <div 
-                className={`h-2 rounded-full ${
-                  timeMetrics.timeEfficiency === 'Fast' ? 'bg-green-500' :
-                  timeMetrics.timeEfficiency === 'Average' ? 'bg-yellow-500' : 'bg-red-500'
-                }`}
-                style={{ width: `${timeMetrics.timePerQuestionBar}%` }}  
-              ></div>
-            </div>
-            <div className="flex justify-between mt-1 text-xs text-white/60">
-              <span>Fast (&lt;30s)</span>
-              <span>Average (30-60s)</span>
-              <span>Slow (&gt;60s)</span>
             </div>
           </div>
         </div>
@@ -293,6 +320,10 @@ const QuizResults: React.FC<QuizResultsProps> = ({
               <span className="text-white/70 text-sm">Accuracy rate:</span>
               <span className="text-white font-medium">{analytics.accuracyPercentage}%</span>
             </div>
+            <div className="flex justify-between items-center">
+              <span className="text-white/70 text-sm">Overall score:</span>
+              <span className="text-white font-medium">{analytics.overallScore}%</span>
+            </div>
             <div className="h-2 bg-darkBlue-900/50 rounded-full">
               <div 
                 className={`h-2 rounded-full ${performanceFeedback.bgColor}`}
@@ -309,7 +340,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       {/* Detailed Question Review */}
       {questionDetails && questionDetails.length > 0 && (
         <div className="bg-darkBlue-800/20 p-4 rounded-xl">
-          <h3 className="text-lg font-medium text-white mb-3">Question Review</h3>
+          <h3 className="text-lg font-medium text-white mb-3">Question Review ({questionDetails.length} questions)</h3>
           <Accordion type="single" collapsible className="text-white">
             {questionDetails.map((detail, index) => (
               <AccordionItem key={`question-${detail.questionId}-${index}`} value={`question-${index}`}>

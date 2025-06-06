@@ -13,7 +13,7 @@ export interface QuestionDetail {
 export interface InProgressQuiz {
   topicId: string;
   currentQuestionIndex: number;
-  userAnswers: (number | null)[];
+  userAnswers: Record<string, number>; // Changed to object with question_id as key
   startTime: number;
   questionIds: string[];
 }
@@ -27,30 +27,32 @@ export function useQuestionNavigation(
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [questionDetails, setQuestionDetails] = useState<QuestionDetail[]>([]);
-  const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
+  // Changed to track answers by question ID to prevent duplicates
+  const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Initialize user answers array when questions change
+  // Initialize user answers when questions change
   useEffect(() => {
     if (questions.length > 0) {
-      setUserAnswers(new Array(questions.length).fill(null));
+      setUserAnswers({});
+      setCorrectAnswers(0);
+      setQuestionDetails([]);
     }
   }, [questions]);
 
-  // When component mounts, restore selected answer for current question if available
+  // When current question changes, restore selected answer if exists
   useEffect(() => {
-    if (userAnswers[currentQuestionIndex] !== undefined) {
-      setSelectedAnswer(userAnswers[currentQuestionIndex]);
+    if (currentQuestion && userAnswers[currentQuestion.id] !== undefined) {
+      setSelectedAnswer(userAnswers[currentQuestion.id]);
     } else {
       setSelectedAnswer(null);
     }
-  }, [currentQuestionIndex, userAnswers]);
+  }, [currentQuestionIndex, userAnswers, currentQuestion]);
 
   // Restore progress from localStorage
   useEffect(() => {
     if (userId && topicId) {
-      // Check for in-progress quiz
       const inProgressQuiz = localStorage.getItem('inProgressQuiz');
       if (inProgressQuiz) {
         try {
@@ -58,53 +60,108 @@ export function useQuestionNavigation(
           if (quizData.topicId === topicId) {
             console.log('Restoring in-progress quiz:', quizData);
             setCurrentQuestionIndex(quizData.currentQuestionIndex);
-            setUserAnswers(quizData.userAnswers);
+            setUserAnswers(quizData.userAnswers || {});
+            
+            // Recalculate correct answers from stored data
+            let correct = 0;
+            questions.forEach(q => {
+              if (quizData.userAnswers[q.id] !== undefined) {
+                const userAnswerText = q.options[quizData.userAnswers[q.id]];
+                if (userAnswerText === q.correctAnswer) {
+                  correct++;
+                }
+              }
+            });
+            setCorrectAnswers(correct);
           }
         } catch (e) {
           console.error('Error parsing in-progress quiz:', e);
         }
       }
     }
-  }, [userId, topicId]);
+  }, [userId, topicId, questions]);
 
   const handleAnswerSelect = useCallback((answerIndex: number) => {
+    if (!currentQuestion) return;
+    
     setSelectedAnswer(answerIndex);
     
-    // Update userAnswers array
-    const updatedUserAnswers = [...userAnswers];
-    updatedUserAnswers[currentQuestionIndex] = answerIndex;
+    // Update userAnswers with question ID as key
+    const previousAnswer = userAnswers[currentQuestion.id];
+    const updatedUserAnswers = {
+      ...userAnswers,
+      [currentQuestion.id]: answerIndex
+    };
     setUserAnswers(updatedUserAnswers);
     
+    // Calculate correct answers accurately
+    const isCorrect = currentQuestion.options[answerIndex] === currentQuestion.correctAnswer;
+    const wasCorrectBefore = previousAnswer !== undefined && 
+      currentQuestion.options[previousAnswer] === currentQuestion.correctAnswer;
+    
+    let newCorrectCount = correctAnswers;
+    if (isCorrect && !wasCorrectBefore) {
+      newCorrectCount = correctAnswers + 1;
+    } else if (!isCorrect && wasCorrectBefore) {
+      newCorrectCount = correctAnswers - 1;
+    }
+    setCorrectAnswers(newCorrectCount);
+    
     // Save progress to localStorage
-    if (userId && topicId && currentQuestion) {
+    if (userId && topicId) {
       const quizData: InProgressQuiz = {
         topicId,
         currentQuestionIndex,
         userAnswers: updatedUserAnswers,
-        startTime: Date.now() - 1000, // Approximate start time
+        startTime: Date.now() - 1000,
         questionIds: questions.map(q => q.id)
       };
       localStorage.setItem('inProgressQuiz', JSON.stringify(quizData));
     }
     
-    if (currentQuestion && currentQuestion.options[answerIndex] === currentQuestion.correctAnswer) {
-      setCorrectAnswers(prev => prev + 1);
-    }
-  }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers]);
+    console.log('Answer selected:', {
+      questionId: currentQuestion.id,
+      answerIndex,
+      isCorrect,
+      totalCorrect: newCorrectCount,
+      userAnswers: updatedUserAnswers
+    });
+  }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers, correctAnswers]);
 
   const goToNextQuestion = useCallback(() => {
     if (!currentQuestion) return false;
     
-    // Track question detail
-    const detail = {
+    // Only track question detail if not already tracked
+    const existingDetailIndex = questionDetails.findIndex(d => d.questionId === currentQuestion.id);
+    const userAnswerText = selectedAnswer !== null ? currentQuestion.options[selectedAnswer] : '';
+    const isCorrect = selectedAnswer !== null && currentQuestion.options[selectedAnswer] === currentQuestion.correctAnswer;
+    
+    const detail: QuestionDetail = {
       questionId: currentQuestion.id,
       question: currentQuestion.text,
-      userAnswer: selectedAnswer !== null ? currentQuestion.options[selectedAnswer] : '',
+      userAnswer: userAnswerText,
       correctAnswer: currentQuestion.correctAnswer,
-      isCorrect: selectedAnswer !== null && currentQuestion.options[selectedAnswer] === currentQuestion.correctAnswer
+      isCorrect
     };
     
-    setQuestionDetails(prev => [...prev, detail]);
+    // Update or add question detail
+    let updatedDetails;
+    if (existingDetailIndex >= 0) {
+      updatedDetails = [...questionDetails];
+      updatedDetails[existingDetailIndex] = detail;
+    } else {
+      updatedDetails = [...questionDetails, detail];
+    }
+    setQuestionDetails(updatedDetails);
+    
+    console.log('Question completed:', {
+      questionId: currentQuestion.id,
+      userAnswer: userAnswerText,
+      correctAnswer: currentQuestion.correctAnswer,
+      isCorrect,
+      totalQuestionDetails: updatedDetails.length
+    });
+    
     setSelectedAnswer(null);
     
     if (currentQuestionIndex < questions.length - 1) {
@@ -117,7 +174,7 @@ export function useQuestionNavigation(
           topicId,
           currentQuestionIndex: nextIndex,
           userAnswers,
-          startTime: Date.now() - ((nextIndex + 1) * 30 * 1000), // Rough estimate
+          startTime: Date.now() - ((nextIndex + 1) * 30 * 1000),
           questionIds: questions.map(q => q.id)
         };
         localStorage.setItem('inProgressQuiz', JSON.stringify(quizData));
@@ -127,16 +184,18 @@ export function useQuestionNavigation(
     } else {
       return true;
     }
-  }, [currentQuestionIndex, questions.length, selectedAnswer, currentQuestion, userAnswers, userId, topicId]);
+  }, [currentQuestionIndex, questions.length, selectedAnswer, currentQuestion, userAnswers, userId, topicId, questionDetails]);
 
   const resetQuestionState = useCallback(() => {
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
     setCorrectAnswers(0);
     setQuestionDetails([]);
-    setUserAnswers(new Array(questions.length).fill(null));
+    setUserAnswers({});
     localStorage.removeItem('inProgressQuiz');
-  }, [questions.length]);
+    
+    console.log('Quiz state reset');
+  }, []);
 
   return {
     currentQuestionIndex,
