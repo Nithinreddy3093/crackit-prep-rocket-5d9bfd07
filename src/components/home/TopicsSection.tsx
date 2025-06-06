@@ -1,57 +1,55 @@
 
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Book, Database, Cpu, Brain, BarChart, PieChart } from 'lucide-react';
-import TopicCard from '@/components/TopicCard';
+import { ArrowRight } from 'lucide-react';
+import TopicCard from '@/components/topics/TopicCard';
+import { getTopicIcon } from '@/utils/topicUtils';
 
 // Define topic data outside component to prevent recreation on each render
 const topicData = [
   {
     id: "dsa",
     title: "Data Structures & Algorithms",
-    icon: <Book className="w-6 h-6" />,
+    icon: "Code",
     description: "Arrays, Linked Lists, Trees, Graphs, Sorting and Searching Algorithms.",
     bgColor: "bg-gradient-to-br from-darkBlue-700 to-darkBlue-600"
   },
   {
     id: "dbms",
     title: "Database Management",
-    icon: <Database className="w-6 h-6" />,
+    icon: "Database",
     description: "SQL, Normalization, Transactions, RDBMS concepts and queries.",
     bgColor: "bg-gradient-to-br from-blue-700 to-blue-600"
   },
   {
     id: "os",
     title: "Operating Systems",
-    icon: <Cpu className="w-6 h-6" />,
+    icon: "Cpu",
     description: "Process Management, Memory Management, File Systems, Scheduling.",
     bgColor: "bg-gradient-to-br from-darkBlue-800 to-blue-900"
   },
   {
     id: "aptitude",
     title: "Aptitude & Reasoning",
-    icon: <Brain className="w-6 h-6" />,
+    icon: "Brain",
     description: "Numerical Ability, Logical Reasoning, Verbal Ability, Data Interpretation.",
     bgColor: "bg-gradient-to-br from-amber-700 to-amber-600"
   },
   {
     id: "networks",
     title: "Computer Networks",
-    icon: <BarChart className="w-6 h-6" />,
+    icon: "Network",
     description: "TCP/IP, OSI Model, Routing, Network Security, Protocols.",
     bgColor: "bg-gradient-to-br from-red-700 to-red-600"
   },
   {
     id: "system-design",
     title: "System Design",
-    icon: <PieChart className="w-6 h-6" />,
+    icon: "PieChart",
     description: "Architecture Patterns, Scalability, APIs, Database Design, Caching.",
     bgColor: "bg-gradient-to-br from-darkBlue-700 to-indigo-600"
   }
 ];
-
-// Memoized card to prevent unnecessary re-renders
-const MemoizedTopicCard = memo(TopicCard);
 
 const TopicsSection = () => {
   return (
@@ -67,14 +65,15 @@ const TopicsSection = () => {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {topicData.map((topic) => (
-            <MemoizedTopicCard
+          {topicData.map((topic, index) => (
+            <TopicCard
               key={topic.id}
               title={topic.title}
-              icon={topic.icon}
+              icon={getTopicIcon(topic.icon)}
               description={topic.description}
               bgColor={topic.bgColor}
               to={`/topics/${topic.id}`}
+              index={index}
             />
           ))}
         </div>
@@ -82,10 +81,10 @@ const TopicsSection = () => {
         <div className="mt-10 text-center">
           <Link
             to="/topics"
-            className="inline-flex items-center text-primary hover:text-primary/90 font-medium"
+            className="inline-flex items-center text-primary hover:text-primary/90 font-medium transition-colors group"
           >
             View all topics
-            <ArrowRight className="ml-2 w-5 h-5" />
+            <ArrowRight className="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>
@@ -93,4 +92,4 @@ const TopicsSection = () => {
   );
 };
 
-export default React.memo(TopicsSection);
+export default memo(TopicsSection);
