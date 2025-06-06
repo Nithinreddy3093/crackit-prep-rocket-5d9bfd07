@@ -1,21 +1,16 @@
 
-import { useEffect, useRef } from 'react';
-import { toast } from "@/components/ui/use-toast";
+import { useState, useEffect, useCallback } from 'react';
+import { Question } from "@/services/questionService";
+import { QuestionDetail } from './useQuestionNavigation';
 
 export interface QuizLocalStorageData {
-  topicId: string | undefined;
-  questions: any[];
+  topicId: string;
+  questions: Question[];
   currentQuestionIndex: number;
   correctAnswers: number;
-  userAnswers: (number | null)[];
+  userAnswers: Record<string, number>; // Updated to match new format
   elapsedTime: number;
-  questionDetails: {
-    questionId: string;
-    question: string;
-    userAnswer: string;
-    correctAnswer: string;
-    isCorrect: boolean;
-  }[];
+  questionDetails: QuestionDetail[];
 }
 
 export function useQuizLocalStorage(
@@ -24,83 +19,86 @@ export function useQuizLocalStorage(
   quizCompleted: boolean,
   startQuiz: () => void
 ) {
-  const hasCheckedStorage = useRef(false);
-  const hasShownProgressToast = useRef(false);
+  const [hasShownContinuePrompt, setHasShownContinuePrompt] = useState(false);
 
-  // Check if there's a saved quiz in localStorage to restore
+  // Save quiz progress to localStorage
+  const saveQuizProgress = useCallback((quizData: QuizLocalStorageData) => {
+    if (topicId) {
+      const key = `quiz_progress_${topicId}`;
+      localStorage.setItem(key, JSON.stringify(quizData));
+      
+      // Also save a general flag that there's an in-progress quiz
+      localStorage.setItem('inProgressQuiz', JSON.stringify({
+        topicId: quizData.topicId,
+        currentQuestionIndex: quizData.currentQuestionIndex,
+        userAnswers: quizData.userAnswers,
+        startTime: Date.now() - quizData.elapsedTime,
+        questionIds: quizData.questions.map(q => q.id)
+      }));
+    }
+  }, [topicId]);
+
+  // Clear quiz progress from localStorage
+  const clearQuizProgress = useCallback(() => {
+    if (topicId) {
+      const key = `quiz_progress_${topicId}`;
+      localStorage.removeItem(key);
+      localStorage.removeItem('inProgressQuiz');
+    }
+  }, [topicId]);
+
+  // Save quiz results to localStorage (for offline storage)
+  const saveQuizResults = useCallback((results: any) => {
+    localStorage.setItem('lastQuizResults', JSON.stringify(results));
+  }, []);
+
+  // Save submitted quiz status to prevent resubmission
+  const saveSubmittedQuizStatus = useCallback((topicId: string | undefined) => {
+    if (topicId) {
+      const submittedQuizzes = JSON.parse(localStorage.getItem('submittedQuizzes') || '[]');
+      submittedQuizzes.push({
+        topicId,
+        submittedAt: new Date().toISOString()
+      });
+      localStorage.setItem('submittedQuizzes', JSON.stringify(submittedQuizzes));
+    }
+  }, []);
+
+  // Check if user has an in-progress quiz and prompt to continue
   useEffect(() => {
-    // Prevent multiple checks/toasts during re-renders
-    if (hasCheckedStorage.current) return;
-    hasCheckedStorage.current = true;
-
-    const savedResults = localStorage.getItem('lastQuizResults');
-    if (savedResults && quizCompleted) {
-      try {
-        // There are saved results that weren't submitted
-        toast({
-          title: "Unsubmitted Quiz Results",
-          description: "You have quiz results that weren't submitted. You can find them in your dashboard.",
-          variant: "default",
-        });
-      } catch (error) {
-        console.error('Error parsing saved results:', error);
-      }
-    }
-    
-    // Check for any in-progress quiz when component mounts
-    const inProgressQuiz = localStorage.getItem('inProgressQuiz');
-    if (inProgressQuiz && !quizStarted && !quizCompleted) {
-      try {
-        const quizData = JSON.parse(inProgressQuiz);
-        // Only continue if the topic ID matches
-        if (quizData.topicId === topicId) {
-          // Show toast only once
-          if (!hasShownProgressToast.current) {
-            hasShownProgressToast.current = true;
-            toast({
-              title: "Quiz in Progress",
-              description: "Continuing your in-progress quiz.",
-              variant: "default",
-            });
+    if (topicId && !quizStarted && !hasShownContinuePrompt) {
+      const key = `quiz_progress_${topicId}`;
+      const savedProgress = localStorage.getItem(key);
+      
+      if (savedProgress) {
+        try {
+          const progressData: QuizLocalStorageData = JSON.parse(savedProgress);
+          if (progressData.currentQuestionIndex > 0) {
+            const shouldContinue = window.confirm(
+              `You have an incomplete quiz for this topic. Would you like to continue where you left off?`
+            );
+            
+            if (shouldContinue) {
+              startQuiz();
+            } else {
+              clearQuizProgress();
+            }
           }
-          
-          // Automatically start the quiz after a short delay
-          setTimeout(() => startQuiz(), 500);
-        } else {
-          // Clear if topic doesn't match
-          localStorage.removeItem('inProgressQuiz');
+        } catch (e) {
+          console.error('Error parsing saved quiz progress:', e);
+          clearQuizProgress();
         }
-      } catch (error) {
-        console.error('Error parsing in-progress quiz:', error);
-        localStorage.removeItem('inProgressQuiz');
       }
+      setHasShownContinuePrompt(true);
     }
-  }, [quizStarted, quizCompleted, topicId, startQuiz]);
+  }, [topicId, quizStarted, hasShownContinuePrompt, startQuiz, clearQuizProgress]);
 
-  const saveQuizProgress = (data: QuizLocalStorageData) => {
-    localStorage.setItem('inProgressQuiz', JSON.stringify(data));
-  };
-
-  const clearQuizProgress = () => {
-    localStorage.removeItem('inProgressQuiz');
-    localStorage.removeItem('lastQuizResults');
-  };
-
-  const saveQuizResults = (data: any) => {
-    localStorage.setItem('lastQuizResults', JSON.stringify({
-      ...data,
-      timestamp: new Date().toISOString()
-    }));
-  };
-
-  const saveSubmittedQuizStatus = (topicId: string | undefined) => {
-    localStorage.removeItem('lastQuizResults');
-    localStorage.removeItem('inProgressQuiz');
-    localStorage.setItem('lastSubmittedQuiz', JSON.stringify({
-      topicId,
-      timestamp: new Date().toISOString()
-    }));
-  };
+  // Clear progress when quiz is completed
+  useEffect(() => {
+    if (quizCompleted && topicId) {
+      clearQuizProgress();
+    }
+  }, [quizCompleted, topicId, clearQuizProgress]);
 
   return {
     saveQuizProgress,
