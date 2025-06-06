@@ -13,7 +13,7 @@ export interface QuestionDetail {
 export interface InProgressQuiz {
   topicId: string;
   currentQuestionIndex: number;
-  userAnswers: Record<string, number>; // Changed to object with question_id as key
+  userAnswers: Record<string, number>; // questionId -> selectedOptionIndex
   startTime: number;
   questionIds: string[];
 }
@@ -27,10 +27,22 @@ export function useQuestionNavigation(
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [questionDetails, setQuestionDetails] = useState<QuestionDetail[]>([]);
-  // Changed to track answers by question ID to prevent duplicates
+  // Track answers by question ID to prevent duplicates
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
 
   const currentQuestion = questions[currentQuestionIndex];
+
+  // Debug logging function
+  const debugAnswerEvaluation = useCallback((questionId: string, selectedOptionIndex: number, selectedText: string, correctText: string, isCorrect: boolean) => {
+    console.log('Answer Evaluation Debug:', {
+      questionId,
+      selectedOptionIndex,
+      selectedText,
+      correctText,
+      isCorrect,
+      match: selectedText === correctText
+    });
+  }, []);
 
   // Initialize user answers when questions change
   useEffect(() => {
@@ -38,6 +50,7 @@ export function useQuestionNavigation(
       setUserAnswers({});
       setCorrectAnswers(0);
       setQuestionDetails([]);
+      console.log('Quiz initialized with questions:', questions.length);
     }
   }, [questions]);
 
@@ -67,12 +80,20 @@ export function useQuestionNavigation(
             questions.forEach(q => {
               if (quizData.userAnswers[q.id] !== undefined) {
                 const userAnswerText = q.options[quizData.userAnswers[q.id]];
-                if (userAnswerText === q.correctAnswer) {
+                const isCorrect = userAnswerText === q.correctAnswer;
+                if (isCorrect) {
                   correct++;
                 }
+                console.log('Restored answer check:', {
+                  questionId: q.id,
+                  userAnswer: userAnswerText,
+                  correctAnswer: q.correctAnswer,
+                  isCorrect
+                });
               }
             });
             setCorrectAnswers(correct);
+            console.log('Restored correct answers count:', correct);
           }
         } catch (e) {
           console.error('Error parsing in-progress quiz:', e);
@@ -94,8 +115,15 @@ export function useQuestionNavigation(
     };
     setUserAnswers(updatedUserAnswers);
     
-    // Calculate correct answers accurately
-    const isCorrect = currentQuestion.options[answerIndex] === currentQuestion.correctAnswer;
+    // Calculate correct answers accurately with proper string comparison
+    const selectedText = currentQuestion.options[answerIndex];
+    const correctText = currentQuestion.correctAnswer;
+    const isCorrect = selectedText === correctText;
+    
+    // Debug the evaluation
+    debugAnswerEvaluation(currentQuestion.id, answerIndex, selectedText, correctText, isCorrect);
+    
+    // Check if previous answer was correct
     const wasCorrectBefore = previousAnswer !== undefined && 
       currentQuestion.options[previousAnswer] === currentQuestion.correctAnswer;
     
@@ -119,14 +147,16 @@ export function useQuestionNavigation(
       localStorage.setItem('inProgressQuiz', JSON.stringify(quizData));
     }
     
-    console.log('Answer selected:', {
+    console.log('Answer selected and evaluated:', {
       questionId: currentQuestion.id,
       answerIndex,
+      selectedText,
+      correctText,
       isCorrect,
       totalCorrect: newCorrectCount,
-      userAnswers: updatedUserAnswers
+      totalAnswered: Object.keys(updatedUserAnswers).length
     });
-  }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers, correctAnswers]);
+  }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers, correctAnswers, debugAnswerEvaluation]);
 
   const goToNextQuestion = useCallback(() => {
     if (!currentQuestion) return false;
@@ -154,7 +184,7 @@ export function useQuestionNavigation(
     }
     setQuestionDetails(updatedDetails);
     
-    console.log('Question completed:', {
+    console.log('Question completed and tracked:', {
       questionId: currentQuestion.id,
       userAnswer: userAnswerText,
       correctAnswer: currentQuestion.correctAnswer,
@@ -182,9 +212,18 @@ export function useQuestionNavigation(
       
       return false;
     } else {
+      // Final evaluation before completion
+      console.log('Quiz completion - Final evaluation:', {
+        totalQuestions: questions.length,
+        answeredQuestions: Object.keys(userAnswers).length,
+        correctAnswers,
+        questionDetails: updatedDetails.length,
+        userAnswers
+      });
+      
       return true;
     }
-  }, [currentQuestionIndex, questions.length, selectedAnswer, currentQuestion, userAnswers, userId, topicId, questionDetails]);
+  }, [currentQuestionIndex, questions.length, selectedAnswer, currentQuestion, userAnswers, userId, topicId, questionDetails, correctAnswers]);
 
   const resetQuestionState = useCallback(() => {
     setCurrentQuestionIndex(0);
