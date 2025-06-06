@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Clock, CheckCircle, AlertTriangle, Check, X, HelpCircle } from 'lucide-react';
+import { Clock, CheckCircle, AlertTriangle, Check, X, HelpCircle, TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { QuizResult } from '@/services/performance/quizResultsService';
@@ -24,6 +24,43 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
     }
     
     return `${minutes}m ${remainingSeconds}s`;
+  };
+
+  // Calculate performance metrics from question details if available
+  const calculateDetailedMetrics = (quiz: QuizResult) => {
+    if (quiz.question_details && Array.isArray(quiz.question_details)) {
+      const details = quiz.question_details as any[];
+      const answeredQuestions = details.filter(q => q.userAnswer && q.userAnswer !== '');
+      const correctAnswers = details.filter(q => q.isCorrect === true).length;
+      const incorrectAnswers = details.filter(q => q.isCorrect === false && q.userAnswer && q.userAnswer !== '').length;
+      const skippedQuestions = details.filter(q => !q.userAnswer || q.userAnswer === '').length;
+      
+      const accuracyRate = answeredQuestions.length > 0 ? Math.round((correctAnswers / answeredQuestions.length) * 100) : 0;
+      const completionRate = Math.round((answeredQuestions.length / details.length) * 100);
+      
+      return {
+        totalQuestions: details.length,
+        correctAnswers,
+        incorrectAnswers,
+        skippedQuestions,
+        answeredQuestions: answeredQuestions.length,
+        accuracyRate,
+        completionRate,
+        hasDetailedData: true
+      };
+    }
+    
+    // Fallback to basic data
+    return {
+      totalQuestions: quiz.total_questions || 10,
+      correctAnswers: quiz.correct_answers || Math.round((quiz.score / 100) * (quiz.total_questions || 10)),
+      incorrectAnswers: quiz.incorrect_answers || 0,
+      skippedQuestions: quiz.skipped_questions || 0,
+      answeredQuestions: (quiz.total_questions || 10) - (quiz.skipped_questions || 0),
+      accuracyRate: quiz.accuracy || quiz.score,
+      completionRate: 100,
+      hasDetailedData: false
+    };
   };
 
   if (loading) {
@@ -64,14 +101,11 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
   const { 
     topic, 
     score, 
-    total_questions, 
-    correct_answers, 
-    incorrect_answers, 
-    skipped_questions, 
     completion_time, 
     submitted_at 
   } = latestQuiz;
 
+  const metrics = calculateDetailedMetrics(latestQuiz);
   const submittedDate = submitted_at 
     ? new Date(submitted_at).toLocaleString('en-US', { 
         month: 'short', 
@@ -81,12 +115,32 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
       }) 
     : 'Recently';
 
+  // Calculate average time per question
+  const averageTimePerQuestion = completion_time && metrics.totalQuestions > 0 
+    ? Math.round(completion_time / metrics.totalQuestions) 
+    : 0;
+
+  // Determine time efficiency
+  const timeEfficiency = averageTimePerQuestion <= 30 ? 'Fast' : 
+                        averageTimePerQuestion <= 60 ? 'Average' : 'Slow';
+
+  const timeEfficiencyColor = timeEfficiency === 'Fast' ? 'text-green-400' :
+                             timeEfficiency === 'Average' ? 'text-yellow-400' : 'text-red-400';
+
   return (
     <Card className="bg-darkBlue-800 border-darkBlue-700">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg text-white">Latest Quiz Result</CardTitle>
-          <span className="text-xs text-gray-400">{submittedDate}</span>
+          <div className="flex items-center gap-2">
+            {metrics.hasDetailedData && (
+              <div className="text-xs text-green-400 flex items-center">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                Detailed
+              </div>
+            )}
+            <span className="text-xs text-gray-400">{submittedDate}</span>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -94,24 +148,48 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
           <h3 className="text-md font-medium text-white">{topic}</h3>
         </div>
         
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm text-gray-400">Score</span>
-            <span className="font-medium text-white">{score}%</span>
+        {/* Score and Accuracy Display */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-gray-400">Overall Score</span>
+              <span className="font-medium text-white">{score}%</span>
+            </div>
+            <Progress
+              value={score}
+              className="h-2 bg-darkBlue-700"
+            />
           </div>
-          <Progress
-            value={score}
-            className="h-2 bg-darkBlue-700"
-          />
+          
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-gray-400">Accuracy Rate</span>
+              <span className="font-medium text-white">{metrics.accuracyRate}%</span>
+            </div>
+            <Progress
+              value={metrics.accuracyRate}
+              className="h-2 bg-darkBlue-700"
+            />
+          </div>
         </div>
         
+        {/* Performance Stats */}
         <div className="mb-4 p-3 bg-darkBlue-700/50 rounded-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 text-blue-400 mr-2" />
-              <span className="text-sm text-gray-300">Completion Time</span>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 text-blue-400 mr-2" />
+                <span className="text-sm text-gray-300">Total Time</span>
+              </div>
+              <span className="text-sm text-gray-300">{formatTime(completion_time)}</span>
             </div>
-            <span className="text-sm text-gray-300">{formatTime(completion_time)}</span>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-300">Avg/Question</span>
+              <span className={`text-sm ${timeEfficiencyColor}`}>
+                {averageTimePerQuestion}s ({timeEfficiency})
+              </span>
+            </div>
           </div>
           
           <div className="grid grid-cols-3 gap-2">
@@ -120,46 +198,71 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
                 <Check className="h-3 w-3 mr-1" />
                 <span className="text-xs">Correct</span>
               </div>
-              <span className="font-bold text-white">{correct_answers}</span>
+              <span className="font-bold text-white">{metrics.correctAnswers}</span>
+              <span className="text-xs text-gray-400">
+                {Math.round((metrics.correctAnswers / metrics.totalQuestions) * 100)}%
+              </span>
             </div>
             <div className="flex flex-col items-center p-2 bg-darkBlue-700 rounded-lg">
               <div className="flex items-center text-red-500 mb-1">
                 <X className="h-3 w-3 mr-1" />
                 <span className="text-xs">Incorrect</span>
               </div>
-              <span className="font-bold text-white">{incorrect_answers}</span>
+              <span className="font-bold text-white">{metrics.incorrectAnswers}</span>
+              <span className="text-xs text-gray-400">
+                {Math.round((metrics.incorrectAnswers / metrics.totalQuestions) * 100)}%
+              </span>
             </div>
             <div className="flex flex-col items-center p-2 bg-darkBlue-700 rounded-lg">
               <div className="flex items-center text-gray-500 mb-1">
                 <HelpCircle className="h-3 w-3 mr-1" />
                 <span className="text-xs">Skipped</span>
               </div>
-              <span className="font-bold text-white">{skipped_questions}</span>
+              <span className="font-bold text-white">{metrics.skippedQuestions}</span>
+              <span className="text-xs text-gray-400">
+                {Math.round((metrics.skippedQuestions / metrics.totalQuestions) * 100)}%
+              </span>
             </div>
           </div>
         </div>
         
+        {/* Performance Feedback */}
         <div className={`py-3 px-4 rounded-lg text-sm border ${
-          score >= 70 
+          score >= 80 
             ? 'bg-green-500/10 border-green-500/30 text-green-400' 
-            : score >= 40 
+            : score >= 60 
             ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
             : 'bg-red-500/10 border-red-500/30 text-red-400'
         }`}>
-          {score >= 70 ? (
+          {score >= 80 ? (
             <div className="flex items-start">
               <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-              <span>Great job! You have a strong understanding of this topic.</span>
+              <div>
+                <span className="font-medium">Excellent Performance!</span>
+                <div className="text-xs mt-1 opacity-90">
+                  Strong understanding with {metrics.accuracyRate}% accuracy on attempted questions.
+                </div>
+              </div>
             </div>
-          ) : score >= 40 ? (
+          ) : score >= 60 ? (
             <div className="flex items-start">
               <AlertTriangle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-              <span>You're making progress. Keep practicing to improve your score.</span>
+              <div>
+                <span className="font-medium">Good Progress!</span>
+                <div className="text-xs mt-1 opacity-90">
+                  Keep practicing to improve accuracy. {metrics.skippedQuestions > 0 && `Consider attempting all ${metrics.totalQuestions} questions.`}
+                </div>
+              </div>
             </div>
           ) : (
             <div className="flex items-start">
               <AlertTriangle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-              <span>This topic needs attention. Review the material and try again.</span>
+              <div>
+                <span className="font-medium">Needs Attention</span>
+                <div className="text-xs mt-1 opacity-90">
+                  Focus on core concepts. {timeEfficiency === 'Slow' ? 'Also practice for better speed.' : 'Review fundamentals thoroughly.'}
+                </div>
+              </div>
             </div>
           )}
         </div>
