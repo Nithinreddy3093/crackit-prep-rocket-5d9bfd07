@@ -15,6 +15,7 @@ export interface QuizResult {
   accuracy: number;
   completion_time: number;
   submitted_at?: string;
+  question_details?: any[]; // Add this property to match the database schema
 }
 
 // Get quiz results for a user
@@ -43,7 +44,8 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
       skipped_questions: 0,
       accuracy: item.score, // Using score as accuracy since they're equivalent
       completion_time: item.completion_time || 0,
-      submitted_at: item.date
+      submitted_at: item.date,
+      question_details: item.question_details || [] // Include question details from database
     }));
   } catch (error) {
     console.error('Error in getUserQuizResults:', error);
@@ -78,7 +80,8 @@ export const getRecentQuizResults = async (userId: string, limit: number = 5): P
       skipped_questions: 0,
       accuracy: item.score, // Using score as accuracy since they're equivalent
       completion_time: item.completion_time || 0,
-      submitted_at: item.date
+      submitted_at: item.date,
+      question_details: item.question_details || [] // Include question details from database
     }));
   } catch (error) {
     console.error('Error in getRecentQuizResults:', error);

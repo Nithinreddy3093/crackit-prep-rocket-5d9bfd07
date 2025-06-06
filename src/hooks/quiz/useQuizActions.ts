@@ -91,8 +91,8 @@ export function useQuizActions(
       return;
     }
     
-    // Calculate analytics
-    const analytics = calculateQuizAnalytics(questionDetails, correctAnswers, questions.length, elapsedTime);
+    // Calculate analytics with correct number of arguments (3 parameters: questionDetails, totalQuestions, elapsedTime)
+    const analytics = calculateQuizAnalytics(questionDetails, questions.length, elapsedTime);
     
     console.log('Quiz analytics:', analytics);
     
