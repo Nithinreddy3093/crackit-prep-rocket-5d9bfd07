@@ -15,8 +15,31 @@ export interface QuizResult {
   accuracy: number;
   completion_time: number;
   submitted_at?: string;
-  question_details?: any[]; // Add this property to match the database schema
+  question_details?: any[]; // Array of question detail objects
 }
+
+// Helper function to safely convert Json to question details array
+const parseQuestionDetails = (questionDetails: Json | null): any[] => {
+  if (!questionDetails) return [];
+  
+  // If it's already an array, return it
+  if (Array.isArray(questionDetails)) {
+    return questionDetails;
+  }
+  
+  // If it's a string, try to parse it as JSON
+  if (typeof questionDetails === 'string') {
+    try {
+      const parsed = JSON.parse(questionDetails);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  
+  // For other types, return empty array
+  return [];
+};
 
 // Get quiz results for a user
 export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> => {
@@ -45,7 +68,7 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
       accuracy: item.score, // Using score as accuracy since they're equivalent
       completion_time: item.completion_time || 0,
       submitted_at: item.date,
-      question_details: item.question_details || [] // Include question details from database
+      question_details: parseQuestionDetails(item.question_details)
     }));
   } catch (error) {
     console.error('Error in getUserQuizResults:', error);
@@ -81,7 +104,7 @@ export const getRecentQuizResults = async (userId: string, limit: number = 5): P
       accuracy: item.score, // Using score as accuracy since they're equivalent
       completion_time: item.completion_time || 0,
       submitted_at: item.date,
-      question_details: item.question_details || [] // Include question details from database
+      question_details: parseQuestionDetails(item.question_details)
     }));
   } catch (error) {
     console.error('Error in getRecentQuizResults:', error);
