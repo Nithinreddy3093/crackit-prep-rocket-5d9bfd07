@@ -16,6 +16,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
+  signInWithProvider: (provider: 'github' | 'google') => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -131,6 +132,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const signInWithProvider = async (provider: 'github' | 'google') => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      toast({
+        title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} login failed`,
+        description: error.message || `There was an error signing in with ${provider}. Please try again.`,
+        variant: "destructive",
+      });
+    }
+  };
+
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -157,6 +179,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isLoading,
         login,
         signup,
+        signInWithProvider,
         logout
       }}
     >

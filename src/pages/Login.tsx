@@ -19,7 +19,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
-  const { login, isLoading } = useAuth();
+  const { login, signInWithProvider, isLoading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -113,11 +113,21 @@ const Login = () => {
               </div>
               
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" disabled={isLoading} className="border-border">
+                <Button 
+                  variant="outline" 
+                  disabled={isLoading} 
+                  className="border-border"
+                  onClick={() => signInWithProvider('github')}
+                >
                   <Github className="mr-2 h-4 w-4" />
                   GitHub
                 </Button>
-                <Button variant="outline" disabled={isLoading} className="border-border">
+                <Button 
+                  variant="outline" 
+                  disabled={isLoading} 
+                  className="border-border"
+                  onClick={() => signInWithProvider('google')}
+                >
                   <Mail className="mr-2 h-4 w-4" />
                   Google
                 </Button>
