@@ -60,7 +60,7 @@ const Dashboard = () => {
           type: 'quiz' as const,
           name: `${result.topic} Quiz`,
           score: `${result.score}/100`,
-          date: result.submitted_at || new Date().toISOString(),
+          date: result.date || new Date().toISOString(),
           topic: result.topic
         }));
         

@@ -50,14 +50,17 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
       };
     }
     
-    // Fallback to basic data
+    // Fallback to basic data - estimate from score
+    const estimatedTotal = 10; // Default assumption
+    const estimatedCorrect = Math.round((quiz.score / 100) * estimatedTotal);
+    
     return {
-      totalQuestions: quiz.total_questions || 10,
-      correctAnswers: quiz.correct_answers || Math.round((quiz.score / 100) * (quiz.total_questions || 10)),
-      incorrectAnswers: quiz.incorrect_answers || 0,
-      skippedQuestions: quiz.skipped_questions || 0,
-      answeredQuestions: (quiz.total_questions || 10) - (quiz.skipped_questions || 0),
-      accuracyRate: quiz.accuracy || quiz.score,
+      totalQuestions: estimatedTotal,
+      correctAnswers: estimatedCorrect,
+      incorrectAnswers: estimatedTotal - estimatedCorrect,
+      skippedQuestions: 0,
+      answeredQuestions: estimatedTotal,
+      accuracyRate: quiz.score,
       completionRate: 100,
       hasDetailedData: false
     };
@@ -102,12 +105,12 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
     topic, 
     score, 
     completion_time, 
-    submitted_at 
+    date 
   } = latestQuiz;
 
   const metrics = calculateDetailedMetrics(latestQuiz);
-  const submittedDate = submitted_at 
-    ? new Date(submitted_at).toLocaleString('en-US', { 
+  const submittedDate = date 
+    ? new Date(date).toLocaleString('en-US', { 
         month: 'short', 
         day: 'numeric', 
         hour: '2-digit', 

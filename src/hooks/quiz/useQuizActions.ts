@@ -34,30 +34,7 @@ export function useQuizActions(
   
   // Modified goToNextQuestion to handle quiz completion and track question details
   const handleNextQuestion = () => {
-    if (currentQuestion && selectedAnswer !== null) {
-      // Track question details with proper evaluation
-      const userAnswerText = currentQuestion.options[selectedAnswer];
-      const isCorrect = userAnswerText === currentQuestion.correctAnswer;
-      
-      console.log('Tracking question detail:', {
-        questionId: currentQuestion.id,
-        userAnswer: userAnswerText,
-        correctAnswer: currentQuestion.correctAnswer,
-        isCorrect,
-        selectedIndex: selectedAnswer
-      });
-      
-      const questionDetail = {
-        questionId: currentQuestion.id,
-        question: currentQuestion.text,
-        userAnswer: userAnswerText,
-        correctAnswer: currentQuestion.correctAnswer,
-        isCorrect
-      };
-      
-      setQuestionDetails([...questionDetails, questionDetail]);
-    }
-    
+    // Don't track details here - let goToNextQuestion handle it to avoid duplicates
     const isCompleted = goToNextQuestion();
     if (isCompleted) {
       console.log('Quiz completed, triggering completion...');

@@ -116,16 +116,11 @@ export function useQuizSubmission() {
         });
       }
       
-      // Create detailed quiz result record with validated data
+      // Create detailed quiz result record for the quiz_results table
       const quizResult = {
         user_id: userId,
         topic: quizTopic,
-        score: Math.round((actualCorrect / totalQuestions) * 100), // Use validated correct count
-        total_questions: totalQuestions,
-        correct_answers: actualCorrect,
-        incorrect_answers: incorrect,
-        skipped_questions: skipped,
-        accuracy: attempted > 0 ? Math.round((actualCorrect / attempted) * 100) : 0,
+        score: Math.round((actualCorrect / totalQuestions) * 100),
         completion_time: completionTime,
         question_details: questionDetails || []
       };

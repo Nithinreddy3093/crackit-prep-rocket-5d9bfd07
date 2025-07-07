@@ -2,20 +2,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 
-// Define the QuizResult type that matches our Supabase table
+// Define the QuizResult type that matches our Supabase quiz_results table structure
 export interface QuizResult {
   id?: string;
   user_id: string;
   topic: string;
   score: number;
-  total_questions: number;
-  correct_answers: number;
-  incorrect_answers: number;
-  skipped_questions: number;
-  accuracy: number;
-  completion_time: number;
-  submitted_at?: string;
+  completion_time?: number;
   question_details?: any[]; // Array of question detail objects
+  date?: string;
 }
 
 // Helper function to safely convert Json to question details array
@@ -61,13 +56,8 @@ export const getUserQuizResults = async (userId: string): Promise<QuizResult[]> 
       user_id: item.user_id,
       topic: item.topic,
       score: item.score,
-      total_questions: 0, // Default values since these columns don't exist in the DB
-      correct_answers: 0,
-      incorrect_answers: 0,
-      skipped_questions: 0,
-      accuracy: item.score, // Using score as accuracy since they're equivalent
       completion_time: item.completion_time || 0,
-      submitted_at: item.date,
+      date: item.date,
       question_details: parseQuestionDetails(item.question_details)
     }));
   } catch (error) {
@@ -97,13 +87,8 @@ export const getRecentQuizResults = async (userId: string, limit: number = 5): P
       user_id: item.user_id,
       topic: item.topic,
       score: item.score,
-      total_questions: 0, // Default values since these columns don't exist in the DB
-      correct_answers: 0,
-      incorrect_answers: 0,
-      skipped_questions: 0,
-      accuracy: item.score, // Using score as accuracy since they're equivalent
       completion_time: item.completion_time || 0,
-      submitted_at: item.date,
+      date: item.date,
       question_details: parseQuestionDetails(item.question_details)
     }));
   } catch (error) {

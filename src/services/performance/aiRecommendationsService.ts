@@ -23,9 +23,19 @@ export const getAIRecommendations = async (userId: string): Promise<string> => {
         topicPerformance[quiz.topic] = { correct: 0, total: 0 };
       }
       
-      // Track accuracy by topic
-      topicPerformance[quiz.topic].correct += quiz.correct_answers;
-      topicPerformance[quiz.topic].total += quiz.total_questions;
+      // Calculate from question details if available, otherwise estimate from score
+      if (quiz.question_details && Array.isArray(quiz.question_details)) {
+        const details = quiz.question_details as any[];
+        const correctCount = details.filter(q => q.isCorrect === true).length;
+        topicPerformance[quiz.topic].correct += correctCount;
+        topicPerformance[quiz.topic].total += details.length;
+      } else {
+        // Fallback calculation from score percentage
+        const estimatedTotal = 10; // Default assumption
+        const estimatedCorrect = Math.round((quiz.score / 100) * estimatedTotal);
+        topicPerformance[quiz.topic].correct += estimatedCorrect;
+        topicPerformance[quiz.topic].total += estimatedTotal;
+      }
     });
     
     // Identify specific strengths and weaknesses by topic

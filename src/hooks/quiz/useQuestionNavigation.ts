@@ -108,32 +108,22 @@ export function useQuestionNavigation(
     setSelectedAnswer(answerIndex);
     
     // Update userAnswers with question ID as key
-    const previousAnswer = userAnswers[currentQuestion.id];
     const updatedUserAnswers = {
       ...userAnswers,
       [currentQuestion.id]: answerIndex
     };
     setUserAnswers(updatedUserAnswers);
     
-    // Calculate correct answers accurately with proper string comparison
-    const selectedText = currentQuestion.options[answerIndex];
-    const correctText = currentQuestion.correctAnswer;
-    const isCorrect = selectedText === correctText;
+    // Recalculate total correct answers from all user answers
+    let totalCorrect = 0;
+    Object.entries(updatedUserAnswers).forEach(([questionId, selectedIndex]) => {
+      const question = questions.find(q => q.id === questionId);
+      if (question && question.options[selectedIndex] === question.correctAnswer) {
+        totalCorrect++;
+      }
+    });
     
-    // Debug the evaluation
-    debugAnswerEvaluation(currentQuestion.id, answerIndex, selectedText, correctText, isCorrect);
-    
-    // Check if previous answer was correct
-    const wasCorrectBefore = previousAnswer !== undefined && 
-      currentQuestion.options[previousAnswer] === currentQuestion.correctAnswer;
-    
-    let newCorrectCount = correctAnswers;
-    if (isCorrect && !wasCorrectBefore) {
-      newCorrectCount = correctAnswers + 1;
-    } else if (!isCorrect && wasCorrectBefore) {
-      newCorrectCount = correctAnswers - 1;
-    }
-    setCorrectAnswers(newCorrectCount);
+    setCorrectAnswers(totalCorrect);
     
     // Save progress to localStorage
     if (userId && topicId) {
@@ -150,10 +140,7 @@ export function useQuestionNavigation(
     console.log('Answer selected and evaluated:', {
       questionId: currentQuestion.id,
       answerIndex,
-      selectedText,
-      correctText,
-      isCorrect,
-      totalCorrect: newCorrectCount,
+      totalCorrect: totalCorrect,
       totalAnswered: Object.keys(updatedUserAnswers).length
     });
   }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers, correctAnswers, debugAnswerEvaluation]);
