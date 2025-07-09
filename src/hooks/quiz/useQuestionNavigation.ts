@@ -80,7 +80,8 @@ export function useQuestionNavigation(
             questions.forEach(q => {
               if (quizData.userAnswers[q.id] !== undefined) {
                 const userAnswerText = q.options[quizData.userAnswers[q.id]];
-                const isCorrect = userAnswerText === q.correctAnswer;
+                // Improved comparison with normalization
+                const isCorrect = userAnswerText?.trim().toLowerCase() === q.correctAnswer?.trim().toLowerCase();
                 if (isCorrect) {
                   correct++;
                 }
@@ -114,12 +115,24 @@ export function useQuestionNavigation(
     };
     setUserAnswers(updatedUserAnswers);
     
-    // Recalculate total correct answers from all user answers
+    // Recalculate total correct answers from all user answers with proper comparison
     let totalCorrect = 0;
     Object.entries(updatedUserAnswers).forEach(([questionId, selectedIndex]) => {
       const question = questions.find(q => q.id === questionId);
-      if (question && question.options[selectedIndex] === question.correctAnswer) {
-        totalCorrect++;
+      if (question) {
+        const userAnswer = question.options[selectedIndex];
+        const correctAnswer = question.correctAnswer;
+        // Normalize both answers for comparison
+        const isCorrect = userAnswer?.trim().toLowerCase() === correctAnswer?.trim().toLowerCase();
+        if (isCorrect) {
+          totalCorrect++;
+        }
+        console.log('Answer comparison:', {
+          questionId,
+          userAnswer,
+          correctAnswer,
+          isCorrect
+        });
       }
     });
     
@@ -151,7 +164,9 @@ export function useQuestionNavigation(
     // Only track question detail if not already tracked
     const existingDetailIndex = questionDetails.findIndex(d => d.questionId === currentQuestion.id);
     const userAnswerText = selectedAnswer !== null ? currentQuestion.options[selectedAnswer] : '';
-    const isCorrect = selectedAnswer !== null && currentQuestion.options[selectedAnswer] === currentQuestion.correctAnswer;
+    // Improved answer comparison with normalization
+    const isCorrect = selectedAnswer !== null && 
+      userAnswerText?.trim().toLowerCase() === currentQuestion.correctAnswer?.trim().toLowerCase();
     
     const detail: QuestionDetail = {
       questionId: currentQuestion.id,

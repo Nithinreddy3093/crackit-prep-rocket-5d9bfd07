@@ -125,10 +125,8 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
   }, [currentQuestion?.id]);
   
   const isAnswered = selectedAnswer !== null;
-  const isCorrect = useMemo(() => 
-    isAnswered && currentQuestion?.options[selectedAnswer] === currentQuestion?.correctAnswer,
-    [isAnswered, currentQuestion, selectedAnswer]
-  );
+  // Don't show correct/incorrect during quiz - only track selection
+  const isCorrect = null; // Will be calculated only on results page
   
   // Compute progress once
   const progressPercentage = useMemo(() => 
@@ -145,33 +143,8 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
     onAnswerSelect(index);
   }, [onAnswerSelect]);
 
-  // Memoize feedback message
-  const feedbackMessage = useMemo(() => {
-    if (!isAnswered) return null;
-    
-    const feedbackClass = isCorrect 
-      ? 'bg-green-500/10 border border-green-500/30' 
-      : 'bg-red-500/10 border border-red-500/30';
-    
-    return (
-      <div className={`p-4 rounded-lg ${feedbackClass}`}>
-        <div className="font-semibold mb-2 flex items-center">
-          {isCorrect ? 
-            <><CheckCircle className="h-4 w-4 mr-2 text-green-400" /> Correct!</> : 
-            <><AlertCircle className="h-4 w-4 mr-2 text-red-400" /> Incorrect</>
-          }
-        </div>
-        <p className="text-sm text-white/80">
-          {currentQuestion?.explanation || 
-            (isCorrect ? 
-              "Great job! That's the right answer." : 
-              `The correct answer is "${currentQuestion?.correctAnswer}".`
-            )
-          }
-        </p>
-      </div>
-    );
-  }, [isAnswered, isCorrect, currentQuestion]);
+  // Don't show feedback during quiz - only after completion
+  const feedbackMessage = null;
 
   if (!currentQuestion) {
     return <div className="min-h-[400px] flex items-center justify-center">
@@ -225,16 +198,15 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
             option={option}
             index={index}
             selected={selectedAnswer === index}
-            isCorrect={isAnswered ? option === currentQuestion.correctAnswer : null}
-            isAnswered={isAnswered}
+            isCorrect={null} // Don't show correct/incorrect during quiz
+            isAnswered={false} // Don't show answered state during quiz
             correctAnswer={currentQuestion.correctAnswer}
             onSelect={createAnswerSelectHandler(index)}
           />
         ))}
       </div>
       
-      {/* Feedback and next button */}
-      {feedbackMessage}
+      {/* No feedback during quiz */}
       
       <div className="flex justify-between pt-4">
         <div className="text-sm text-white/60">

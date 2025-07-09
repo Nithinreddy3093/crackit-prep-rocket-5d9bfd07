@@ -128,13 +128,15 @@ export function useQuizSubmission() {
       console.log('Final quiz result for submission:', quizResult);
       
       // Submit to quiz_results table
+      console.log('About to submit quiz result to database...');
       const submitted = await submitQuizResult(quizResult);
       
       if (!submitted) {
+        console.error('Database submission failed');
         throw new Error("Failed to save quiz results to database");
       }
       
-      console.log('Quiz result submitted successfully to database');
+      console.log('✅ Quiz result submitted successfully to database');
       
       // Also update the user's performance metrics in Supabase
       const performanceData = await updateUserPerformance(userId, quizTopic, quizResult.score, completionTime);
@@ -164,8 +166,8 @@ export function useQuizSubmission() {
       console.log('Invalidated all relevant queries');
       
       toast({
-        title: "Quiz Submitted Successfully",
-        description: `Your score of ${quizResult.score}% has been recorded.`,
+        title: "Quiz Saved Successfully ✅",
+        description: `Your score of ${quizResult.score}% has been saved to your profile.`,
         variant: "default",
       });
       
@@ -188,8 +190,8 @@ export function useQuizSubmission() {
       console.error("=== QUIZ SUBMISSION ERROR ===");
       console.error("Error submitting quiz:", error);
       toast({
-        title: "Error submitting quiz",
-        description: error.message || "Failed to submit the quiz. Please try again.",
+        title: "Failed to Save ❌",
+        description: error.message || "Failed to save quiz results. Please try again.",
         variant: "destructive",
       });
       throw error;
