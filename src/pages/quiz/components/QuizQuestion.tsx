@@ -185,9 +185,7 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
       {/* Question */}
       <div className="space-y-2">
         <h3 className="text-xl font-semibold text-white">{currentQuestion.text}</h3>
-        {currentQuestion.explanation && (
-          <div className="text-white/70 text-sm">{currentQuestion.explanation}</div>
-        )}
+        {/* Don't show explanation during quiz - only show it after completion */}
       </div>
       
       {/* Answer options */}

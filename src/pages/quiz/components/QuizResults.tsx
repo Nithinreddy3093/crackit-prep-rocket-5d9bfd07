@@ -16,6 +16,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { toast } from "@/components/ui/use-toast";
+import { getMockQuestions, generateAdditionalQuestions } from '@/services/questionService';
 
 interface QuestionDetail {
   questionId: string;
@@ -218,6 +219,26 @@ const QuizResults: React.FC<QuizResultsProps> = ({
     }
   }, [isSubmitting, isSubmitted, onSubmit, topicTitle]);
 
+  // Helper function to get explanation for a question
+  const getExplanationForQuestion = useCallback((questionId: string) => {
+    try {
+      // Extract topic from question ID (e.g., 'dbms-5' -> 'dbms')
+      const topicId = questionId.split('-')[0];
+      
+      // Get all questions for this topic (both base and additional)
+      const baseQuestions = getMockQuestions(topicId);
+      const additionalQuestions = generateAdditionalQuestions(topicId);
+      const allQuestions = [...baseQuestions, ...additionalQuestions];
+      
+      const question = allQuestions.find(q => q.id === questionId);
+      
+      return question?.explanation || 'No explanation available for this question.';
+    } catch (error) {
+      console.error('Error getting explanation for question:', questionId, error);
+      return 'Explanation not available.';
+    }
+  }, []);
+
   return (
     <div className="glass-card p-6 space-y-6 animate-fade-in">
       <div className="text-center">
@@ -364,7 +385,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-3 pb-4 pt-1">
-                  <div className="space-y-2 text-sm text-white/80">
+                  <div className="space-y-3 text-sm text-white/80">
                     <div className="p-3 bg-darkBlue-900/30 rounded">
                       <span className="font-semibold text-white/90">Question: </span>
                       <span>{detail.question}</span>
@@ -380,10 +401,18 @@ const QuizResults: React.FC<QuizResultsProps> = ({
                       </span>
                     </div>
                     
-                    {!detail.isCorrect && detail.userAnswer !== '' && (
-                      <div>
-                        <span className="font-semibold text-white/90">Correct answer: </span> 
-                        <span className="ml-1 text-green-400">{detail.correctAnswer}</span>
+                    <div>
+                      <span className="font-semibold text-white/90">Correct answer: </span> 
+                      <span className="ml-1 text-green-400">{detail.correctAnswer}</span>
+                    </div>
+                    
+                    {/* Show explanation if available - this is where explanations should appear */}
+                    {detail.questionId && (
+                      <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded">
+                        <span className="font-semibold text-blue-400">Explanation: </span>
+                        <span className="text-white/90">
+                          {getExplanationForQuestion(detail.questionId)}
+                        </span>
                       </div>
                     )}
                     

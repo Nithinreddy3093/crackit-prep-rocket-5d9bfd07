@@ -65,8 +65,8 @@ const getExpandedQuestions = (topicId: string): Question[] => {
   return [...baseQuestions, ...expandedQuestions];
 };
 
-// Generate additional questions dynamically to have more variety
-const generateAdditionalQuestions = (topicId: string): Question[] => {
+// Generate additional questions dynamically to have more variety (exported for accessing explanations)
+export const generateAdditionalQuestions = (topicId: string): Question[] => {
   // Generate additional questions based on the topic
   switch (topicId) {
     case 'dsa':
@@ -294,8 +294,8 @@ export const getQuestionsFromMultipleTopics = async (
   }
 };
 
-// Mock questions by topic (will be replaced by database queries later)
-const getMockQuestions = (topicId: string): Question[] => {
+// Mock questions by topic (exported for accessing explanations)
+export const getMockQuestions = (topicId: string): Question[] => {
   const topics: Record<string, Question[]> = {
     'dsa': [
       {
