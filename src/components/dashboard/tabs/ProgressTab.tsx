@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { BarChart3, ListChecks, BookOpenCheck } from 'lucide-react';
-import { ActivityItem } from '@/pages/Dashboard';
+import { ActivityItem } from '@/types/dashboard';
 import StudyStats from '@/components/dashboard/StudyStats';
 import ActivityHistory from '@/components/dashboard/ActivityHistory';
 
