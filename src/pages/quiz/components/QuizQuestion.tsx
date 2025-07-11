@@ -1,8 +1,9 @@
-
-import React, { memo, useMemo, useCallback, useState, useEffect } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import { Question } from '@/services/questionService';
-import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import QuizOption from './QuizOption';
+import QuizHeader from './QuizHeader';
+import QuizProgress from './QuizProgress';
+import QuizActions from './QuizActions';
 
 interface QuizQuestionProps {
   currentQuestion: Question;
@@ -15,77 +16,6 @@ interface QuizQuestionProps {
   formatTime: (ms: number) => string;
   topicTitle?: string;
 }
-
-// Memoized option component to reduce re-renders
-const QuizOption = memo(({ 
-  option, 
-  index, 
-  selected, 
-  isCorrect, 
-  isAnswered, 
-  correctAnswer,
-  onSelect 
-}: { 
-  option: string; 
-  index: number; 
-  selected: boolean; 
-  isCorrect: boolean | null; 
-  isAnswered: boolean;
-  correctAnswer: string;
-  onSelect: () => void;
-}) => {
-  // Create classes as a memoized value to prevent recalculation
-  const classes = useMemo(() => {
-    const baseClasses = `p-4 rounded-lg border transition-all`;
-    const interactionClasses = !isAnswered ? 'cursor-pointer hover:bg-white/5 hover:border-white/30' : 'cursor-default';
-    
-    let stateClasses = 'border-white/10 bg-white/5';
-    if (selected && isCorrect === true) {
-      stateClasses = 'bg-green-500/20 border-green-500/50';
-    } else if (selected && isCorrect === false) {
-      stateClasses = 'bg-red-500/20 border-red-500/50';
-    } else if (!selected && option === correctAnswer && isAnswered) {
-      stateClasses = 'bg-green-500/10 border-green-500/30';
-    } else if (!selected && isAnswered) {
-      stateClasses = 'opacity-50';
-    }
-    
-    return `${baseClasses} ${interactionClasses} ${stateClasses}`;
-  }, [selected, isCorrect, isAnswered, option, correctAnswer]);
-
-  const optionLetterClass = useMemo(() => 
-    `w-6 h-6 rounded-full mr-3 flex items-center justify-center text-xs ${selected ? 'bg-white/20' : 'bg-darkBlue-800/70'}`,
-    [selected]
-  );
-  
-  // Use a callback for the onClick handler to prevent recreation
-  const handleClick = useCallback(() => {
-    if (!isAnswered) {
-      onSelect();
-    }
-  }, [isAnswered, onSelect]);
-
-  return (
-    <div onClick={handleClick} className={classes}>
-      <div className="flex items-center">
-        <div className={optionLetterClass}>
-          {String.fromCharCode(65 + index)}
-        </div>
-        <div className="flex-grow">{option}</div>
-        {isAnswered && (
-          <div className="ml-2">
-            {option === correctAnswer ? 
-              <CheckCircle className="h-5 w-5 text-green-400" /> : 
-              (selected ? <AlertCircle className="h-5 w-5 text-red-400" /> : null)
-            }
-          </div>
-        )}
-      </div>
-    </div>
-  );
-});
-
-QuizOption.displayName = 'QuizOption';
 
 // Prevent unnecessary re-renders by wrapping the component
 const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
@@ -127,24 +57,10 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
   const isAnswered = selectedAnswer !== null;
   // Don't show correct/incorrect during quiz - only track selection
   const isCorrect = null; // Will be calculated only on results page
-  
-  // Compute progress once
-  const progressPercentage = useMemo(() => 
-    Math.floor(((currentIndex) / totalQuestions) * 100), 
-    [currentIndex, totalQuestions]
-  );
-
-  // Memoize handlers to prevent recreations on each render
-  const handleNextQuestion = useCallback(() => {
-    onNextQuestion();
-  }, [onNextQuestion]);
 
   const createAnswerSelectHandler = useCallback((index: number) => () => {
     onAnswerSelect(index);
   }, [onAnswerSelect]);
-
-  // Don't show feedback during quiz - only after completion
-  const feedbackMessage = null;
 
   if (!currentQuestion) {
     return <div className="min-h-[400px] flex items-center justify-center">
@@ -157,30 +73,17 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
   return (
     <div className={`glass-card p-6 space-y-6 transition-opacity duration-300 ${animationClass}`}>
       {/* Header with topic and timer */}
-      <div className="flex justify-between items-center">
-        <div className="text-white">
-          <span className="text-sm font-light">Topic:</span>
-          <h3 className="text-lg font-semibold">{topicTitle || 'General Knowledge'}</h3>
-        </div>
-        <div className="flex items-center space-x-1 text-white/90 bg-darkBlue-800/50 px-3 py-1 rounded-full">
-          <Clock className="h-4 w-4" />
-          <span className="text-sm font-mono">{formatTime(elapsedTime)}</span>
-        </div>
-      </div>
+      <QuizHeader 
+        topicTitle={topicTitle}
+        elapsedTime={elapsedTime}
+        formatTime={formatTime}
+      />
       
       {/* Question progress */}
-      <div className="space-y-2">
-        <div className="flex justify-between items-center text-white/80 text-sm">
-          <span>Question {currentIndex + 1} of {totalQuestions}</span>
-          <span>{progressPercentage}% Complete</span>
-        </div>
-        <div className="w-full bg-darkBlue-800/50 rounded-full h-2">
-          <div 
-            className="bg-primary h-2 rounded-full transition-all duration-300" 
-            style={{ width: `${progressPercentage}%` }}
-          ></div>
-        </div>
-      </div>
+      <QuizProgress 
+        currentIndex={currentIndex}
+        totalQuestions={totalQuestions}
+      />
       
       {/* Question */}
       <div className="space-y-2">
@@ -204,20 +107,14 @@ const QuizQuestion: React.FC<QuizQuestionProps> = memo(({
         ))}
       </div>
       
-      {/* No feedback during quiz */}
-      
-      <div className="flex justify-between pt-4">
-        <div className="text-sm text-white/60">
-          ID: {currentQuestion.id}
-        </div>
-        <Button 
-          onClick={handleNextQuestion}
-          disabled={!isAnswered}
-          className="bg-primary hover:bg-primary/90"
-        >
-          {currentIndex === totalQuestions - 1 ? 'Finish Quiz' : 'Next Question'}
-        </Button>
-      </div>
+      {/* Actions */}
+      <QuizActions 
+        currentIndex={currentIndex}
+        totalQuestions={totalQuestions}
+        isAnswered={isAnswered}
+        questionId={currentQuestion.id}
+        onNextQuestion={onNextQuestion}
+      />
     </div>
   );
 });
