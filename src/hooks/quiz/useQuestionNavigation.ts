@@ -122,17 +122,14 @@ export function useQuestionNavigation(
       if (question) {
         const userAnswer = question.options[selectedIndex];
         const correctAnswer = question.correctAnswer;
-        // Normalize both answers for comparison
-        const isCorrect = userAnswer?.trim().toLowerCase() === correctAnswer?.trim().toLowerCase();
+        // Normalize both answers for comparison - handle edge cases
+        const normalizedUserAnswer = userAnswer?.trim().toLowerCase() || '';
+        const normalizedCorrectAnswer = correctAnswer?.trim().toLowerCase() || '';
+        const isCorrect = normalizedUserAnswer === normalizedCorrectAnswer;
         if (isCorrect) {
           totalCorrect++;
         }
-        console.log('Answer comparison:', {
-          questionId,
-          userAnswer,
-          correctAnswer,
-          isCorrect
-        });
+        debugAnswerEvaluation(questionId, selectedIndex, userAnswer, correctAnswer, isCorrect);
       }
     });
     
@@ -153,20 +150,22 @@ export function useQuestionNavigation(
     console.log('Answer selected and evaluated:', {
       questionId: currentQuestion.id,
       answerIndex,
+      userAnswer: currentQuestion.options[answerIndex],
+      correctAnswer: currentQuestion.correctAnswer,
       totalCorrect: totalCorrect,
       totalAnswered: Object.keys(updatedUserAnswers).length
     });
-  }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers, correctAnswers, debugAnswerEvaluation]);
+  }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers, debugAnswerEvaluation]);
 
   const goToNextQuestion = useCallback(() => {
     if (!currentQuestion) return false;
     
-    // Only track question detail if not already tracked
-    const existingDetailIndex = questionDetails.findIndex(d => d.questionId === currentQuestion.id);
+    // Always track question detail for the current question
     const userAnswerText = selectedAnswer !== null ? currentQuestion.options[selectedAnswer] : '';
-    // Improved answer comparison with normalization
-    const isCorrect = selectedAnswer !== null && 
-      userAnswerText?.trim().toLowerCase() === currentQuestion.correctAnswer?.trim().toLowerCase();
+    // Improved answer comparison with normalization  
+    const normalizedUserAnswer = userAnswerText?.trim().toLowerCase() || '';
+    const normalizedCorrectAnswer = currentQuestion.correctAnswer?.trim().toLowerCase() || '';
+    const isCorrect = selectedAnswer !== null && normalizedUserAnswer === normalizedCorrectAnswer;
     
     const detail: QuestionDetail = {
       questionId: currentQuestion.id,
@@ -176,13 +175,16 @@ export function useQuestionNavigation(
       isCorrect
     };
     
-    // Update or add question detail
+    // Check if this question already exists in details and update/add accordingly
+    const existingDetailIndex = questionDetails.findIndex(d => d.questionId === currentQuestion.id);
     let updatedDetails;
     if (existingDetailIndex >= 0) {
       updatedDetails = [...questionDetails];
       updatedDetails[existingDetailIndex] = detail;
+      console.log('Updated existing question detail:', currentQuestion.id);
     } else {
       updatedDetails = [...questionDetails, detail];
+      console.log('Added new question detail:', currentQuestion.id);
     }
     setQuestionDetails(updatedDetails);
     
@@ -190,7 +192,10 @@ export function useQuestionNavigation(
       questionId: currentQuestion.id,
       userAnswer: userAnswerText,
       correctAnswer: currentQuestion.correctAnswer,
+      normalizedUserAnswer,
+      normalizedCorrectAnswer,
       isCorrect,
+      selectedAnswer,
       totalQuestionDetails: updatedDetails.length
     });
     
@@ -219,7 +224,8 @@ export function useQuestionNavigation(
         totalQuestions: questions.length,
         answeredQuestions: Object.keys(userAnswers).length,
         correctAnswers,
-        questionDetails: updatedDetails.length,
+        finalQuestionDetails: updatedDetails.length,
+        allQuestionDetails: updatedDetails,
         userAnswers
       });
       

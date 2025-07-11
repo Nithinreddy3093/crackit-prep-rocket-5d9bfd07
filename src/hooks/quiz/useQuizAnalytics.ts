@@ -97,20 +97,24 @@ export function useQuizAnalytics() {
       });
     });
 
-    // Calculate metrics based on actual answers with proper validation
+    // Calculate metrics based on actual answers with proper validation and consistent comparison
     const answeredQuestions = uniqueQuestions.filter(q => q.userAnswer !== '' && q.userAnswer !== null);
     const correctAnswers = uniqueQuestions.filter(q => {
-      // Double-check the correctness evaluation
+      // Double-check the correctness evaluation with normalized comparison
       const isAnswered = q.userAnswer !== '' && q.userAnswer !== null;
-      const isCorrectByComparison = isAnswered && q.userAnswer === q.correctAnswer;
+      const normalizedUserAnswer = q.userAnswer?.trim().toLowerCase() || '';
+      const normalizedCorrectAnswer = q.correctAnswer?.trim().toLowerCase() || '';
+      const isCorrectByComparison = isAnswered && normalizedUserAnswer === normalizedCorrectAnswer;
       const isCorrectByFlag = q.isCorrect;
       
       // Log if there's a mismatch in evaluation
       if (isAnswered && isCorrectByComparison !== isCorrectByFlag) {
-        console.error('Evaluation mismatch detected:', {
+        console.warn('Evaluation mismatch detected - using normalized comparison:', {
           questionId: q.questionId,
           userAnswer: q.userAnswer,
           correctAnswer: q.correctAnswer,
+          normalizedUserAnswer,
+          normalizedCorrectAnswer,
           isCorrectByComparison,
           isCorrectByFlag
         });
@@ -120,7 +124,9 @@ export function useQuizAnalytics() {
     });
     
     const incorrectAnswers = answeredQuestions.filter(q => {
-      const isCorrect = q.userAnswer === q.correctAnswer;
+      const normalizedUserAnswer = q.userAnswer?.trim().toLowerCase() || '';
+      const normalizedCorrectAnswer = q.correctAnswer?.trim().toLowerCase() || '';
+      const isCorrect = normalizedUserAnswer === normalizedCorrectAnswer;
       return !isCorrect;
     });
     

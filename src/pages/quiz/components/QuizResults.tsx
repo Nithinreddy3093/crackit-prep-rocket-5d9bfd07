@@ -74,10 +74,24 @@ const QuizResults: React.FC<QuizResultsProps> = ({
 
       console.log('Unique questions after deduplication:', uniqueQuestions.length);
 
-      const answeredQuestions = uniqueQuestions.filter(q => q.userAnswer && q.userAnswer !== '');
-      const correctCount = uniqueQuestions.filter(q => q.isCorrect).length;
-      const incorrectCount = uniqueQuestions.filter(q => !q.isCorrect && q.userAnswer && q.userAnswer !== '').length;
-      const skippedCount = uniqueQuestions.filter(q => !q.userAnswer || q.userAnswer === '').length;
+      // Re-validate answers with consistent normalization
+      const validatedQuestions = uniqueQuestions.map(q => {
+        const isAnswered = q.userAnswer && q.userAnswer !== '';
+        const normalizedUserAnswer = q.userAnswer?.trim().toLowerCase() || '';
+        const normalizedCorrectAnswer = q.correctAnswer?.trim().toLowerCase() || '';
+        const isCorrectCalculated = isAnswered && normalizedUserAnswer === normalizedCorrectAnswer;
+        
+        return {
+          ...q,
+          isCorrect: isCorrectCalculated,
+          isAnswered
+        };
+      });
+      
+      const answeredQuestions = validatedQuestions.filter(q => q.isAnswered);
+      const correctCount = validatedQuestions.filter(q => q.isCorrect).length;
+      const incorrectCount = validatedQuestions.filter(q => !q.isCorrect && q.isAnswered).length;
+      const skippedCount = validatedQuestions.filter(q => !q.isAnswered).length;
       
       const attemptedCount = answeredQuestions.length;
       const accuracyPercentage = attemptedCount > 0 ? Math.round((correctCount / attemptedCount) * 100) : 0;

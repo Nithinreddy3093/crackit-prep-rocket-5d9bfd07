@@ -67,41 +67,60 @@ export function useQuizSubmission() {
       const quizScore = Math.round((correctAnswers / totalQuestions) * 100);
       const completionTime = Math.floor(timeInMs / 1000); // convert ms to seconds
       
-      // Calculate accurate analytics from question details
+      // Calculate accurate analytics from question details with improved comparison
       let skipped = 0;
       let incorrect = 0;
       let attempted = 0;
       let actualCorrect = 0;
       
       if (questionDetails && questionDetails.length > 0) {
-        // Use question details for accurate calculation
-        const answeredQuestions = questionDetails.filter(q => q.userAnswer !== '' && q.userAnswer !== null);
+        console.log('Using question details for accurate calculation');
+        
+        // Re-validate each answer with proper comparison
+        const validatedDetails = questionDetails.map(detail => {
+          const isAnswered = detail.userAnswer !== '' && detail.userAnswer !== null;
+          // Normalize answers for accurate comparison
+          const normalizedUserAnswer = detail.userAnswer?.trim().toLowerCase() || '';
+          const normalizedCorrectAnswer = detail.correctAnswer?.trim().toLowerCase() || '';
+          const isCorrectCalculated = isAnswered && normalizedUserAnswer === normalizedCorrectAnswer;
+          
+          return {
+            ...detail,
+            isCorrect: isCorrectCalculated,
+            isAnswered
+          };
+        });
+        
+        const answeredQuestions = validatedDetails.filter(q => q.isAnswered);
         attempted = answeredQuestions.length;
-        actualCorrect = questionDetails.filter(q => q.isCorrect && q.userAnswer !== '').length;
+        actualCorrect = validatedDetails.filter(q => q.isCorrect).length;
         incorrect = attempted - actualCorrect;
         skipped = totalQuestions - attempted;
         
         console.log('Detailed analytics calculation:', {
           totalQuestions,
           questionDetailsProvided: questionDetails.length,
+          validatedDetails: validatedDetails.length,
           attempted,
           actualCorrect,
           incorrect,
           skipped
         });
         
-        // Validate that our calculation matches the provided correctAnswers
-        if (actualCorrect !== correctAnswers) {
-          console.warn('Correct answers mismatch detected:', {
-            providedCorrectAnswers: correctAnswers,
-            calculatedCorrect: actualCorrect,
-            difference: Math.abs(actualCorrect - correctAnswers)
+        // Log each answer for debugging
+        validatedDetails.forEach((detail, index) => {
+          console.log(`Q${index + 1} (${detail.questionId}):`, {
+            userAnswer: detail.userAnswer,
+            correctAnswer: detail.correctAnswer,
+            isCorrect: detail.isCorrect,
+            isAnswered: detail.isAnswered
           });
-          // Use the calculated value for accuracy
-          console.log('Using calculated correct answers for submission');
-        }
+        });
+        
+        // Always use the calculated value for accuracy
+        console.log('Using calculated correct answers for submission:', actualCorrect);
       } else {
-        // Fallback calculation
+        console.warn('No question details available - using fallback calculation');
         attempted = totalQuestions;
         actualCorrect = correctAnswers;
         incorrect = totalQuestions - correctAnswers;
