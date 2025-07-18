@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -14,16 +15,28 @@ export function useDashboardData() {
   const location = useLocation();
   const queryClient = useQueryClient();
   
-  // Fetch both performance history and detailed quiz results
+  // Enhanced data fetching with better deduplication and error handling
   const { data: activities, isLoading: activitiesLoading, refetch: refetchActivities } = useQuery({
     queryKey: ['userActivities', user?.id],
     queryFn: async () => {
       if (!user) return [];
       try {
-        // Get historical performance data
-        const history = await getPerformanceHistory(user.id);
+        console.log('Fetching dashboard activities for user:', user.id);
+        
+        // Get both data sources
+        const [history, quizResults] = await Promise.all([
+          getPerformanceHistory(user.id),
+          getUserQuizResults(user.id)
+        ]);
+        
+        console.log('Fetched data:', {
+          historyCount: history.length,
+          quizResultsCount: quizResults.length
+        });
+        
+        // Convert performance history to activities
         const historyActivities = history.map((item, index) => ({
-          id: index + 1,
+          id: `history-${index + 1}`,
           type: 'quiz' as const,
           name: `${item.topic} Quiz`,
           score: `${item.score}/100`,
@@ -31,69 +44,113 @@ export function useDashboardData() {
           topic: item.topic
         }));
         
-        // Get detailed quiz results 
-        const quizResults = await getUserQuizResults(user.id);
+        // Convert quiz results to activities with better score formatting
         const quizActivities = quizResults.map((result, index) => ({
-          id: history.length + index + 1,
+          id: `quiz-${result.id || index + 1}`,
           type: 'quiz' as const,
           name: `${result.topic} Quiz`,
-          score: `${result.score}/100`,
+          score: `${result.score}%`,
           date: result.date || new Date().toISOString(),
           topic: result.topic
         }));
         
-        // Combine and deduplicate (prefer quiz results data if available)
-        const combined = [...quizActivities, ...historyActivities];
-        const seen = new Set();
-        const unique = combined.filter(item => {
-          const key = `${item.topic}-${item.date}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
+        // Combine and deduplicate more intelligently
+        const allActivities = [...quizActivities, ...historyActivities];
+        
+        // Remove duplicates based on topic and similar timestamps (within 1 minute)
+        const deduplicatedActivities = allActivities.filter((activity, index, arr) => {
+          const activityTime = new Date(activity.date).getTime();
+          
+          // Find if there's a duplicate
+          const duplicateIndex = arr.findIndex((other, otherIndex) => {
+            if (otherIndex >= index) return false; // Only check previous items
+            
+            const otherTime = new Date(other.date).getTime();
+            const timeDiff = Math.abs(activityTime - otherTime);
+            
+            return other.topic === activity.topic && 
+                   timeDiff < 60000; // Within 1 minute
+          });
+          
+          return duplicateIndex === -1; // Keep if no duplicate found
         });
         
         // Sort by date, most recent first
-        return unique.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const sortedActivities = deduplicatedActivities.sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        
+        console.log('Activities processing result:', {
+          originalCount: allActivities.length,
+          afterDeduplication: deduplicatedActivities.length,
+          finalCount: sortedActivities.length
+        });
+        
+        return sortedActivities;
       } catch (error) {
-        console.error('Error fetching activities:', error);
+        console.error('Error fetching dashboard activities:', error);
         return [];
       }
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 30, // 30 seconds - shorter for more frequent updates
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 
-  // Effect to handle refreshed data flag from location state after quiz submission
+  // Enhanced effect to handle quiz completion and dashboard refresh
   useEffect(() => {
-    if (location.state?.refreshData) {
-      console.log('Refreshing dashboard data after quiz submission');
+    if (location.state?.refreshData || location.state?.quizCompleted) {
+      console.log('Dashboard refresh triggered by location state:', {
+        refreshData: location.state?.refreshData,
+        quizCompleted: location.state?.quizCompleted,
+        topic: location.state?.topic,
+        score: location.state?.score,
+        timestamp: location.state?.timestamp
+      });
       
-      // Invalidate all relevant queries
+      // Comprehensive cache invalidation
       const refreshQueries = async () => {
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
-          queryClient.invalidateQueries({ queryKey: ['performanceHistory'] }),
-          queryClient.invalidateQueries({ queryKey: ['quizResults'] }),
-          queryClient.invalidateQueries({ queryKey: ['topicScores'] }),
-          queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] }),
-          queryClient.invalidateQueries({ queryKey: ['userActivities'] }),
-          queryClient.invalidateQueries({ queryKey: ['userBadges'] }),
-        ]);
-        
-        // Trigger refetch
-        await refetchActivities();
-        
-        // Trigger a force refresh for components
-        setForceRefresh(prev => !prev);
+        try {
+          console.log('Starting comprehensive dashboard refresh...');
+          
+          // Invalidate all relevant queries
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
+            queryClient.invalidateQueries({ queryKey: ['performanceHistory'] }),
+            queryClient.invalidateQueries({ queryKey: ['quizResults'] }),
+            queryClient.invalidateQueries({ queryKey: ['topicScores'] }),
+            queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] }),
+            queryClient.invalidateQueries({ queryKey: ['userActivities'] }),
+            queryClient.invalidateQueries({ queryKey: ['userBadges'] }),
+          ]);
+          
+          console.log('✅ Cache invalidation completed');
+          
+          // Force refetch of critical data
+          await Promise.all([
+            refetchActivities(),
+            queryClient.refetchQueries({ queryKey: ['userPerformance', user?.id] }),
+          ]);
+          
+          console.log('✅ Data refetch completed');
+          
+          // Trigger component re-renders
+          setForceRefresh(prev => !prev);
+          
+          console.log('✅ Dashboard refresh completed');
+          
+        } catch (error) {
+          console.error('Error during dashboard refresh:', error);
+        }
       };
       
       refreshQueries();
       
-      // If there's specific quiz completion data, show a toast
+      // Show completion toast for quiz
       if (location.state?.quizCompleted && location.state?.topic) {
         toast({
-          title: "Quiz Results Updated",
-          description: `Your ${location.state.topic} quiz has been recorded in your profile.`,
+          title: "Quiz Completed! 🎉",
+          description: `Your ${location.state.topic} quiz result (${location.state.score}%) has been added to your profile.`,
           variant: "default",
         });
       }
@@ -101,10 +158,12 @@ export function useDashboardData() {
       // Clear the state to avoid unnecessary refreshes
       window.history.replaceState({}, document.title);
     }
-  }, [location.state, queryClient, refetchActivities]);
+  }, [location.state, queryClient, refetchActivities, user?.id]);
 
+  // Update activities when data changes
   useEffect(() => {
     if (activities) {
+      console.log('Setting recent activities:', activities.length);
       setRecentActivities(activities);
     }
   }, [activities]);

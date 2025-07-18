@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Question } from "@/services/questionService";
+import { compareAnswers, deduplicateQuestions } from '@/utils/answerComparison';
 
 export interface QuestionDetail {
   questionId: string;
@@ -27,30 +28,23 @@ export function useQuestionNavigation(
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [questionDetails, setQuestionDetails] = useState<QuestionDetail[]>([]);
-  // Track answers by question ID to prevent duplicates
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
 
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Debug logging function
-  const debugAnswerEvaluation = useCallback((questionId: string, selectedOptionIndex: number, selectedText: string, correctText: string, isCorrect: boolean) => {
-    console.log('Answer Evaluation Debug:', {
-      questionId,
-      selectedOptionIndex,
-      selectedText,
-      correctText,
-      isCorrect,
-      match: selectedText === correctText
-    });
-  }, []);
-
   // Initialize user answers when questions change
   useEffect(() => {
     if (questions.length > 0) {
+      // Deduplicate questions to prevent issues
+      const uniqueQuestions = deduplicateQuestions(questions);
+      if (uniqueQuestions.length !== questions.length) {
+        console.warn('Duplicate questions detected and removed:', questions.length - uniqueQuestions.length);
+      }
+      
       setUserAnswers({});
       setCorrectAnswers(0);
       setQuestionDetails([]);
-      console.log('Quiz initialized with questions:', questions.length);
+      console.log('Quiz initialized with unique questions:', uniqueQuestions.length);
     }
   }, [questions]);
 
@@ -75,31 +69,15 @@ export function useQuestionNavigation(
             setCurrentQuestionIndex(quizData.currentQuestionIndex);
             setUserAnswers(quizData.userAnswers || {});
             
-            // Recalculate correct answers from stored data
+            // Recalculate correct answers using improved comparison
             let correct = 0;
             questions.forEach(q => {
               if (quizData.userAnswers[q.id] !== undefined) {
                 const userAnswerText = q.options[quizData.userAnswers[q.id]];
-                let correctAnswer = q.correctAnswer;
-                
-                // Check if correctAnswer is an index or the actual text
-                if (typeof q.correctAnswer === 'number' || !isNaN(Number(q.correctAnswer))) {
-                  const correctIndex = Number(q.correctAnswer);
-                  correctAnswer = q.options[correctIndex];
-                }
-                
-                // Improved comparison with normalization
-                const isCorrect = userAnswerText?.trim().toLowerCase() === correctAnswer?.trim().toLowerCase();
-                if (isCorrect) {
+                const comparison = compareAnswers(userAnswerText, q.correctAnswer, q.options, q.id);
+                if (comparison.isCorrect) {
                   correct++;
                 }
-                console.log('Restored answer check:', {
-                  questionId: q.id,
-                  userAnswer: userAnswerText,
-                  correctAnswer: correctAnswer,
-                  originalCorrectAnswer: q.correctAnswer,
-                  isCorrect
-                });
               }
             });
             setCorrectAnswers(correct);
@@ -124,28 +102,16 @@ export function useQuestionNavigation(
     };
     setUserAnswers(updatedUserAnswers);
     
-    // Recalculate total correct answers from all user answers with proper comparison
+    // Recalculate total correct answers using improved comparison
     let totalCorrect = 0;
     Object.entries(updatedUserAnswers).forEach(([questionId, selectedIndex]) => {
       const question = questions.find(q => q.id === questionId);
       if (question) {
-        const userAnswer = question.options[selectedIndex];
-        let correctAnswer = question.correctAnswer;
-        
-        // Check if correctAnswer is an index or the actual text
-        if (typeof question.correctAnswer === 'number' || !isNaN(Number(question.correctAnswer))) {
-          const correctIndex = Number(question.correctAnswer);
-          correctAnswer = question.options[correctIndex];
-        }
-        
-        // Normalize both answers for comparison - handle edge cases
-        const normalizedUserAnswer = userAnswer?.trim().toLowerCase() || '';
-        const normalizedCorrectAnswer = correctAnswer?.trim().toLowerCase() || '';
-        const isCorrect = normalizedUserAnswer === normalizedCorrectAnswer;
-        if (isCorrect) {
+        const userAnswerText = question.options[selectedIndex];
+        const comparison = compareAnswers(userAnswerText, question.correctAnswer, question.options, questionId);
+        if (comparison.isCorrect) {
           totalCorrect++;
         }
-        debugAnswerEvaluation(questionId, selectedIndex, userAnswer, correctAnswer, isCorrect);
       }
     });
     
@@ -171,50 +137,21 @@ export function useQuestionNavigation(
       totalCorrect: totalCorrect,
       totalAnswered: Object.keys(updatedUserAnswers).length
     });
-  }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers, debugAnswerEvaluation]);
+  }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers]);
 
   const goToNextQuestion = useCallback(() => {
     if (!currentQuestion) return false;
     
-    // Always track question detail for the current question
+    // Create question detail with improved comparison
     const userAnswerText = selectedAnswer !== null ? currentQuestion.options[selectedAnswer] : '';
-    // Debug the data structure to understand the issue
-    console.log('DEBUGGING ANSWER STRUCTURE:', {
-      currentQuestion: currentQuestion,
-      selectedAnswer,
-      userAnswerText,
-      correctAnswer: currentQuestion.correctAnswer,
-      options: currentQuestion.options
-    });
-    
-    // Improved answer comparison with normalization  
-    const normalizedUserAnswer = userAnswerText?.trim().toLowerCase() || '';
-    const normalizedCorrectAnswer = currentQuestion.correctAnswer?.trim().toLowerCase() || '';
-    
-    // Check if correctAnswer is an index or the actual text
-    let actualCorrectAnswer = currentQuestion.correctAnswer;
-    if (typeof currentQuestion.correctAnswer === 'number' || !isNaN(Number(currentQuestion.correctAnswer))) {
-      // If correctAnswer is an index, get the text from options
-      const correctIndex = Number(currentQuestion.correctAnswer);
-      actualCorrectAnswer = currentQuestion.options[correctIndex];
-      console.log('Using correctAnswer as index:', { correctIndex, actualCorrectAnswer });
-    }
-    
-    const normalizedActualCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
-    const isCorrect = selectedAnswer !== null && normalizedUserAnswer === normalizedActualCorrectAnswer;
-    
-    console.log('FINAL COMPARISON:', {
-      normalizedUserAnswer,
-      normalizedActualCorrectAnswer,
-      isCorrect
-    });
+    const comparison = compareAnswers(userAnswerText, currentQuestion.correctAnswer, currentQuestion.options, currentQuestion.id);
     
     const detail: QuestionDetail = {
       questionId: currentQuestion.id,
       question: currentQuestion.text,
       userAnswer: userAnswerText,
-      correctAnswer: actualCorrectAnswer,
-      isCorrect
+      correctAnswer: comparison.normalizedCorrectAnswer,
+      isCorrect: comparison.isCorrect
     };
     
     // Check if this question already exists in details and update/add accordingly
@@ -234,9 +171,9 @@ export function useQuestionNavigation(
       questionId: currentQuestion.id,
       userAnswer: userAnswerText,
       correctAnswer: currentQuestion.correctAnswer,
-      normalizedUserAnswer,
-      normalizedCorrectAnswer,
-      isCorrect,
+      actualCorrectAnswer: comparison.normalizedCorrectAnswer,
+      isCorrect: comparison.isCorrect,
+      comparisonMethod: comparison.comparisonMethod,
       selectedAnswer,
       totalQuestionDetails: updatedDetails.length
     });

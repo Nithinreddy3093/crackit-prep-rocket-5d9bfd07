@@ -26,20 +26,48 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
     return `${minutes}m ${remainingSeconds}s`;
   };
 
-  // Calculate performance metrics from question details if available
+  // Enhanced metrics calculation with improved accuracy
   const calculateDetailedMetrics = (quiz: QuizResult) => {
     if (quiz.question_details && Array.isArray(quiz.question_details)) {
       const details = quiz.question_details as any[];
-      const answeredQuestions = details.filter(q => q.userAnswer && q.userAnswer !== '');
-      const correctAnswers = details.filter(q => q.isCorrect === true).length;
-      const incorrectAnswers = details.filter(q => q.isCorrect === false && q.userAnswer && q.userAnswer !== '').length;
-      const skippedQuestions = details.filter(q => !q.userAnswer || q.userAnswer === '').length;
       
-      const accuracyRate = answeredQuestions.length > 0 ? Math.round((correctAnswers / answeredQuestions.length) * 100) : 0;
-      const completionRate = Math.round((answeredQuestions.length / details.length) * 100);
+      // Remove duplicates and validate structure
+      const uniqueDetails = new Map();
+      details.forEach(detail => {
+        if (detail && detail.questionId && !uniqueDetails.has(detail.questionId)) {
+          uniqueDetails.set(detail.questionId, detail);
+        }
+      });
+      
+      const validDetails = Array.from(uniqueDetails.values());
+      
+      const answeredQuestions = validDetails.filter(q => 
+        q.userAnswer && q.userAnswer !== '' && q.userAnswer !== null
+      );
+      
+      const correctAnswers = validDetails.filter(q => q.isCorrect === true).length;
+      const incorrectAnswers = answeredQuestions.filter(q => q.isCorrect === false).length;
+      const skippedQuestions = validDetails.filter(q => 
+        !q.userAnswer || q.userAnswer === '' || q.userAnswer === null
+      ).length;
+      
+      const accuracyRate = answeredQuestions.length > 0 ? 
+        Math.round((correctAnswers / answeredQuestions.length) * 100) : 0;
+      const completionRate = Math.round((answeredQuestions.length / validDetails.length) * 100);
+      
+      console.log('Quiz metrics calculation:', {
+        totalDetails: details.length,
+        validDetails: validDetails.length,
+        answeredQuestions: answeredQuestions.length,
+        correctAnswers,
+        incorrectAnswers,
+        skippedQuestions,
+        accuracyRate,
+        completionRate
+      });
       
       return {
-        totalQuestions: details.length,
+        totalQuestions: validDetails.length,
         correctAnswers,
         incorrectAnswers,
         skippedQuestions,
@@ -50,8 +78,8 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
       };
     }
     
-    // Fallback to basic data - estimate from score
-    const estimatedTotal = 10; // Default assumption
+    // Fallback calculation based on quiz score
+    const estimatedTotal = 10;
     const estimatedCorrect = Math.round((quiz.score / 100) * estimatedTotal);
     
     return {
@@ -118,12 +146,11 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
       }) 
     : 'Recently';
 
-  // Calculate average time per question
+  // Enhanced time analysis
   const averageTimePerQuestion = completion_time && metrics.totalQuestions > 0 
     ? Math.round(completion_time / metrics.totalQuestions) 
     : 0;
 
-  // Determine time efficiency
   const timeEfficiency = averageTimePerQuestion <= 30 ? 'Fast' : 
                         averageTimePerQuestion <= 60 ? 'Average' : 'Slow';
 
@@ -139,7 +166,7 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
             {metrics.hasDetailedData && (
               <div className="text-xs text-green-400 flex items-center">
                 <TrendingUp className="h-3 w-3 mr-1" />
-                Detailed
+                Detailed Analysis
               </div>
             )}
             <span className="text-xs text-gray-400">{submittedDate}</span>
@@ -149,34 +176,41 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
       <CardContent>
         <div className="mb-4">
           <h3 className="text-md font-medium text-white">{topic}</h3>
+          <p className="text-sm text-gray-400">{metrics.totalQuestions} questions total</p>
         </div>
         
-        {/* Score and Accuracy Display */}
+        {/* Enhanced Score Display */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm text-gray-400">Overall Score</span>
-              <span className="font-medium text-white">{score}%</span>
+              <span className="font-bold text-white">{score}%</span>
             </div>
             <Progress
               value={score}
-              className="h-2 bg-darkBlue-700"
+              className="h-3 bg-darkBlue-700"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              {metrics.correctAnswers} of {metrics.totalQuestions} correct
+            </p>
           </div>
           
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm text-gray-400">Accuracy Rate</span>
-              <span className="font-medium text-white">{metrics.accuracyRate}%</span>
+              <span className="font-bold text-white">{metrics.accuracyRate}%</span>
             </div>
             <Progress
               value={metrics.accuracyRate}
-              className="h-2 bg-darkBlue-700"
+              className="h-3 bg-darkBlue-700"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              On attempted questions
+            </p>
           </div>
         </div>
         
-        {/* Performance Stats */}
+        {/* Enhanced Performance Stats */}
         <div className="mb-4 p-3 bg-darkBlue-700/50 rounded-lg">
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="flex items-center justify-between">
@@ -184,44 +218,47 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
                 <Clock className="h-4 w-4 text-blue-400 mr-2" />
                 <span className="text-sm text-gray-300">Total Time</span>
               </div>
-              <span className="text-sm text-gray-300">{formatTime(completion_time)}</span>
+              <span className="text-sm text-gray-300">{formatTime(completion_time || 0)}</span>
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-300">Avg/Question</span>
-              <span className={`text-sm ${timeEfficiencyColor}`}>
+              <span className="text-sm text-gray-300">Per Question</span>
+              <span className={`text-sm font-medium ${timeEfficiencyColor}`}>
                 {averageTimePerQuestion}s ({timeEfficiency})
               </span>
             </div>
           </div>
           
+          {/* Enhanced Question Breakdown */}
           <div className="grid grid-cols-3 gap-2">
             <div className="flex flex-col items-center p-2 bg-darkBlue-700 rounded-lg">
               <div className="flex items-center text-green-500 mb-1">
                 <Check className="h-3 w-3 mr-1" />
-                <span className="text-xs">Correct</span>
+                <span className="text-xs font-medium">Correct</span>
               </div>
-              <span className="font-bold text-white">{metrics.correctAnswers}</span>
+              <span className="font-bold text-white text-lg">{metrics.correctAnswers}</span>
               <span className="text-xs text-gray-400">
                 {Math.round((metrics.correctAnswers / metrics.totalQuestions) * 100)}%
               </span>
             </div>
+            
             <div className="flex flex-col items-center p-2 bg-darkBlue-700 rounded-lg">
               <div className="flex items-center text-red-500 mb-1">
                 <X className="h-3 w-3 mr-1" />
-                <span className="text-xs">Incorrect</span>
+                <span className="text-xs font-medium">Wrong</span>
               </div>
-              <span className="font-bold text-white">{metrics.incorrectAnswers}</span>
+              <span className="font-bold text-white text-lg">{metrics.incorrectAnswers}</span>
               <span className="text-xs text-gray-400">
                 {Math.round((metrics.incorrectAnswers / metrics.totalQuestions) * 100)}%
               </span>
             </div>
+            
             <div className="flex flex-col items-center p-2 bg-darkBlue-700 rounded-lg">
               <div className="flex items-center text-gray-500 mb-1">
                 <HelpCircle className="h-3 w-3 mr-1" />
-                <span className="text-xs">Skipped</span>
+                <span className="text-xs font-medium">Skipped</span>
               </div>
-              <span className="font-bold text-white">{metrics.skippedQuestions}</span>
+              <span className="font-bold text-white text-lg">{metrics.skippedQuestions}</span>
               <span className="text-xs text-gray-400">
                 {Math.round((metrics.skippedQuestions / metrics.totalQuestions) * 100)}%
               </span>
@@ -229,7 +266,7 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
           </div>
         </div>
         
-        {/* Performance Feedback */}
+        {/* Enhanced Performance Feedback */}
         <div className={`py-3 px-4 rounded-lg text-sm border ${
           score >= 80 
             ? 'bg-green-500/10 border-green-500/30 text-green-400' 
@@ -241,9 +278,10 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
             <div className="flex items-start">
               <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="font-medium">Excellent Performance!</span>
+                <span className="font-medium">Excellent Performance! 🎉</span>
                 <div className="text-xs mt-1 opacity-90">
                   Strong understanding with {metrics.accuracyRate}% accuracy on attempted questions.
+                  {timeEfficiency === 'Fast' && ' Great speed too!'}
                 </div>
               </div>
             </div>
@@ -251,9 +289,10 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
             <div className="flex items-start">
               <AlertTriangle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="font-medium">Good Progress!</span>
+                <span className="font-medium">Good Progress! 📈</span>
                 <div className="text-xs mt-1 opacity-90">
-                  Keep practicing to improve accuracy. {metrics.skippedQuestions > 0 && `Consider attempting all ${metrics.totalQuestions} questions.`}
+                  Keep practicing to improve accuracy. 
+                  {metrics.skippedQuestions > 0 && ` Try attempting all ${metrics.totalQuestions} questions next time.`}
                 </div>
               </div>
             </div>
@@ -261,14 +300,23 @@ const QuizResultSummary: React.FC<QuizResultSummaryProps> = ({ latestQuiz, loadi
             <div className="flex items-start">
               <AlertTriangle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
               <div>
-                <span className="font-medium">Needs Attention</span>
+                <span className="font-medium">Room for Improvement 📚</span>
                 <div className="text-xs mt-1 opacity-90">
-                  Focus on core concepts. {timeEfficiency === 'Slow' ? 'Also practice for better speed.' : 'Review fundamentals thoroughly.'}
+                  Focus on core concepts and practice more. 
+                  {timeEfficiency === 'Slow' ? ' Take time to understand each question.' : ' Review fundamentals thoroughly.'}
                 </div>
               </div>
             </div>
           )}
         </div>
+        
+        {/* Data Quality Indicator */}
+        {metrics.hasDetailedData && (
+          <div className="mt-3 text-xs text-green-400 flex items-center justify-center">
+            <TrendingUp className="h-3 w-3 mr-1" />
+            Enhanced analysis from detailed quiz data
+          </div>
+        )}
       </CardContent>
     </Card>
   );

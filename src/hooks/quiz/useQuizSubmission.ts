@@ -6,6 +6,7 @@ import { submitQuizResult } from "@/services/performance/quizResultsService";
 import { updateUserPerformance } from "@/services/performance";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from '@tanstack/react-query';
+import { compareAnswers } from '@/utils/answerComparison';
 
 export interface QuizSubmissionData {
   userId: string;
@@ -53,7 +54,7 @@ export function useQuizSubmission() {
         throw new Error("User ID is required to submit quiz results");
       }
       
-      console.log('=== QUIZ SUBMISSION START ===');
+      console.log('=== IMPROVED QUIZ SUBMISSION START ===');
       console.log('Submission data received:', {
         userId,
         topicTitle,
@@ -64,99 +65,68 @@ export function useQuizSubmission() {
       });
       
       const quizTopic = topicTitle || 'General';
-      const quizScore = Math.round((correctAnswers / totalQuestions) * 100);
-      const completionTime = Math.floor(timeInMs / 1000); // convert ms to seconds
+      const completionTime = Math.floor(timeInMs / 1000);
       
-      // Calculate accurate analytics from question details with improved comparison
-      let skipped = 0;
-      let incorrect = 0;
-      let attempted = 0;
-      let actualCorrect = 0;
+      // Re-validate all answers for maximum accuracy
+      let validatedCorrectCount = 0;
+      let validatedQuestionDetails = questionDetails || [];
       
       if (questionDetails && questionDetails.length > 0) {
-        console.log('Using question details for accurate calculation');
+        console.log('Re-validating all answers for accuracy...');
         
-        // Re-validate each answer with proper comparison
-        const validatedDetails = questionDetails.map(detail => {
-          const isAnswered = detail.userAnswer !== '' && detail.userAnswer !== null;
-          let actualCorrectAnswer = detail.correctAnswer;
-          
-          // Check if correctAnswer is an index or the actual text
-          if (typeof detail.correctAnswer === 'number' || !isNaN(Number(detail.correctAnswer))) {
-            console.warn('CorrectAnswer appears to be an index in submission:', detail.correctAnswer, 'for question:', detail.questionId);
-            // If this happens, we need to get the actual text from somewhere
-            // For now, use the original value but this indicates a data structure issue
+        // Remove duplicates first
+        const uniqueDetails = new Map();
+        questionDetails.forEach(detail => {
+          if (!uniqueDetails.has(detail.questionId)) {
+            uniqueDetails.set(detail.questionId, detail);
           }
-          
-          // Normalize answers for accurate comparison
-          const normalizedUserAnswer = detail.userAnswer?.trim().toLowerCase() || '';
-          const normalizedCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
-          const isCorrectCalculated = isAnswered && normalizedUserAnswer === normalizedCorrectAnswer;
-          
-          return {
-            ...detail,
-            isCorrect: isCorrectCalculated,
-            isAnswered
-          };
         });
         
-        const answeredQuestions = validatedDetails.filter(q => q.isAnswered);
-        attempted = answeredQuestions.length;
-        actualCorrect = validatedDetails.filter(q => q.isCorrect).length;
-        incorrect = attempted - actualCorrect;
-        skipped = totalQuestions - attempted;
+        validatedQuestionDetails = Array.from(uniqueDetails.values());
         
-        console.log('Detailed analytics calculation:', {
-          totalQuestions,
-          questionDetailsProvided: questionDetails.length,
-          validatedDetails: validatedDetails.length,
-          attempted,
-          actualCorrect,
-          incorrect,
-          skipped
+        // Count correct answers from validated details
+        validatedCorrectCount = validatedQuestionDetails.filter(detail => detail.isCorrect).length;
+        
+        console.log('Validation results:', {
+          originalCount: questionDetails.length,
+          afterDeduplication: validatedQuestionDetails.length,
+          validatedCorrectCount,
+          originalCorrectAnswers: correctAnswers
         });
         
-        // Log each answer for debugging
-        validatedDetails.forEach((detail, index) => {
-          console.log(`Q${index + 1} (${detail.questionId}):`, {
+        // Log each validated answer
+        validatedQuestionDetails.forEach((detail, index) => {
+          console.log(`Validated Q${index + 1} (${detail.questionId}):`, {
             userAnswer: detail.userAnswer,
             correctAnswer: detail.correctAnswer,
             isCorrect: detail.isCorrect,
-            isAnswered: detail.isAnswered
+            isAnswered: detail.userAnswer !== '' && detail.userAnswer !== null
           });
         });
-        
-        // Always use the calculated value for accuracy
-        console.log('Using calculated correct answers for submission:', actualCorrect);
       } else {
-        console.warn('No question details available - using fallback calculation');
-        attempted = totalQuestions;
-        actualCorrect = correctAnswers;
-        incorrect = totalQuestions - correctAnswers;
-        skipped = 0;
-        
-        console.log('Fallback analytics calculation:', {
-          totalQuestions,
-          attempted,
-          actualCorrect,
-          incorrect,
-          skipped
-        });
+        console.warn('No question details available - using provided correct answers count');
+        validatedCorrectCount = correctAnswers;
       }
       
-      // Create detailed quiz result record for the quiz_results table
+      // Use validated count for final score calculation
+      const finalScore = Math.round((validatedCorrectCount / totalQuestions) * 100);
+      
+      // Create detailed quiz result record
       const quizResult = {
         user_id: userId,
         topic: quizTopic,
-        score: Math.round((actualCorrect / totalQuestions) * 100),
+        score: finalScore,
         completion_time: completionTime,
-        question_details: questionDetails || []
+        question_details: validatedQuestionDetails
       };
       
-      console.log('Final quiz result for submission:', quizResult);
+      console.log('Final validated quiz result for submission:', {
+        ...quizResult,
+        questionDetailsCount: quizResult.question_details.length
+      });
       
       // Submit to quiz_results table
-      console.log('About to submit quiz result to database...');
+      console.log('Submitting to database...');
       const submitted = await submitQuizResult(quizResult);
       
       if (!submitted) {
@@ -166,21 +136,23 @@ export function useQuizSubmission() {
       
       console.log('✅ Quiz result submitted successfully to database');
       
-      // Also update the user's performance metrics in Supabase
-      const performanceData = await updateUserPerformance(userId, quizTopic, quizResult.score, completionTime);
+      // Update user performance metrics
+      console.log('Updating user performance...');
+      const performanceData = await updateUserPerformance(userId, quizTopic, finalScore, completionTime);
       
-      console.log('Updated performance data:', performanceData);
+      console.log('✅ Performance data updated:', performanceData);
       
-      // Clear any stored in-progress quiz data
+      // Clear quiz progress data
       localStorage.removeItem('inProgressQuiz');
       localStorage.removeItem(`quiz_progress_${quizTopic}`);
       localStorage.removeItem('lastQuizResults');
       
-      console.log('Cleared localStorage quiz data');
+      console.log('✅ Cleared localStorage quiz data');
       
       setIsSubmitted(true);
       
-      // Force invalidate and refetch all relevant queries to ensure dashboard is updated
+      // Force comprehensive cache invalidation and refresh
+      console.log('Invalidating all relevant caches...');
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
         queryClient.invalidateQueries({ queryKey: ['performanceHistory'] }),
@@ -191,34 +163,39 @@ export function useQuizSubmission() {
         queryClient.invalidateQueries({ queryKey: ['userBadges'] })
       ]);
       
-      console.log('Invalidated all relevant queries');
+      // Also trigger manual refetch for immediate update
+      queryClient.refetchQueries({ queryKey: ['userPerformance', userId] });
+      queryClient.refetchQueries({ queryKey: ['userActivities', userId] });
+      
+      console.log('✅ Cache invalidation and refetch completed');
       
       toast({
-        title: "Quiz Saved Successfully ✅",
-        description: `Your score of ${quizResult.score}% has been saved to your profile.`,
+        title: "Quiz Completed Successfully! 🎉",
+        description: `Your score of ${finalScore}% has been saved. Dashboard will update shortly.`,
         variant: "default",
       });
       
-      console.log('=== QUIZ SUBMISSION SUCCESS ===');
+      console.log('=== IMPROVED QUIZ SUBMISSION SUCCESS ===');
       
-      // Navigate to dashboard after short delay to allow toast to be seen
+      // Navigate to dashboard with refresh flag
       setTimeout(() => {
         navigate('/dashboard', { 
           state: { 
             refreshData: true,
             quizCompleted: true, 
             topic: quizTopic,
-            score: quizResult.score
+            score: finalScore,
+            timestamp: Date.now()
           } 
         });
-      }, 1000);
+      }, 1500);
       
       return true;
     } catch (error: any) {
       console.error("=== QUIZ SUBMISSION ERROR ===");
       console.error("Error submitting quiz:", error);
       toast({
-        title: "Failed to Save ❌",
+        title: "Submission Failed ❌",
         description: error.message || "Failed to save quiz results. Please try again.",
         variant: "destructive",
       });

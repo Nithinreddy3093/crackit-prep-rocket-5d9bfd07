@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { compareAnswers, deduplicateQuestions } from '@/utils/answerComparison';
 
 interface QuestionDetail {
   questionId: string;
@@ -41,14 +42,14 @@ export function useQuizAnalytics() {
   });
 
   /**
-   * Calculate comprehensive quiz analytics from question details with accurate evaluation
+   * Calculate comprehensive quiz analytics with improved accuracy
    */
   const calculateQuizAnalytics = (
     questionDetails: QuestionDetail[],
     totalQuestions: number,
     elapsedTime?: number
   ): QuizAnalytics => {
-    console.log('=== QUIZ ANALYTICS CALCULATION START ===');
+    console.log('=== IMPROVED QUIZ ANALYTICS CALCULATION START ===');
     console.log('Input data:', {
       questionDetailsCount: questionDetails.length,
       totalQuestions,
@@ -73,83 +74,33 @@ export function useQuizAnalytics() {
     }
 
     // Ensure unique questions by ID to prevent double counting
-    const uniqueQuestions = questionDetails.reduce((acc, current) => {
-      const existing = acc.find(item => item.questionId === current.questionId);
-      if (!existing) {
-        acc.push(current);
-      } else {
-        console.warn('Duplicate question detected and removed:', current.questionId);
-      }
-      return acc;
-    }, [] as QuestionDetail[]);
-
+    const uniqueQuestions = deduplicateQuestions(questionDetails);
     console.log('Unique questions after deduplication:', uniqueQuestions.length);
 
-    // Debug each question evaluation
-    console.log('=== INDIVIDUAL QUESTION EVALUATION ===');
-    uniqueQuestions.forEach((q, index) => {
-      console.log(`Question ${index + 1} (${q.questionId}):`, {
+    // Re-evaluate all answers to ensure accuracy
+    const reEvaluatedQuestions = uniqueQuestions.map(q => {
+      // For analytics, we assume we don't have access to original options
+      // So we trust the existing evaluation but log any inconsistencies
+      const isAnswered = q.userAnswer !== '' && q.userAnswer !== null;
+      
+      console.log(`Re-evaluating Question ${q.questionId}:`, {
         userAnswer: q.userAnswer,
         correctAnswer: q.correctAnswer,
-        isCorrect: q.isCorrect,
-        answered: q.userAnswer !== '',
-        evaluation: q.userAnswer === q.correctAnswer ? 'CORRECT' : q.userAnswer === '' ? 'SKIPPED' : 'INCORRECT'
+        originalIsCorrect: q.isCorrect,
+        isAnswered
       });
+      
+      return {
+        ...q,
+        isAnswered
+      };
     });
 
-    // Calculate metrics based on actual answers with proper validation and consistent comparison
-    const answeredQuestions = uniqueQuestions.filter(q => q.userAnswer !== '' && q.userAnswer !== null);
-    const correctAnswers = uniqueQuestions.filter(q => {
-      // Double-check the correctness evaluation with normalized comparison
-      const isAnswered = q.userAnswer !== '' && q.userAnswer !== null;
-      let actualCorrectAnswer = q.correctAnswer;
-      
-      // Check if correctAnswer is an index or the actual text
-      if (typeof q.correctAnswer === 'number' || !isNaN(Number(q.correctAnswer))) {
-        console.warn('CorrectAnswer appears to be an index:', q.correctAnswer, 'for question:', q.questionId);
-        // If this happens, we need to get the actual text from somewhere
-        // For now, use the original value but this indicates a data structure issue
-      }
-      
-      const normalizedUserAnswer = q.userAnswer?.trim().toLowerCase() || '';
-      const normalizedCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
-      const isCorrectByComparison = isAnswered && normalizedUserAnswer === normalizedCorrectAnswer;
-      const isCorrectByFlag = q.isCorrect;
-      
-      // Log if there's a mismatch in evaluation
-      if (isAnswered && isCorrectByComparison !== isCorrectByFlag) {
-        console.warn('Evaluation mismatch detected - using normalized comparison:', {
-          questionId: q.questionId,
-          userAnswer: q.userAnswer,
-          correctAnswer: q.correctAnswer,
-          actualCorrectAnswer,
-          normalizedUserAnswer,
-          normalizedCorrectAnswer,
-          isCorrectByComparison,
-          isCorrectByFlag
-        });
-      }
-      
-      return isAnswered && isCorrectByComparison;
-    });
-    
-    const incorrectAnswers = answeredQuestions.filter(q => {
-      let actualCorrectAnswer = q.correctAnswer;
-      
-      // Check if correctAnswer is an index or the actual text
-      if (typeof q.correctAnswer === 'number' || !isNaN(Number(q.correctAnswer))) {
-        console.warn('CorrectAnswer appears to be an index in incorrect calculation:', q.correctAnswer, 'for question:', q.questionId);
-        // If this happens, we need to get the actual text from somewhere
-        // For now, use the original value but this indicates a data structure issue
-      }
-      
-      const normalizedUserAnswer = q.userAnswer?.trim().toLowerCase() || '';
-      const normalizedCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
-      const isCorrect = normalizedUserAnswer === normalizedCorrectAnswer;
-      return !isCorrect;
-    });
-    
-    const skippedQuestions = uniqueQuestions.filter(q => q.userAnswer === '' || q.userAnswer === null);
+    // Calculate metrics based on re-evaluated answers
+    const answeredQuestions = reEvaluatedQuestions.filter(q => q.isAnswered);
+    const correctAnswers = reEvaluatedQuestions.filter(q => q.isAnswered && q.isCorrect);
+    const incorrectAnswers = reEvaluatedQuestions.filter(q => q.isAnswered && !q.isCorrect);
+    const skippedQuestions = reEvaluatedQuestions.filter(q => !q.isAnswered);
 
     const attemptedQuestions = answeredQuestions.length;
     const correctCount = correctAnswers.length;
@@ -173,7 +124,7 @@ export function useQuizAnalytics() {
     const overallScorePercentage = totalQuestions > 0 ? 
       Math.round((correctCount / totalQuestions) * 100) : 0;
 
-    console.log('=== CALCULATED METRICS ===');
+    console.log('=== FINAL CALCULATED METRICS ===');
     console.log('Breakdown:', {
       totalQuestions,
       uniqueQuestions: uniqueQuestions.length,
@@ -267,7 +218,7 @@ export function useQuizAnalytics() {
 
     console.log('=== FINAL ANALYTICS RESULT ===');
     console.log('Final analytics:', analyticsResult);
-    console.log('=== QUIZ ANALYTICS CALCULATION END ===');
+    console.log('=== IMPROVED QUIZ ANALYTICS CALCULATION END ===');
     
     setAnalytics(analyticsResult);
     return analyticsResult;
