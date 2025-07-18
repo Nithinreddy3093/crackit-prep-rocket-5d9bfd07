@@ -1,6 +1,6 @@
 // Activity item type
 export interface ActivityItem {
-  id: number;
+  id: string;
   type: 'quiz' | 'resource';
   name: string;
   score?: string;

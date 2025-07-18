@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/components/ui/use-toast';
-import { ActivityItem } from '@/components/dashboard/RecentActivity';
+import { ActivityItem } from '@/types/dashboard';
 
 interface ActivityHistoryProps {
   activities: ActivityItem[];

@@ -2,7 +2,8 @@
 import React from 'react';
 import { MousePointerClick, ListChecks, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import RecentActivity, { ActivityItem } from '@/components/dashboard/RecentActivity';
+import RecentActivity from '@/components/dashboard/RecentActivity';
+import { ActivityItem } from '@/types/dashboard';
 import UpcomingQuizzes from '@/components/dashboard/UpcomingQuizzes';
 import AiRecommendations from '@/components/dashboard/AiRecommendations';
 import PerformanceSummary from '@/components/dashboard/PerformanceSummary';

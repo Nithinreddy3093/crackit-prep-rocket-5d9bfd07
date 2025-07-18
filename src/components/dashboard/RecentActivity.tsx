@@ -21,15 +21,8 @@ const Badge = ({ children, className, ...props }: React.HTMLAttributes<HTMLSpanE
   );
 };
 
-// Activity type definition
-export interface ActivityItem {
-  id: number;
-  type: 'quiz' | 'resource';
-  name: string;
-  score?: string;
-  date: string;
-  topic: string;
-}
+// Import ActivityItem from types
+import { ActivityItem } from '@/types/dashboard';
 
 interface RecentActivityProps {
   activities: ActivityItem[];
