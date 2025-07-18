@@ -80,15 +80,24 @@ export function useQuestionNavigation(
             questions.forEach(q => {
               if (quizData.userAnswers[q.id] !== undefined) {
                 const userAnswerText = q.options[quizData.userAnswers[q.id]];
+                let correctAnswer = q.correctAnswer;
+                
+                // Check if correctAnswer is an index or the actual text
+                if (typeof q.correctAnswer === 'number' || !isNaN(Number(q.correctAnswer))) {
+                  const correctIndex = Number(q.correctAnswer);
+                  correctAnswer = q.options[correctIndex];
+                }
+                
                 // Improved comparison with normalization
-                const isCorrect = userAnswerText?.trim().toLowerCase() === q.correctAnswer?.trim().toLowerCase();
+                const isCorrect = userAnswerText?.trim().toLowerCase() === correctAnswer?.trim().toLowerCase();
                 if (isCorrect) {
                   correct++;
                 }
                 console.log('Restored answer check:', {
                   questionId: q.id,
                   userAnswer: userAnswerText,
-                  correctAnswer: q.correctAnswer,
+                  correctAnswer: correctAnswer,
+                  originalCorrectAnswer: q.correctAnswer,
                   isCorrect
                 });
               }
@@ -121,7 +130,14 @@ export function useQuestionNavigation(
       const question = questions.find(q => q.id === questionId);
       if (question) {
         const userAnswer = question.options[selectedIndex];
-        const correctAnswer = question.correctAnswer;
+        let correctAnswer = question.correctAnswer;
+        
+        // Check if correctAnswer is an index or the actual text
+        if (typeof question.correctAnswer === 'number' || !isNaN(Number(question.correctAnswer))) {
+          const correctIndex = Number(question.correctAnswer);
+          correctAnswer = question.options[correctIndex];
+        }
+        
         // Normalize both answers for comparison - handle edge cases
         const normalizedUserAnswer = userAnswer?.trim().toLowerCase() || '';
         const normalizedCorrectAnswer = correctAnswer?.trim().toLowerCase() || '';
@@ -162,16 +178,42 @@ export function useQuestionNavigation(
     
     // Always track question detail for the current question
     const userAnswerText = selectedAnswer !== null ? currentQuestion.options[selectedAnswer] : '';
+    // Debug the data structure to understand the issue
+    console.log('DEBUGGING ANSWER STRUCTURE:', {
+      currentQuestion: currentQuestion,
+      selectedAnswer,
+      userAnswerText,
+      correctAnswer: currentQuestion.correctAnswer,
+      options: currentQuestion.options
+    });
+    
     // Improved answer comparison with normalization  
     const normalizedUserAnswer = userAnswerText?.trim().toLowerCase() || '';
     const normalizedCorrectAnswer = currentQuestion.correctAnswer?.trim().toLowerCase() || '';
-    const isCorrect = selectedAnswer !== null && normalizedUserAnswer === normalizedCorrectAnswer;
+    
+    // Check if correctAnswer is an index or the actual text
+    let actualCorrectAnswer = currentQuestion.correctAnswer;
+    if (typeof currentQuestion.correctAnswer === 'number' || !isNaN(Number(currentQuestion.correctAnswer))) {
+      // If correctAnswer is an index, get the text from options
+      const correctIndex = Number(currentQuestion.correctAnswer);
+      actualCorrectAnswer = currentQuestion.options[correctIndex];
+      console.log('Using correctAnswer as index:', { correctIndex, actualCorrectAnswer });
+    }
+    
+    const normalizedActualCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
+    const isCorrect = selectedAnswer !== null && normalizedUserAnswer === normalizedActualCorrectAnswer;
+    
+    console.log('FINAL COMPARISON:', {
+      normalizedUserAnswer,
+      normalizedActualCorrectAnswer,
+      isCorrect
+    });
     
     const detail: QuestionDetail = {
       questionId: currentQuestion.id,
       question: currentQuestion.text,
       userAnswer: userAnswerText,
-      correctAnswer: currentQuestion.correctAnswer,
+      correctAnswer: actualCorrectAnswer,
       isCorrect
     };
     

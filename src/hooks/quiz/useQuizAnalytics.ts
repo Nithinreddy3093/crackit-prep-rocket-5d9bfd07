@@ -102,8 +102,17 @@ export function useQuizAnalytics() {
     const correctAnswers = uniqueQuestions.filter(q => {
       // Double-check the correctness evaluation with normalized comparison
       const isAnswered = q.userAnswer !== '' && q.userAnswer !== null;
+      let actualCorrectAnswer = q.correctAnswer;
+      
+      // Check if correctAnswer is an index or the actual text
+      if (typeof q.correctAnswer === 'number' || !isNaN(Number(q.correctAnswer))) {
+        console.warn('CorrectAnswer appears to be an index:', q.correctAnswer, 'for question:', q.questionId);
+        // If this happens, we need to get the actual text from somewhere
+        // For now, use the original value but this indicates a data structure issue
+      }
+      
       const normalizedUserAnswer = q.userAnswer?.trim().toLowerCase() || '';
-      const normalizedCorrectAnswer = q.correctAnswer?.trim().toLowerCase() || '';
+      const normalizedCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
       const isCorrectByComparison = isAnswered && normalizedUserAnswer === normalizedCorrectAnswer;
       const isCorrectByFlag = q.isCorrect;
       
@@ -113,6 +122,7 @@ export function useQuizAnalytics() {
           questionId: q.questionId,
           userAnswer: q.userAnswer,
           correctAnswer: q.correctAnswer,
+          actualCorrectAnswer,
           normalizedUserAnswer,
           normalizedCorrectAnswer,
           isCorrectByComparison,
@@ -124,8 +134,17 @@ export function useQuizAnalytics() {
     });
     
     const incorrectAnswers = answeredQuestions.filter(q => {
+      let actualCorrectAnswer = q.correctAnswer;
+      
+      // Check if correctAnswer is an index or the actual text
+      if (typeof q.correctAnswer === 'number' || !isNaN(Number(q.correctAnswer))) {
+        console.warn('CorrectAnswer appears to be an index in incorrect calculation:', q.correctAnswer, 'for question:', q.questionId);
+        // If this happens, we need to get the actual text from somewhere
+        // For now, use the original value but this indicates a data structure issue
+      }
+      
       const normalizedUserAnswer = q.userAnswer?.trim().toLowerCase() || '';
-      const normalizedCorrectAnswer = q.correctAnswer?.trim().toLowerCase() || '';
+      const normalizedCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
       const isCorrect = normalizedUserAnswer === normalizedCorrectAnswer;
       return !isCorrect;
     });

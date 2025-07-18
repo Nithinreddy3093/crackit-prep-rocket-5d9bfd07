@@ -79,9 +79,18 @@ export function useQuizSubmission() {
         // Re-validate each answer with proper comparison
         const validatedDetails = questionDetails.map(detail => {
           const isAnswered = detail.userAnswer !== '' && detail.userAnswer !== null;
+          let actualCorrectAnswer = detail.correctAnswer;
+          
+          // Check if correctAnswer is an index or the actual text
+          if (typeof detail.correctAnswer === 'number' || !isNaN(Number(detail.correctAnswer))) {
+            console.warn('CorrectAnswer appears to be an index in submission:', detail.correctAnswer, 'for question:', detail.questionId);
+            // If this happens, we need to get the actual text from somewhere
+            // For now, use the original value but this indicates a data structure issue
+          }
+          
           // Normalize answers for accurate comparison
           const normalizedUserAnswer = detail.userAnswer?.trim().toLowerCase() || '';
-          const normalizedCorrectAnswer = detail.correctAnswer?.trim().toLowerCase() || '';
+          const normalizedCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
           const isCorrectCalculated = isAnswered && normalizedUserAnswer === normalizedCorrectAnswer;
           
           return {

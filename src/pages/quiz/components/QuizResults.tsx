@@ -77,8 +77,17 @@ const QuizResults: React.FC<QuizResultsProps> = ({
       // Re-validate answers with consistent normalization
       const validatedQuestions = uniqueQuestions.map(q => {
         const isAnswered = q.userAnswer && q.userAnswer !== '';
+        let actualCorrectAnswer = q.correctAnswer;
+        
+        // Check if correctAnswer is an index or the actual text
+        if (typeof q.correctAnswer === 'number' || !isNaN(Number(q.correctAnswer))) {
+          console.warn('CorrectAnswer appears to be an index in results:', q.correctAnswer, 'for question:', q.questionId);
+          // If this happens, we need to get the actual text from somewhere
+          // For now, use the original value but this indicates a data structure issue
+        }
+        
         const normalizedUserAnswer = q.userAnswer?.trim().toLowerCase() || '';
-        const normalizedCorrectAnswer = q.correctAnswer?.trim().toLowerCase() || '';
+        const normalizedCorrectAnswer = actualCorrectAnswer?.trim().toLowerCase() || '';
         const isCorrectCalculated = isAnswered && normalizedUserAnswer === normalizedCorrectAnswer;
         
         return {
