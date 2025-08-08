@@ -57,7 +57,8 @@ export function useQuiz(topicId: string | undefined) {
     resetQuestionState,
     resetQuiz,
     resetTimer,
-    completeQuiz
+    completeQuiz,
+    userAnswers
   );
 
   // Store seen question IDs in localStorage whenever a quiz is completed

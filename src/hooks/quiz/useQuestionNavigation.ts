@@ -93,6 +93,13 @@ export function useQuestionNavigation(
   const handleAnswerSelect = useCallback((answerIndex: number) => {
     if (!currentQuestion) return;
     
+    console.log('🔘 ANSWER SELECTED:', {
+      questionId: currentQuestion.id,
+      selectedIndex: answerIndex,
+      selectedOption: currentQuestion.options[answerIndex],
+      correctAnswer: currentQuestion.correctAnswer
+    });
+    
     setSelectedAnswer(answerIndex);
     
     // Update userAnswers with question ID as key
@@ -104,15 +111,31 @@ export function useQuestionNavigation(
     
     // Recalculate total correct answers using improved comparison
     let totalCorrect = 0;
+    const answerBreakdown: Array<{questionId: string, isCorrect: boolean, userAnswer: string, correctAnswer: string}> = [];
+    
     Object.entries(updatedUserAnswers).forEach(([questionId, selectedIndex]) => {
       const question = questions.find(q => q.id === questionId);
       if (question) {
         const userAnswerText = question.options[selectedIndex];
         const comparison = compareAnswers(userAnswerText, question.correctAnswer, question.options, questionId);
+        
+        answerBreakdown.push({
+          questionId,
+          isCorrect: comparison.isCorrect,
+          userAnswer: userAnswerText,
+          correctAnswer: comparison.normalizedCorrectAnswer
+        });
+        
         if (comparison.isCorrect) {
           totalCorrect++;
         }
       }
+    });
+    
+    console.log('📊 UPDATED SCORE CALCULATION:', {
+      totalAnswered: Object.keys(updatedUserAnswers).length,
+      totalCorrect,
+      answerBreakdown
     });
     
     setCorrectAnswers(totalCorrect);
@@ -123,24 +146,22 @@ export function useQuestionNavigation(
         topicId,
         currentQuestionIndex,
         userAnswers: updatedUserAnswers,
-        startTime: Date.now() - 1000,
+        startTime: Date.now() - ((currentQuestionIndex + 1) * 30 * 1000), // Estimated start time
         questionIds: questions.map(q => q.id)
       };
       localStorage.setItem('inProgressQuiz', JSON.stringify(quizData));
+      console.log('💾 Progress saved to localStorage');
     }
-    
-    console.log('Answer selected and evaluated:', {
-      questionId: currentQuestion.id,
-      answerIndex,
-      userAnswer: currentQuestion.options[answerIndex],
-      correctAnswer: currentQuestion.correctAnswer,
-      totalCorrect: totalCorrect,
-      totalAnswered: Object.keys(updatedUserAnswers).length
-    });
   }, [currentQuestion, currentQuestionIndex, questions, topicId, userId, userAnswers]);
 
   const goToNextQuestion = useCallback(() => {
     if (!currentQuestion) return false;
+    
+    console.log('⏭️ PROCESSING NEXT QUESTION:', {
+      currentQuestionId: currentQuestion.id,
+      selectedAnswer,
+      hasUserAnswer: selectedAnswer !== null
+    });
     
     // Create question detail with improved comparison
     const userAnswerText = selectedAnswer !== null ? currentQuestion.options[selectedAnswer] : '';
@@ -154,28 +175,32 @@ export function useQuestionNavigation(
       isCorrect: comparison.isCorrect
     };
     
+    console.log('📝 QUESTION DETAIL CREATED:', {
+      questionId: detail.questionId,
+      userAnswer: detail.userAnswer,
+      correctAnswer: detail.correctAnswer,
+      isCorrect: detail.isCorrect,
+      comparisonMethod: comparison.comparisonMethod
+    });
+    
     // Check if this question already exists in details and update/add accordingly
     const existingDetailIndex = questionDetails.findIndex(d => d.questionId === currentQuestion.id);
     let updatedDetails;
     if (existingDetailIndex >= 0) {
       updatedDetails = [...questionDetails];
       updatedDetails[existingDetailIndex] = detail;
-      console.log('Updated existing question detail:', currentQuestion.id);
+      console.log('🔄 Updated existing question detail:', currentQuestion.id);
     } else {
       updatedDetails = [...questionDetails, detail];
-      console.log('Added new question detail:', currentQuestion.id);
+      console.log('➕ Added new question detail:', currentQuestion.id);
     }
     setQuestionDetails(updatedDetails);
     
-    console.log('Question completed and tracked:', {
-      questionId: currentQuestion.id,
-      userAnswer: userAnswerText,
-      correctAnswer: currentQuestion.correctAnswer,
-      actualCorrectAnswer: comparison.normalizedCorrectAnswer,
-      isCorrect: comparison.isCorrect,
-      comparisonMethod: comparison.comparisonMethod,
-      selectedAnswer,
-      totalQuestionDetails: updatedDetails.length
+    console.log('📋 QUESTION DETAILS STATUS:', {
+      totalDetails: updatedDetails.length,
+      detailsIds: updatedDetails.map(d => d.questionId),
+      currentQuestionIndex: currentQuestionIndex + 1,
+      totalQuestions: questions.length
     });
     
     setSelectedAnswer(null);
@@ -194,18 +219,22 @@ export function useQuestionNavigation(
           questionIds: questions.map(q => q.id)
         };
         localStorage.setItem('inProgressQuiz', JSON.stringify(quizData));
+        console.log('💾 Updated progress for next question');
       }
       
       return false;
     } else {
       // Final evaluation before completion
-      console.log('Quiz completion - Final evaluation:', {
+      console.log('🏁 QUIZ COMPLETION - FINAL EVALUATION:', {
         totalQuestions: questions.length,
         answeredQuestions: Object.keys(userAnswers).length,
         correctAnswers,
-        finalQuestionDetails: updatedDetails.length,
-        allQuestionDetails: updatedDetails,
-        userAnswers
+        finalQuestionDetailsCount: updatedDetails.length,
+        questionDetailsBreakdown: updatedDetails.map(d => ({
+          id: d.questionId,
+          correct: d.isCorrect,
+          answered: d.userAnswer !== ''
+        }))
       });
       
       return true;

@@ -24,7 +24,8 @@ export function useQuizActions(
   resetQuestionState: () => void,
   resetQuiz: () => void,
   resetTimer: () => void,
-  completeQuiz: () => void
+  completeQuiz: () => void,
+  userAnswers: Record<string, number> = {}
 ) {
   const { submitQuiz, isSubmitting } = useQuizSubmission();
   const { calculateQuizAnalytics } = useQuizAnalytics();
@@ -74,40 +75,60 @@ export function useQuizActions(
 
   // Submit quiz and save results with accurate evaluation
   const handleSubmitQuiz = async () => {
+    console.log('🚀 QUIZ SUBMISSION INITIATED in useQuizActions:', {
+      userId: userId || 'NOT_AUTHENTICATED',
+      topicTitle: currentTopicTitle || 'General',
+      correctAnswers,
+      totalQuestions: questions.length,
+      questionDetailsCount: questionDetails.length,
+      elapsedTime,
+      userAnswersCount: Object.keys(userAnswers).length
+    });
+
     if (!userId) {
+      console.error('❌ No user ID - authentication required');
       toast({
-        title: "Authentication required",
-        description: "You need to be logged in to submit quiz results.",
+        title: "Authentication Required",
+        description: "Please sign in to save your quiz results.",
         variant: "destructive",
       });
       return;
     }
-    
-    console.log('=== QUIZ SUBMISSION PREPARATION ===');
-    console.log('Pre-submission state:', {
-      userId,
-      topicTitle: currentTopicTitle,
-      questionsLength: questions.length,
-      questionDetailsLength: questionDetails.length,
-      correctAnswers,
-      elapsedTime
-    });
-    
-    // Log all question details for debugging
-    console.log('Question details being submitted:');
+
+    // Pre-submission validation
+    if (questionDetails.length === 0) {
+      console.error('🚨 CRITICAL: No question details available for submission!');
+      toast({
+        title: "Submission Error",
+        description: "Quiz data is incomplete. Please restart the quiz.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (questionDetails.length !== questions.length) {
+      console.warn('⚠️ Question details count mismatch before submission:', {
+        expected: questions.length,
+        actual: questionDetails.length
+      });
+    }
+
+    // Log all question details for comprehensive debugging
+    console.log('📋 QUESTION DETAILS FOR SUBMISSION:');
     questionDetails.forEach((detail, index) => {
-      console.log(`Question ${index + 1}:`, {
-        id: detail.questionId,
-        userAnswer: detail.userAnswer,
+      console.log(`Q${index + 1} (${detail.questionId}):`, {
+        question: detail.question.substring(0, 50) + '...',
+        userAnswer: detail.userAnswer || 'NO ANSWER',
         correctAnswer: detail.correctAnswer,
-        isCorrect: detail.isCorrect
+        isCorrect: detail.isCorrect ? '✅' : '❌',
+        isAnswered: detail.userAnswer ? '📝' : '⏭️'
       });
     });
     
-    // Calculate analytics with the correct parameters
+    // Calculate analytics with the correct parameters for final validation
     const analytics = calculateQuizAnalytics(questionDetails, questions.length, elapsedTime);
     
-    console.log('Analytics calculated for submission:', {
+    console.log('📊 ANALYTICS CALCULATED FOR SUBMISSION:', {
       totalQuestions: analytics.totalQuestions,
       attemptedQuestions: analytics.attemptedQuestions,
       correctCount: analytics.correctCount,
@@ -126,13 +147,14 @@ export function useQuizActions(
       questionDetails
     };
     
-    console.log('Final quiz data for submission:', {
+    console.log('📤 FINAL QUIZ DATA FOR SUBMISSION:', {
       userId: quizData.userId,
       topicTitle: quizData.topicTitle,
       correctAnswers: quizData.correctAnswers,
       totalQuestions: quizData.totalQuestions,
       timeInMs: quizData.timeInMs,
-      questionDetailsCount: quizData.questionDetails?.length || 0
+      questionDetailsCount: quizData.questionDetails?.length || 0,
+      score: Math.round((quizData.correctAnswers / quizData.totalQuestions) * 100)
     });
     
     try {
@@ -142,7 +164,7 @@ export function useQuizActions(
       localStorage.removeItem('lastQuizResults');
       localStorage.removeItem('inProgressQuiz');
       
-      console.log('Cleared all quiz progress data');
+      console.log('🧹 Cleared all quiz progress data');
       
       // Submit quiz results
       await submitQuiz(quizData);
@@ -150,14 +172,15 @@ export function useQuizActions(
       // Save submission status to prevent resubmission
       saveSubmittedQuizStatus(topicId);
       
-      console.log('Quiz submission completed successfully');
+      console.log('✅ Quiz submission completed successfully in useQuizActions');
       
     } catch (error) {
-      console.error('Error submitting quiz:', error);
+      console.error('❌ Error submitting quiz in useQuizActions:', error);
       
       // Save to localStorage in case of submission failure
       saveQuizResults(quizData);
-      console.log('Saved quiz data to localStorage as backup');
+      console.log('💾 Saved quiz data to localStorage as backup');
+      throw error; // Re-throw to trigger error handling in parent
     }
   };
 

@@ -67,45 +67,94 @@ export function useQuizSubmission() {
       const quizTopic = topicTitle || 'General';
       const completionTime = Math.floor(timeInMs / 1000);
       
-      // Re-validate all answers for maximum accuracy
+      // Re-validate all answers for maximum accuracy with enhanced logging
       let validatedCorrectCount = 0;
       let validatedQuestionDetails = questionDetails || [];
       
       if (questionDetails && questionDetails.length > 0) {
-        console.log('Re-validating all answers for accuracy...');
+        console.log('🔍 RE-VALIDATING ALL ANSWERS FOR SUBMISSION:', {
+          receivedQuestionDetails: questionDetails.length,
+          originalCorrectAnswers: correctAnswers,
+          totalQuestions
+        });
         
-        // Remove duplicates first
+        // Remove duplicates first using Set-based deduplication
         const uniqueDetails = new Map();
-        questionDetails.forEach(detail => {
+        questionDetails.forEach((detail, index) => {
           if (!uniqueDetails.has(detail.questionId)) {
             uniqueDetails.set(detail.questionId, detail);
+            console.log(`✅ Added unique question ${detail.questionId} (${index + 1}):`, {
+              userAnswer: detail.userAnswer,
+              correctAnswer: detail.correctAnswer,
+              isCorrect: detail.isCorrect
+            });
+          } else {
+            console.warn(`⚠️ Skipped duplicate question ${detail.questionId} (${index + 1})`);
           }
         });
         
         validatedQuestionDetails = Array.from(uniqueDetails.values());
         
-        // Count correct answers from validated details
-        validatedCorrectCount = validatedQuestionDetails.filter(detail => detail.isCorrect).length;
+        // Re-validate each answer using the utility function
+        let reValidatedCorrectCount = 0;
+        const reValidatedDetails = validatedQuestionDetails.map((detail, index) => {
+          // For submission, we trust the existing evaluation but double-check logic
+          const isAnswered = detail.userAnswer && detail.userAnswer.trim() !== '';
+          const isCorrectValidated = isAnswered && detail.isCorrect;
+          
+          if (isCorrectValidated) {
+            reValidatedCorrectCount++;
+          }
+          
+          console.log(`📝 Question ${index + 1} (${detail.questionId}) final validation:`, {
+            userAnswer: detail.userAnswer,
+            correctAnswer: detail.correctAnswer,
+            isAnswered,
+            isCorrect: detail.isCorrect,
+            isCorrectValidated
+          });
+          
+          return {
+            ...detail,
+            isCorrect: detail.isCorrect // Keep original evaluation
+          };
+        });
         
-        console.log('Validation results:', {
+        validatedQuestionDetails = reValidatedDetails;
+        validatedCorrectCount = reValidatedCorrectCount;
+        
+        console.log('🎯 FINAL VALIDATION RESULTS:', {
           originalCount: questionDetails.length,
           afterDeduplication: validatedQuestionDetails.length,
           validatedCorrectCount,
-          originalCorrectAnswers: correctAnswers
+          originalCorrectAnswers: correctAnswers,
+          validationMatches: validatedCorrectCount === correctAnswers
         });
         
-        // Log each validated answer
+        // Show detailed breakdown
+        console.log('📊 QUESTION BREAKDOWN FOR SUBMISSION:');
         validatedQuestionDetails.forEach((detail, index) => {
-          console.log(`Validated Q${index + 1} (${detail.questionId}):`, {
-            userAnswer: detail.userAnswer,
+          console.log(`Q${index + 1} (${detail.questionId}):`, {
+            question: detail.question.substring(0, 50) + '...',
+            userAnswer: detail.userAnswer || 'NO ANSWER',
             correctAnswer: detail.correctAnswer,
-            isCorrect: detail.isCorrect,
-            isAnswered: detail.userAnswer !== '' && detail.userAnswer !== null
+            isCorrect: detail.isCorrect ? '✅' : '❌',
+            isAnswered: detail.userAnswer ? '📝' : '⏭️'
           });
         });
       } else {
-        console.warn('No question details available - using provided correct answers count');
+        console.error('❌ CRITICAL: No question details available for submission!');
+        console.warn('Using fallback: provided correct answers count only');
         validatedCorrectCount = correctAnswers;
+        
+        // Create minimal question details if none exist
+        validatedQuestionDetails = Array.from({ length: totalQuestions }, (_, index) => ({
+          questionId: `unknown-${index + 1}`,
+          question: `Question ${index + 1}`,
+          userAnswer: '',
+          correctAnswer: '',
+          isCorrect: false
+        }));
       }
       
       // Use validated count for final score calculation

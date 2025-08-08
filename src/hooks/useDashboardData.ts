@@ -108,12 +108,21 @@ export function useDashboardData() {
         timestamp: location.state?.timestamp
       });
       
-      // Comprehensive cache invalidation
+      // Comprehensive cache invalidation with enhanced debugging
       const refreshQueries = async () => {
         try {
-          console.log('Starting comprehensive dashboard refresh...');
+          console.log('🔄 STARTING COMPREHENSIVE DASHBOARD REFRESH...');
+          console.log('Location state details:', {
+            refreshData: location.state?.refreshData,
+            quizCompleted: location.state?.quizCompleted,
+            topic: location.state?.topic,
+            score: location.state?.score,
+            timestamp: location.state?.timestamp,
+            userId: user?.id
+          });
           
-          // Invalidate all relevant queries
+          // Invalidate ALL dashboard-related cache keys with timing
+          const startTime = Date.now();
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
             queryClient.invalidateQueries({ queryKey: ['performanceHistory'] }),
@@ -122,25 +131,65 @@ export function useDashboardData() {
             queryClient.invalidateQueries({ queryKey: ['aiRecommendations'] }),
             queryClient.invalidateQueries({ queryKey: ['userActivities'] }),
             queryClient.invalidateQueries({ queryKey: ['userBadges'] }),
+            queryClient.invalidateQueries({ queryKey: ['dashboardStats'] }),
+            queryClient.invalidateQueries({ queryKey: ['recentQuizzes'] }),
+            queryClient.invalidateQueries({ queryKey: ['performanceSummary'] })
           ]);
+          const invalidationTime = Date.now() - startTime;
           
-          console.log('✅ Cache invalidation completed');
+          console.log(`✅ Cache invalidation completed in ${invalidationTime}ms`);
           
-          // Force refetch of critical data
-          await Promise.all([
-            refetchActivities(),
-            queryClient.refetchQueries({ queryKey: ['userPerformance', user?.id] }),
-          ]);
+          // Force immediate refetch of critical data with error handling
+          if (user?.id) {
+            console.log('🔄 Force refetching critical user data...');
+            const refetchStartTime = Date.now();
+            
+            try {
+              const refetchPromises = [
+                refetchActivities(),
+                queryClient.refetchQueries({ queryKey: ['userPerformance', user.id] }),
+                queryClient.refetchQueries({ queryKey: ['userActivities', user.id] }),
+                queryClient.refetchQueries({ queryKey: ['quizResults', user.id] })
+              ];
+              
+              await Promise.allSettled(refetchPromises);
+              const refetchTime = Date.now() - refetchStartTime;
+              console.log(`✅ Critical data refetch completed in ${refetchTime}ms`);
+              
+              // Additional aggressive refresh after a short delay for stubborn cache
+              setTimeout(async () => {
+                console.log('🔄 Secondary refresh cycle for persistent cache...');
+                await Promise.allSettled([
+                  queryClient.invalidateQueries({ queryKey: ['userPerformance'] }),
+                  queryClient.invalidateQueries({ queryKey: ['userActivities'] }),
+                  refetchActivities()
+                ]);
+                console.log('✅ Secondary refresh completed');
+              }, 2000);
+              
+            } catch (error) {
+              console.error('❌ Error during critical data refetch:', error);
+            }
+          }
           
-          console.log('✅ Data refetch completed');
+          // Trigger component re-renders with timestamp for debugging
+          setForceRefresh(prev => {
+            console.log('🔄 Triggering force refresh toggle:', !prev);
+            return !prev;
+          });
           
-          // Trigger component re-renders
-          setForceRefresh(prev => !prev);
-          
-          console.log('✅ Dashboard refresh completed');
+          console.log('✅ COMPREHENSIVE DASHBOARD REFRESH COMPLETED');
           
         } catch (error) {
-          console.error('Error during dashboard refresh:', error);
+          console.error('❌ Error during dashboard refresh:', error);
+          // Still attempt a basic refresh
+          try {
+            await refetchActivities();
+            setForceRefresh(prev => !prev);
+            console.log('✅ Fallback refresh completed');
+          } catch (fallbackError) {
+            console.error('❌ Fallback refresh failed:', fallbackError);
+          }
         }
       };
       

@@ -19,41 +19,77 @@ export const getQuestionsByTopicId = async (
   count: number = 10
 ): Promise<Question[]> => {
   try {
+    console.log('🔍 FETCHING QUESTIONS:', {
+      topicId,
+      excludedIdsCount: excludedIds.length,
+      difficulty,
+      requestedCount: count
+    });
+
     if (!topicId) {
       console.error('No topic ID provided');
       return [];
     }
 
-    // For now, return mock questions until we implement them in Supabase
     // Get expanded question set per topic
     let allQuestions = getExpandedQuestions(topicId);
+    console.log('📚 Total available questions for topic:', allQuestions.length);
+    
+    // Remove duplicates by ID to prevent duplicate questions
+    const uniqueQuestions = allQuestions.reduce((acc, current) => {
+      const exists = acc.find(q => q.id === current.id);
+      if (!exists) {
+        acc.push(current);
+      } else {
+        console.warn('⚠️ Duplicate question removed:', current.id);
+      }
+      return acc;
+    }, [] as Question[]);
+    
+    console.log('📝 Unique questions after deduplication:', uniqueQuestions.length);
     
     // Filter out previously seen questions
+    let filteredQuestions = uniqueQuestions;
     if (excludedIds.length > 0) {
-      allQuestions = allQuestions.filter(q => !excludedIds.includes(q.id));
+      filteredQuestions = uniqueQuestions.filter(q => !excludedIds.includes(q.id));
+      console.log('🚫 After excluding seen questions:', filteredQuestions.length);
     }
     
     // Filter by difficulty if specified (skip filtering if mixed)
     if (difficulty !== 'mixed') {
-      allQuestions = allQuestions.filter(q => q.difficulty === difficulty);
+      filteredQuestions = filteredQuestions.filter(q => q.difficulty === difficulty);
+      console.log(`🎯 After filtering by ${difficulty} difficulty:`, filteredQuestions.length);
     }
     
-    // If we don't have enough questions after filtering, fall back to all questions
-    // This ensures we always return some questions even if the user has seen them before
-    if (allQuestions.length < count) {
-      console.warn('Not enough unique questions available, including some repeated questions');
-      allQuestions = getExpandedQuestions(topicId);
+    // If we don't have enough questions after filtering, fall back to include some seen questions
+    if (filteredQuestions.length < count) {
+      console.warn(`⚠️ Not enough unique questions (${filteredQuestions.length}), including some repeated questions`);
       
-      // Still filter by difficulty if specified
+      // Get additional questions from seen ones, but still apply difficulty filter
+      let additionalQuestions = uniqueQuestions.filter(q => excludedIds.includes(q.id));
       if (difficulty !== 'mixed') {
-        allQuestions = allQuestions.filter(q => q.difficulty === difficulty);
+        additionalQuestions = additionalQuestions.filter(q => q.difficulty === difficulty);
       }
+      
+      // Combine and shuffle to mix seen and unseen questions
+      const combined = [...filteredQuestions, ...additionalQuestions];
+      filteredQuestions = shuffleArray(combined);
+      
+      console.log('🔄 Combined with repeated questions:', filteredQuestions.length);
     }
     
-    // Randomize and limit to requested count
-    return shuffleArray(allQuestions).slice(0, count);
+    // Final randomize and limit to requested count
+    const finalQuestions = shuffleArray(filteredQuestions).slice(0, count);
+    
+    console.log('✅ FINAL QUESTION SET:', {
+      selectedCount: finalQuestions.length,
+      questionIds: finalQuestions.map(q => q.id),
+      difficulties: finalQuestions.map(q => q.difficulty)
+    });
+    
+    return finalQuestions;
   } catch (error) {
-    console.error(`Error fetching questions for topic ${topicId}:`, error);
+    console.error(`❌ Error fetching questions for topic ${topicId}:`, error);
     throw new Error('Failed to fetch questions. Please try again later.');
   }
 };
