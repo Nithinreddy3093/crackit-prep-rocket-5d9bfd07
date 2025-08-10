@@ -1,43 +1,21 @@
 
-import React, { useCallback, useMemo, Suspense, lazy, useState, useEffect } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuiz } from "@/hooks/useQuiz";
+import { useSimpleQuiz } from "@/hooks/useSimpleQuiz";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import LoadingState from './components/LoadingState';
 import ErrorState from './components/ErrorState';
-import QuizIntro from '@/components/quiz/QuizIntro';
+import SimpleQuizIntro from '@/components/quiz/SimpleQuizIntro';
+import SimpleQuizQuestion from '@/components/quiz/SimpleQuizQuestion';
+import SimpleQuizResults from '@/components/quiz/SimpleQuizResults';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { toast } from "@/components/ui/use-toast";
-
-// Lazy load components for better initial loading performance
-const QuizQuestion = lazy(() => import('./components/QuizQuestion'));
-const QuizResults = lazy(() => import('./components/QuizResults'));
 
 const QuizPage = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const navigate = useNavigate();
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const quiz = useQuiz(topicId);
-  
-  // Handle initial loading state
-  useEffect(() => {
-    if (!quiz.isLoading && isInitialLoad) {
-      setIsInitialLoad(false);
-    }
-  }, [quiz.isLoading, isInitialLoad]);
-  
-  useEffect(() => {
-    // Show error toast when quiz fails to load
-    if (quiz.error && !isInitialLoad) {
-      toast({
-        title: "Error loading quiz",
-        description: (quiz.error as Error).message || "Failed to load quiz",
-        variant: "destructive",
-      });
-    }
-  }, [quiz.error, isInitialLoad]);
+  const quiz = useSimpleQuiz(topicId);
 
   const handleBackToTopics = useCallback(() => {
     navigate('/topics');
@@ -45,15 +23,14 @@ const QuizPage = () => {
   
   // Memoize content to prevent unnecessary re-renders
   const renderContent = useMemo(() => {
-    // Early return for initial loading state to prevent flickering
-    if (isInitialLoad || (quiz.isLoading && quiz.questions.length === 0)) {
+    if (quiz.isLoading && quiz.questions.length === 0) {
       return <LoadingState />;
     }
     
     if (quiz.error) {
       return (
         <ErrorState 
-          errorMessage={(quiz.error as Error).message || "Failed to load quiz."}
+          errorMessage={quiz.error}
           onRetry={() => window.location.href = '/topics'}
         />
       );
@@ -61,69 +38,67 @@ const QuizPage = () => {
     
     if (!quiz.quizStarted) {
       return (
-        <QuizIntro 
-          topic={quiz.currentTopic?.title || "General Knowledge"}
-          questionCount={quiz.questions.length}
+        <SimpleQuizIntro 
+          topic={topicId || "General Knowledge"}
+          questionCount={quiz.totalQuestions}
           onStartQuiz={quiz.startQuiz}
           isLoading={quiz.isLoading}
-          seenQuestions={quiz.seenQuestionIds.length}
         />
       );
     }
     
     if (quiz.quizCompleted) {
       return (
-        <Suspense fallback={<LoadingState />}>
-          <QuizResults 
-            correctAnswers={quiz.correctAnswers}
-            totalQuestions={quiz.questions.length}
-            elapsedTime={quiz.elapsedTime}
-            topicTitle={quiz.currentTopic?.title}
-            formatTime={quiz.formatTime}
-            onRestart={quiz.handleRestartQuiz}
-            onSubmit={quiz.handleSubmitQuiz}
-            questionDetails={quiz.questionDetails}
-          />
-        </Suspense>
+        <SimpleQuizResults 
+          correctAnswersCount={quiz.correctAnswersCount}
+          totalQuestions={quiz.totalQuestions}
+          scorePercentage={quiz.scorePercentage}
+          elapsedTime={quiz.elapsedTime}
+          formatTime={quiz.formatTime}
+          topicTitle={topicId}
+          questionDetails={quiz.questionDetails}
+          onRestart={quiz.resetQuiz}
+        />
       );
     }
     
+    if (!quiz.currentQuestion) {
+      return <LoadingState />;
+    }
+    
     return (
-      <Suspense fallback={<LoadingState />}>
-        <QuizQuestion 
-          currentQuestion={quiz.currentQuestion}
-          currentIndex={quiz.currentQuestionIndex}
-          totalQuestions={quiz.questions.length}
-          selectedAnswer={quiz.selectedAnswer}
-          onAnswerSelect={quiz.handleAnswerSelect}
-          onNextQuestion={quiz.goToNextQuestion}
-          elapsedTime={quiz.elapsedTime}
-          formatTime={quiz.formatTime}
-          topicTitle={quiz.currentTopic?.title}
-        />
-      </Suspense>
+      <SimpleQuizQuestion 
+        question={quiz.currentQuestion}
+        currentIndex={quiz.currentQuestionIndex}
+        totalQuestions={quiz.totalQuestions}
+        selectedAnswer={quiz.selectedAnswer}
+        onAnswerSelect={quiz.handleAnswerSelect}
+        onNextQuestion={quiz.goToNextQuestion}
+        elapsedTime={quiz.elapsedTime}
+        formatTime={quiz.formatTime}
+        topicTitle={topicId}
+      />
     );
   }, [
-    isInitialLoad,
     quiz.isLoading,
     quiz.error,
     quiz.quizStarted,
     quiz.quizCompleted,
-    quiz.currentTopic,
     quiz.questions.length,
+    quiz.totalQuestions,
     quiz.startQuiz,
-    quiz.seenQuestionIds.length,
-    quiz.correctAnswers,
+    quiz.correctAnswersCount,
+    quiz.scorePercentage,
     quiz.elapsedTime,
     quiz.formatTime,
-    quiz.handleRestartQuiz,
-    quiz.handleSubmitQuiz,
     quiz.questionDetails,
+    quiz.resetQuiz,
     quiz.currentQuestion,
     quiz.currentQuestionIndex,
     quiz.selectedAnswer,
     quiz.handleAnswerSelect,
-    quiz.goToNextQuestion
+    quiz.goToNextQuestion,
+    topicId
   ]);
 
   return (

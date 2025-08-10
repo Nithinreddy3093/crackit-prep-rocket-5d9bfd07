@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
@@ -77,6 +77,42 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          difficulty: string | null
+          explanation: string | null
+          id: string
+          options: Json
+          question_text: string
+          topic_id: string
+          updated_at: string
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          difficulty?: string | null
+          explanation?: string | null
+          id?: string
+          options: Json
+          question_text: string
+          topic_id: string
+          updated_at?: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          difficulty?: string | null
+          explanation?: string | null
+          id?: string
+          options?: Json
+          question_text?: string
+          topic_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quiz_results: {
         Row: {
           completion_time: number | null
@@ -104,6 +140,51 @@ export type Database = {
           score?: number
           topic?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      quiz_sessions: {
+        Row: {
+          completed_at: string | null
+          correct_answers: number
+          created_at: string
+          id: string
+          question_details: Json | null
+          score_percentage: number | null
+          started_at: string
+          time_spent_ms: number | null
+          topic_id: string
+          total_questions: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          correct_answers?: number
+          created_at?: string
+          id?: string
+          question_details?: Json | null
+          score_percentage?: number | null
+          started_at?: string
+          time_spent_ms?: number | null
+          topic_id: string
+          total_questions?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          correct_answers?: number
+          created_at?: string
+          id?: string
+          question_details?: Json | null
+          score_percentage?: number | null
+          started_at?: string
+          time_spent_ms?: number | null
+          topic_id?: string
+          total_questions?: number
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

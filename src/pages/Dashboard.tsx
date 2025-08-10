@@ -1,34 +1,25 @@
 import React from 'react';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import DashboardTabs from '@/components/dashboard/DashboardTabs';
-import WelcomeSection from '@/components/dashboard/WelcomeSection';
-import { useDashboardData } from '@/hooks/useDashboardData';
-import { useDashboardEffects } from '@/hooks/useDashboardEffects';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import SimpleDashboard from '@/components/dashboard/SimpleDashboard';
+import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const {
-    user,
-    recentActivities,
-    activitiesLoading,
-    forceRefresh
-  } = useDashboardData();
+  const { user } = useAuth();
 
-  // Handle welcome toast and other side effects
-  useDashboardEffects(user);
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
-    <DashboardLayout>
-      {/* Welcome Section with new styling */}
-      <WelcomeSection userName={user?.name || 'User'} />
-      
-      {/* Dashboard Tabs with updated styling */}
-      <DashboardTabs 
-        user={user}
-        recentActivities={recentActivities}
-        activitiesLoading={activitiesLoading}
-        forceRefresh={forceRefresh}
-      />
-    </DashboardLayout>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
+      <Navbar />
+      <main className="flex-grow">
+        <SimpleDashboard />
+      </main>
+      <Footer />
+    </div>
   );
 };
 
