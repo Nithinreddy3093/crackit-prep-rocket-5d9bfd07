@@ -67,8 +67,11 @@ const OptimizedTopicsGrid: React.FC<OptimizedTopicsGridProps> = ({
           description={topic.description}
           bgColor={`bg-gradient-to-br ${topic.color || 'from-darkBlue-700 to-darkBlue-600'}`}
           to={`/quiz/${topic.id}`}
-          questionCount={topic.questionsCount || 10}
-          timeEstimate={`${Math.round((topic.questionsCount || 10) * 1.5)} min`}
+          questionCount={topic.questionCount || topic.questionsCount || 10}
+          timeLimit={topic.timeLimit}
+          difficulty={topic.difficulty}
+          category={topic.category}
+          timeEstimate={`${topic.timeLimit || Math.round((topic.questionCount || 10) * 1.5)} min`}
           completed={0}
           onClick={() => onTopicClick(topic.id)}
           index={index}

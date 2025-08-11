@@ -11,6 +11,9 @@ interface TopicCardProps {
   to: string;
   questionCount?: number;
   timeEstimate?: string;
+  timeLimit?: number;
+  difficulty?: string;
+  category?: string;
   completed?: number;
   onClick?: () => void;
   index?: number;
@@ -24,6 +27,9 @@ const TopicCard: React.FC<TopicCardProps> = ({
   to,
   questionCount = 15,
   timeEstimate = "15 min",
+  timeLimit,
+  difficulty = "intermediate",
+  category = "General",
   completed = 0,
   onClick,
   index = 0
@@ -75,7 +81,10 @@ const TopicCard: React.FC<TopicCardProps> = ({
           </span>
           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white/20 text-white backdrop-blur-sm">
             <Clock className="mr-1 h-3 w-3" />
-            {timeEstimate}
+            {timeLimit ? `${timeLimit} min` : timeEstimate}
+          </span>
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white/30 text-white backdrop-blur-sm capitalize">
+            {difficulty}
           </span>
           {completed > 0 && (
             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-400/30 backdrop-blur-sm text-white">

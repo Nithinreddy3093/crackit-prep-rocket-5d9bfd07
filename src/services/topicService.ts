@@ -9,6 +9,9 @@ export interface Topic {
   icon: string;
   difficulty: string;
   questionsCount?: number;
+  questionCount: number;
+  timeLimit: number; // in minutes
+  category: string;
   color?: string;
 }
 
@@ -39,62 +42,83 @@ export const getTopicById = async (topicId?: string): Promise<Topic | null> => {
   }
 };
 
+// Topic configurations with proper metadata
+export const TOPIC_CONFIGS: Record<string, Topic> = {
+  'dsa': {
+    id: 'dsa',
+    title: 'Data Structures & Algorithms',
+    description: 'Arrays, Linked Lists, Trees, Graphs, Sorting and Searching Algorithms.',
+    icon: 'Code',
+    difficulty: 'intermediate',
+    questionsCount: 25,
+    questionCount: 25,
+    timeLimit: 38,
+    category: 'Computer Science',
+    color: 'from-purple-500 to-indigo-600'
+  },
+  'dbms': {
+    id: 'dbms',
+    title: 'Database Management',
+    description: 'SQL, Normalization, Transactions, RDBMS concepts and queries.',
+    icon: 'Database',
+    difficulty: 'intermediate',
+    questionsCount: 20,
+    questionCount: 20,
+    timeLimit: 30,
+    category: 'Computer Science',
+    color: 'from-blue-500 to-cyan-600'
+  },
+  'os': {
+    id: 'os',
+    title: 'Operating Systems',
+    description: 'Process Management, Memory Management, File Systems, Scheduling.',
+    icon: 'Cpu',
+    difficulty: 'advanced',
+    questionsCount: 18,
+    questionCount: 18,
+    timeLimit: 27,
+    category: 'Computer Science',
+    color: 'from-gray-600 to-gray-800'
+  },
+  'oops': {
+    id: 'oops',
+    title: 'Object-Oriented Programming',
+    description: 'Classes, Objects, Inheritance, Polymorphism, Encapsulation, Abstraction.',
+    icon: 'Layers',
+    difficulty: 'beginner',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 23,
+    category: 'Programming',
+    color: 'from-green-500 to-emerald-600'
+  },
+  'web-development': {
+    id: 'web-development',
+    title: 'Web Development',
+    description: 'HTML, CSS, JavaScript, React, RESTful APIs, and web architecture.',
+    icon: 'Globe',
+    difficulty: 'beginner',
+    questionsCount: 22,
+    questionCount: 22,
+    timeLimit: 33,
+    category: 'Programming',
+    color: 'from-amber-500 to-orange-600'
+  },
+  'ai-ml': {
+    id: 'ai-ml',
+    title: 'AI & Machine Learning',
+    description: 'Neural Networks, Supervised/Unsupervised Learning, NLP, Computer Vision.',
+    icon: 'Brain',
+    difficulty: 'advanced',
+    questionsCount: 12,
+    questionCount: 12,
+    timeLimit: 18,
+    category: 'Technology',
+    color: 'from-red-500 to-pink-600'
+  }
+};
+
 // Mock topics (will be replaced by database queries later)
 const getMockTopics = (): Topic[] => {
-  return [
-    {
-      id: 'dsa',
-      title: 'Data Structures & Algorithms',
-      description: 'Arrays, Linked Lists, Trees, Graphs, Sorting and Searching Algorithms.',
-      icon: 'Code',
-      difficulty: 'intermediate',
-      questionsCount: 25,
-      color: 'from-purple-500 to-indigo-600'
-    },
-    {
-      id: 'dbms',
-      title: 'Database Management',
-      description: 'SQL, Normalization, Transactions, RDBMS concepts and queries.',
-      icon: 'Database',
-      difficulty: 'intermediate',
-      questionsCount: 20,
-      color: 'from-blue-500 to-cyan-600'
-    },
-    {
-      id: 'os',
-      title: 'Operating Systems',
-      description: 'Process Management, Memory Management, File Systems, Scheduling.',
-      icon: 'Cpu',
-      difficulty: 'advanced',
-      questionsCount: 18,
-      color: 'from-gray-600 to-gray-800'
-    },
-    {
-      id: 'oops',
-      title: 'Object-Oriented Programming',
-      description: 'Classes, Objects, Inheritance, Polymorphism, Encapsulation, Abstraction.',
-      icon: 'Layers',
-      difficulty: 'beginner',
-      questionsCount: 15,
-      color: 'from-green-500 to-emerald-600'
-    },
-    {
-      id: 'web',
-      title: 'Web Development',
-      description: 'HTML, CSS, JavaScript, React, RESTful APIs, and web architecture.',
-      icon: 'Globe',
-      difficulty: 'beginner',
-      questionsCount: 22,
-      color: 'from-amber-500 to-orange-600'
-    },
-    {
-      id: 'ai',
-      title: 'AI & Machine Learning',
-      description: 'Neural Networks, Supervised/Unsupervised Learning, NLP, Computer Vision.',
-      icon: 'Brain',
-      difficulty: 'advanced',
-      questionsCount: 12,
-      color: 'from-red-500 to-pink-600'
-    }
-  ];
+  return Object.values(TOPIC_CONFIGS);
 };

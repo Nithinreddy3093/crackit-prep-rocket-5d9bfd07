@@ -76,7 +76,7 @@ export const useSimpleQuiz = (topicId?: string) => {
     };
   }, [quizStarted, quizCompleted, startTime]);
 
-  // Load questions from database
+  // Load questions using AI generation
   const loadQuestions = useCallback(async (topicId: string) => {
     try {
       setIsLoading(true);
@@ -84,41 +84,78 @@ export const useSimpleQuiz = (topicId?: string) => {
       
       console.log('🔍 Loading questions for topic:', topicId);
       
-      // Get questions from database
-      const { data: dbQuestions, error: dbError } = await supabase
+      // First try to get recent questions from database (within last hour)
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: recentQuestions, error: dbError } = await supabase
         .from('questions')
         .select('*')
         .eq('topic_id', topicId)
-        .limit(8);
+        .gte('created_at', oneHourAgo)
+        .limit(50);
 
-      if (dbError) {
-        console.error('Database error:', dbError);
-        throw new Error('Failed to load questions from database');
+      if (recentQuestions && recentQuestions.length >= 10) {
+        console.log('✅ Using cached questions from database');
+        
+        // Transform and shuffle cached questions
+        const transformedQuestions: SimpleQuestion[] = recentQuestions.map(q => ({
+          id: q.id,
+          question_text: q.question_text,
+          options: Array.isArray(q.options) ? q.options : JSON.parse(q.options as string),
+          correct_answer: q.correct_answer,
+          explanation: q.explanation,
+          topic_id: q.topic_id,
+          difficulty: q.difficulty as 'beginner' | 'intermediate' | 'advanced'
+        }));
+
+        const shuffledQuestions = transformedQuestions
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 15); // Take up to 15 questions
+        
+        setQuestions(shuffledQuestions);
+        setUserAnswers(new Array(shuffledQuestions.length).fill(null));
+        return;
       }
 
-      if (!dbQuestions || dbQuestions.length === 0) {
-        throw new Error('No questions found for this topic');
+      // Generate new questions using AI
+      console.log('🤖 Generating new questions using AI...');
+      
+      const response = await supabase.functions.invoke('generate-quiz-questions', {
+        body: { topicId, difficulty: 'mixed' }
+      });
+
+      if (response.error) {
+        console.error('Edge function error:', response.error);
+        throw new Error('Failed to generate questions');
       }
 
-      // Transform database questions to our format
-      const transformedQuestions: SimpleQuestion[] = dbQuestions.map(q => ({
+      const { questions: aiQuestions, timeLimit } = response.data;
+      
+      if (!aiQuestions || aiQuestions.length === 0) {
+        throw new Error('No questions generated');
+      }
+
+      // Store generated questions in database for caching
+      const questionsToStore = aiQuestions.map((q: any) => ({
         id: q.id,
         question_text: q.question_text,
-        options: Array.isArray(q.options) ? q.options : JSON.parse(q.options as string),
+        options: JSON.stringify(q.options),
         correct_answer: q.correct_answer,
-        explanation: q.explanation,
+        explanation: q.explanation || '',
         topic_id: q.topic_id,
-        difficulty: q.difficulty as 'beginner' | 'intermediate' | 'advanced'
+        difficulty: q.difficulty || 'intermediate'
       }));
 
-      // Shuffle questions for variety
-      const shuffledQuestions = transformedQuestions.sort(() => Math.random() - 0.5);
+      // Insert into database (ignore conflicts for caching)
+      await supabase
+        .from('questions')
+        .upsert(questionsToStore, { onConflict: 'id' });
+
+      // Use a subset for the quiz (10-15 questions)
+      const quizQuestions = aiQuestions.slice(0, 15);
       
-      console.log('✅ Loaded questions:', shuffledQuestions.length);
-      setQuestions(shuffledQuestions);
-      
-      // Initialize user answers array
-      setUserAnswers(new Array(shuffledQuestions.length).fill(null));
+      console.log('✅ Generated and loaded', quizQuestions.length, 'questions');
+      setQuestions(quizQuestions);
+      setUserAnswers(new Array(quizQuestions.length).fill(null));
       
     } catch (err) {
       console.error('❌ Error loading questions:', err);
