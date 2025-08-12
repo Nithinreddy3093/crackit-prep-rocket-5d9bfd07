@@ -76,7 +76,7 @@ export const useSimpleQuiz = (topicId?: string) => {
     };
   }, [quizStarted, quizCompleted, startTime]);
 
-  // Load questions using AI generation
+  // Load questions using secure functions
   const loadQuestions = useCallback(async (topicId: string) => {
     try {
       setIsLoading(true);
@@ -84,35 +84,34 @@ export const useSimpleQuiz = (topicId?: string) => {
       
       console.log('🔍 Loading questions for topic:', topicId);
       
-      // First try to get recent questions from database (within last hour)
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      const { data: recentQuestions, error: dbError } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('topic_id', topicId)
-        .gte('created_at', oneHourAgo)
-        .limit(50);
+      // Use secure function to get questions (without answers)
+      const { data: secureQuestions, error: secureError } = await supabase
+        .rpc('get_secure_quiz_questions', {
+          p_topic_id: topicId,
+          p_limit: 15
+        });
 
-      if (recentQuestions && recentQuestions.length >= 10) {
-        console.log('✅ Using cached questions from database');
+      if (secureError) {
+        console.error('Error fetching secure questions:', secureError);
+        throw new Error('Failed to fetch questions securely');
+      }
+
+      if (secureQuestions && secureQuestions.length >= 10) {
+        console.log('✅ Using secure questions from database');
         
-        // Transform and shuffle cached questions
-        const transformedQuestions: SimpleQuestion[] = recentQuestions.map(q => ({
+        // Transform secure questions (note: no correct_answer available)
+        const transformedQuestions: SimpleQuestion[] = secureQuestions.map(q => ({
           id: q.id,
           question_text: q.question_text,
           options: Array.isArray(q.options) ? q.options : JSON.parse(q.options as string),
-          correct_answer: q.correct_answer,
-          explanation: q.explanation,
+          correct_answer: '', // Not available in secure fetch
+          explanation: undefined, // Not available in secure fetch
           topic_id: q.topic_id,
           difficulty: q.difficulty as 'beginner' | 'intermediate' | 'advanced'
         }));
-
-        const shuffledQuestions = transformedQuestions
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 15); // Take up to 15 questions
         
-        setQuestions(shuffledQuestions);
-        setUserAnswers(new Array(shuffledQuestions.length).fill(null));
+        setQuestions(transformedQuestions);
+        setUserAnswers(new Array(transformedQuestions.length).fill(null));
         return;
       }
 
@@ -134,24 +133,20 @@ export const useSimpleQuiz = (topicId?: string) => {
         throw new Error('No questions generated');
       }
 
-      // Store generated questions in database for caching
-      const questionsToStore = aiQuestions.map((q: any) => ({
+      // Note: Questions are stored in database by the edge function
+      // We don't store them here since direct table access is now restricted
+
+      // Use a subset for the quiz (10-15 questions)
+      // Transform to remove sensitive data for client
+      const quizQuestions = aiQuestions.slice(0, 15).map((q: any) => ({
         id: q.id,
         question_text: q.question_text,
-        options: JSON.stringify(q.options),
-        correct_answer: q.correct_answer,
-        explanation: q.explanation || '',
+        options: q.options,
+        correct_answer: '', // Remove correct answer from client
+        explanation: undefined, // Remove explanation from client
         topic_id: q.topic_id,
         difficulty: q.difficulty || 'intermediate'
       }));
-
-      // Insert into database (ignore conflicts for caching)
-      await supabase
-        .from('questions')
-        .upsert(questionsToStore, { onConflict: 'id' });
-
-      // Use a subset for the quiz (10-15 questions)
-      const quizQuestions = aiQuestions.slice(0, 15);
       
       console.log('✅ Generated and loaded', quizQuestions.length, 'questions');
       setQuestions(quizQuestions);
@@ -239,23 +234,44 @@ export const useSimpleQuiz = (topicId?: string) => {
     });
   }, [currentQuestionIndex]);
 
-  // Check if answer is correct
-  const isAnswerCorrect = useCallback((userAnswer: string, correctAnswer: string): boolean => {
-    return userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+  // Validate answer using secure function
+  const validateAnswer = useCallback(async (questionId: string, userAnswer: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('validate_quiz_answer', {
+          p_question_id: questionId,
+          p_user_answer: userAnswer
+        });
+
+      if (error) {
+        console.error('Error validating answer:', error);
+        return { is_correct: false, correct_answer: '', explanation: '' };
+      }
+
+      // Type guard for the response data
+      const result = data as { is_correct: boolean; correct_answer: string; explanation: string };
+      return result || { is_correct: false, correct_answer: '', explanation: '' };
+    } catch (err) {
+      console.error('Error in answer validation:', err);
+      return { is_correct: false, correct_answer: '', explanation: '' };
+    }
   }, []);
 
   // Go to next question
-  const goToNextQuestion = useCallback(() => {
+  const goToNextQuestion = useCallback(async () => {
     if (!selectedAnswer || !questions[currentQuestionIndex]) return;
 
     const currentQuestion = questions[currentQuestionIndex];
-    const isCorrect = isAnswerCorrect(selectedAnswer, currentQuestion.correct_answer);
     
-    // Add to question details
+    // Validate answer using secure function
+    const validationResult = await validateAnswer(currentQuestion.id, selectedAnswer);
+    const isCorrect = validationResult.is_correct;
+    
+    // Add to question details with correct answer from server
     const questionDetail: QuizAnswerDetail = {
       questionId: currentQuestion.id,
       userAnswer: selectedAnswer,
-      correctAnswer: currentQuestion.correct_answer,
+      correctAnswer: validationResult.correct_answer,
       isCorrect
     };
     
@@ -272,7 +288,7 @@ export const useSimpleQuiz = (topicId?: string) => {
     } else {
       completeQuiz();
     }
-  }, [selectedAnswer, questions, currentQuestionIndex, isAnswerCorrect]);
+  }, [selectedAnswer, questions, currentQuestionIndex, validateAnswer]);
 
   // Complete quiz
   const completeQuiz = useCallback(async () => {
@@ -282,21 +298,29 @@ export const useSimpleQuiz = (topicId?: string) => {
       setIsLoading(true);
       
       const totalElapsed = Date.now() - startTime;
-      const finalCorrectCount = correctAnswersCount + (selectedAnswer && isAnswerCorrect(selectedAnswer, questions[currentQuestionIndex]?.correct_answer) ? 1 : 0);
-      const scorePercentage = Math.round((finalCorrectCount / questions.length) * 100);
       
-      // Include final question if needed
+      // Handle final question validation if needed
       let finalQuestionDetails = [...questionDetails];
+      let finalCorrectCount = correctAnswersCount;
+      
       if (selectedAnswer && questions[currentQuestionIndex]) {
         const currentQuestion = questions[currentQuestionIndex];
-        const isCorrect = isAnswerCorrect(selectedAnswer, currentQuestion.correct_answer);
+        const validationResult = await validateAnswer(currentQuestion.id, selectedAnswer);
+        const isCorrect = validationResult.is_correct;
+        
+        if (isCorrect) {
+          finalCorrectCount += 1;
+        }
+        
         finalQuestionDetails.push({
           questionId: currentQuestion.id,
           userAnswer: selectedAnswer,
-          correctAnswer: currentQuestion.correct_answer,
+          correctAnswer: validationResult.correct_answer,
           isCorrect
         });
       }
+      
+      const scorePercentage = Math.round((finalCorrectCount / questions.length) * 100);
 
       // Update quiz session
       const { error: updateError } = await supabase
@@ -368,7 +392,7 @@ export const useSimpleQuiz = (topicId?: string) => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentSession, user, startTime, correctAnswersCount, selectedAnswer, questions, currentQuestionIndex, questionDetails, topicId, isAnswerCorrect]);
+  }, [currentSession, user, startTime, correctAnswersCount, selectedAnswer, questions, currentQuestionIndex, questionDetails, topicId, validateAnswer]);
 
   // Reset quiz
   const resetQuiz = useCallback(() => {

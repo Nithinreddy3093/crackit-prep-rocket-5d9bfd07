@@ -310,36 +310,7 @@ export type Database = {
       }
     }
     Views: {
-      questions_secure: {
-        Row: {
-          created_at: string | null
-          difficulty: string | null
-          id: string | null
-          options: Json | null
-          question_text: string | null
-          topic_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          difficulty?: string | null
-          id?: string | null
-          options?: Json | null
-          question_text?: string | null
-          topic_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          difficulty?: string | null
-          id?: string | null
-          options?: Json | null
-          question_text?: string | null
-          topic_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_secure_quiz_questions: {
