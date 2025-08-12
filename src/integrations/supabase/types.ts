@@ -313,6 +313,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_secure_quiz_questions: {
+        Args: { p_topic_id: string; p_limit?: number }
+        Returns: {
+          id: string
+          question_text: string
+          options: Json
+          topic_id: string
+          difficulty: string
+        }[]
+      }
       update_user_performance: {
         Args: {
           p_user_id: string
@@ -320,6 +330,10 @@ export type Database = {
           p_score: number
           p_completion_time?: number
         }
+        Returns: Json
+      }
+      validate_quiz_answer: {
+        Args: { p_question_id: string; p_user_answer: string }
         Returns: Json
       }
     }
