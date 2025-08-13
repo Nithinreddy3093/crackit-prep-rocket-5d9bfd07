@@ -333,7 +333,9 @@ export type Database = {
         Returns: Json
       }
       validate_quiz_answer: {
-        Args: { p_question_id: string; p_user_answer: string }
+        Args:
+          | { p_question_id: string; p_user_answer: string }
+          | { p_question_id: string; p_user_answer: string }
         Returns: Json
       }
     }

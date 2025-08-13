@@ -1,9 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Initialize Supabase client
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface TopicConfig {
   name: string;
@@ -103,13 +109,11 @@ Requirements:
 Format your response as a JSON array with this exact structure:
 [
   {
-    "id": "unique_id_1",
     "question_text": "Question text here?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correct_answer": "Option A",
     "explanation": "Brief explanation of why this is correct",
-    "difficulty": "beginner|intermediate|advanced",
-    "topic_id": "${topicId}"
+    "difficulty": "beginner|intermediate|advanced"
   }
 ]
 
@@ -150,9 +154,9 @@ IMPORTANT: Return ONLY the JSON array, no other text or formatting.`;
       
       const questions = JSON.parse(jsonMatch[0]);
       
-      // Validate and transform questions
+      // Validate and transform questions with proper UUIDs
       const validatedQuestions = questions.map((q: any, index: number) => ({
-        id: q.id || `${topicId}-${Date.now()}-${index}`,
+        id: crypto.randomUUID(), // Generate proper UUID
         question_text: q.question_text || q.question,
         options: Array.isArray(q.options) ? q.options : [],
         correct_answer: q.correct_answer,
@@ -167,6 +171,30 @@ IMPORTANT: Return ONLY the JSON array, no other text or formatting.`;
       );
 
       console.log(`✅ Generated ${validatedQuestions.length} valid questions`);
+      
+      // Store questions in database for future secure access
+      if (validatedQuestions.length > 0) {
+        console.log(`💾 Storing ${validatedQuestions.length} questions in database...`);
+        
+        const { error: insertError } = await supabase
+          .from('questions')
+          .insert(validatedQuestions.map(q => ({
+            id: q.id,
+            question_text: q.question_text,
+            options: q.options,
+            correct_answer: q.correct_answer,
+            explanation: q.explanation,
+            difficulty: q.difficulty,
+            topic_id: q.topic_id
+          })));
+
+        if (insertError) {
+          console.error('Error storing questions:', insertError);
+          // Don't fail the entire request, just log the error
+        } else {
+          console.log('✅ Questions stored successfully in database');
+        }
+      }
 
       return new Response(
         JSON.stringify({
