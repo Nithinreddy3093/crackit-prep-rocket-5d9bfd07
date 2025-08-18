@@ -11,7 +11,7 @@ export interface Question {
   difficulty?: 'beginner' | 'intermediate' | 'advanced';
 }
 
-// Get questions by topic ID with session tracking and difficulty options
+// Get questions by topic ID - now prioritizes database questions over mock questions
 export const getQuestionsByTopicId = async (
   topicId?: string, 
   excludedIds: string[] = [],
@@ -31,9 +31,53 @@ export const getQuestionsByTopicId = async (
       return [];
     }
 
-    // Get expanded question set per topic
+    // First, try to get questions from database
+    try {
+      const { data: dbQuestions, error } = await supabase
+        .from('questions')
+        .select('id, question_text, options, difficulty, topic_id')
+        .eq('topic_id', topicId)
+        .limit(count * 2); // Get more than needed for filtering
+
+      if (!error && dbQuestions && dbQuestions.length > 0) {
+        console.log(`📚 Found ${dbQuestions.length} database questions`);
+        
+        // Transform database questions to match our interface
+        const transformedQuestions: Question[] = dbQuestions.map(q => ({
+          id: q.id,
+          text: q.question_text,
+          options: Array.isArray(q.options) ? q.options : (typeof q.options === 'string' ? JSON.parse(q.options || '[]') : []),
+          correctAnswer: '', // This will be filled during validation
+          topic_id: q.topic_id,
+          difficulty: (q.difficulty as 'beginner' | 'intermediate' | 'advanced') || 'intermediate'
+        }));
+
+        // Filter by difficulty if specified
+        let filteredQuestions = transformedQuestions;
+        if (difficulty !== 'mixed') {
+          filteredQuestions = transformedQuestions.filter(q => q.difficulty === difficulty);
+        }
+
+        // Filter out excluded questions
+        if (excludedIds.length > 0) {
+          filteredQuestions = filteredQuestions.filter(q => !excludedIds.includes(q.id));
+        }
+
+        // If we have enough database questions, use them
+        if (filteredQuestions.length >= count) {
+          const finalQuestions = shuffleArray(filteredQuestions).slice(0, count);
+          console.log('✅ Using database questions:', finalQuestions.length);
+          return finalQuestions;
+        }
+      }
+    } catch (dbError) {
+      console.warn('Database question fetch failed, falling back to mock questions:', dbError);
+    }
+
+    // Fallback to mock questions if database doesn't have enough
+    console.log('📝 Falling back to mock questions');
     let allQuestions = getExpandedQuestions(topicId);
-    console.log('📚 Total available questions for topic:', allQuestions.length);
+    console.log('📚 Total available mock questions for topic:', allQuestions.length);
     
     // Remove duplicates by ID to prevent duplicate questions
     const uniqueQuestions = allQuestions.reduce((acc, current) => {

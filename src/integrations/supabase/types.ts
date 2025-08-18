@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -314,21 +314,21 @@ export type Database = {
     }
     Functions: {
       get_secure_quiz_questions: {
-        Args: { p_topic_id: string; p_limit?: number }
+        Args: { p_limit?: number; p_topic_id: string }
         Returns: {
-          id: string
-          question_text: string
-          options: Json
-          topic_id: string
           difficulty: string
+          id: string
+          options: Json
+          question_text: string
+          topic_id: string
         }[]
       }
       update_user_performance: {
         Args: {
-          p_user_id: string
-          p_topic: string
-          p_score: number
           p_completion_time?: number
+          p_score: number
+          p_topic: string
+          p_user_id: string
         }
         Returns: Json
       }
