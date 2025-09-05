@@ -1,4 +1,3 @@
-
 import React, { useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSimpleQuiz } from "@/hooks/useSimpleQuiz";
@@ -77,6 +76,8 @@ const QuizPage = () => {
         elapsedTime={quiz.elapsedTime}
         formatTime={quiz.formatTime}
         topicTitle={topicId}
+        isValidating={quiz.isValidating}
+        validationResult={quiz.validationResult}
       />
     );
   }, [
@@ -98,6 +99,8 @@ const QuizPage = () => {
     quiz.selectedAnswer,
     quiz.handleAnswerSelect,
     quiz.goToNextQuestion,
+    quiz.isValidating,
+    quiz.validationResult,
     topicId
   ]);
 

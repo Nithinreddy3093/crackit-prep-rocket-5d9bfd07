@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Clock, ChevronRight } from 'lucide-react';
 import { SimpleQuestion } from '@/hooks/useSimpleQuiz';
+import QuestionValidationFeedback from './QuestionValidationFeedback';
 
 interface SimpleQuizQuestionProps {
   question: SimpleQuestion;
@@ -14,6 +15,12 @@ interface SimpleQuizQuestionProps {
   elapsedTime: number;
   formatTime: (ms: number) => string;
   topicTitle?: string;
+  isValidating?: boolean;
+  validationResult?: {
+    isCorrect?: boolean;
+    correctAnswer?: string;
+    explanation?: string;
+  } | null;
 }
 
 const SimpleQuizQuestion: React.FC<SimpleQuizQuestionProps> = ({
@@ -25,7 +32,9 @@ const SimpleQuizQuestion: React.FC<SimpleQuizQuestionProps> = ({
   onNextQuestion,
   elapsedTime,
   formatTime,
-  topicTitle
+  topicTitle,
+  isValidating = false,
+  validationResult = null
 }) => {
   const progressPercentage = Math.floor(((currentIndex + 1) / totalQuestions) * 100);
 
@@ -90,6 +99,16 @@ const SimpleQuizQuestion: React.FC<SimpleQuizQuestionProps> = ({
             ))}
           </div>
 
+          {/* Validation Feedback */}
+          <QuestionValidationFeedback
+            isValidating={isValidating}
+            isCorrect={validationResult?.isCorrect}
+            correctAnswer={validationResult?.correctAnswer}
+            explanation={validationResult?.explanation}
+            userAnswer={selectedAnswer || undefined}
+            show={Boolean(selectedAnswer && (isValidating || validationResult))}
+          />
+
           {/* Actions */}
           <div className="flex justify-between pt-4">
             <div className="text-sm text-white/60">
@@ -97,8 +116,8 @@ const SimpleQuizQuestion: React.FC<SimpleQuizQuestionProps> = ({
             </div>
             <Button 
               onClick={onNextQuestion}
-              disabled={!selectedAnswer}
-              className="bg-primary hover:bg-primary/90 text-white"
+              disabled={!selectedAnswer || isValidating}
+              className="bg-primary hover:bg-primary/90 text-white disabled:opacity-50"
             >
               {currentIndex === totalQuestions - 1 ? 'Finish Quiz' : 'Next Question'}
               <ChevronRight className="ml-2 h-4 w-4" />

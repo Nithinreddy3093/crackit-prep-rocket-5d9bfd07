@@ -42,11 +42,18 @@ export const useSimpleQuiz = (topicId?: string) => {
   const [questionDetails, setQuestionDetails] = useState<QuizAnswerDetail[]>([]);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   
-  // Quiz states
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Validation states
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    isCorrect?: boolean;
+    correctAnswer?: string;
+    explanation?: string;
+  } | null>(null);
   
   // Timer
   const [startTime, setStartTime] = useState<number>(0);
@@ -245,22 +252,15 @@ export const useSimpleQuiz = (topicId?: string) => {
     }
   }, [user, topicId, questions.length]);
 
-  // Handle answer selection
-  const handleAnswerSelect = useCallback((answer: string) => {
-    setSelectedAnswer(answer);
-    
-    // Update user answers array
-    setUserAnswers(prev => {
-      const updated = [...prev];
-      updated[currentQuestionIndex] = answer;
-      return updated;
-    });
-  }, [currentQuestionIndex]);
-
   // Validate answer using secure function with retry logic
   const validateAnswer = useCallback(async (questionId: string, userAnswer: string, retryCount = 0) => {
     try {
-      console.log(`🔍 Validating answer for question: ${questionId}`);
+      console.log(`🔍 Validating answer for question: ${questionId}`, {
+        questionId,
+        userAnswer,
+        retryCount,
+        timestamp: new Date().toISOString()
+      });
       
       const { data, error } = await supabase
         .rpc('validate_quiz_answer', {
@@ -269,7 +269,7 @@ export const useSimpleQuiz = (topicId?: string) => {
         });
 
       if (error) {
-        console.error('RPC validation error:', error);
+        console.error('❌ RPC validation error:', error);
         
         // Retry once if it's a network or temporary error
         if (retryCount < 1 && (error.message.includes('network') || error.message.includes('timeout'))) {
@@ -279,35 +279,62 @@ export const useSimpleQuiz = (topicId?: string) => {
         }
         
         return { 
-          is_correct: false, 
+          isCorrect: false, 
           correct_answer: '', 
           explanation: 'Unable to validate answer. Please try again.',
           error: error.message 
         };
       }
 
-      // Type guard for the response data
-      const result = data as { 
-        is_correct: boolean; 
-        correct_answer: string; 
-        explanation: string; 
+      // Ensure we have data
+      if (!data) {
+        console.error('❌ No data returned from validation');
+        return { 
+          isCorrect: false, 
+          correct_answer: '', 
+          explanation: 'No response from validation service'
+        };
+      }
+
+      // Handle both direct object and array response formats
+      const validationData = Array.isArray(data) && data.length > 0 ? data[0] : data;
+      
+      // Extract properties from server response
+      const rawResult = validationData as { 
+        is_correct?: boolean; 
+        correct_answer?: string; 
+        explanation?: string; 
         error?: string; 
       };
       
-      if (result?.error) {
-        console.error('Validation result error:', result.error);
+      if (rawResult?.error) {
+        console.error('❌ Validation result error:', rawResult.error);
         return { 
-          is_correct: false, 
-          correct_answer: '', 
-          explanation: result.error 
+          isCorrect: false, 
+          correct_answer: rawResult.correct_answer || '', 
+          explanation: rawResult.error 
         };
       }
       
-      console.log(`✅ Answer validation result:`, result);
-      return result || { is_correct: false, correct_answer: '', explanation: '' };
+      // Transform server response to client format (is_correct -> isCorrect)
+      const transformedResult = {
+        isCorrect: Boolean(rawResult.is_correct),
+        correct_answer: rawResult.correct_answer || '',
+        explanation: rawResult.explanation || ''
+      };
+      
+      console.log(`✅ Answer validation successful:`, {
+        questionId,
+        userAnswer,
+        serverResponse: rawResult,
+        transformedResult,
+        timestamp: new Date().toISOString()
+      });
+      
+      return transformedResult;
       
     } catch (err) {
-      console.error('Error in answer validation:', err);
+      console.error('❌ Error in answer validation:', err);
       
       // Retry once for unexpected errors
       if (retryCount < 1) {
@@ -317,7 +344,7 @@ export const useSimpleQuiz = (topicId?: string) => {
       }
       
       return { 
-        is_correct: false, 
+        isCorrect: false, 
         correct_answer: '', 
         explanation: 'Validation failed. Please try again.',
         error: err instanceof Error ? err.message : 'Unknown error'
@@ -325,15 +352,59 @@ export const useSimpleQuiz = (topicId?: string) => {
     }
   }, []);
 
+  // Handle answer selection with immediate validation
+  const handleAnswerSelect = useCallback(async (answer: string) => {
+    setSelectedAnswer(answer);
+    setValidationResult(null);
+    
+    // Update user answers array
+    setUserAnswers(prev => {
+      const updated = [...prev];
+      updated[currentQuestionIndex] = answer;
+      return updated;
+    });
+
+    // Immediate validation for feedback
+    const currentQuestion = questions[currentQuestionIndex];
+    if (currentQuestion?.id) {
+      setIsValidating(true);
+      try {
+        const result = await validateAnswer(currentQuestion.id, answer);
+        setValidationResult({
+          isCorrect: result.isCorrect,
+          correctAnswer: result.correct_answer,
+          explanation: result.explanation
+        });
+      } catch (error) {
+        console.error('Error in immediate validation:', error);
+      } finally {
+        setIsValidating(false);
+      }
+    }
+  }, [currentQuestionIndex, questions, validateAnswer]);
+
   // Go to next question
   const goToNextQuestion = useCallback(async () => {
     if (!selectedAnswer || !questions[currentQuestionIndex]) return;
 
     const currentQuestion = questions[currentQuestionIndex];
     
+    console.log('📝 Processing question answer:', {
+      questionId: currentQuestion.id,
+      userAnswer: selectedAnswer,
+      questionIndex: currentQuestionIndex
+    });
+    
     // Validate answer using secure function
     const validationResult = await validateAnswer(currentQuestion.id, selectedAnswer);
-    const isCorrect = validationResult.is_correct;
+    const isCorrect = validationResult.isCorrect; // Use transformed property name
+    
+    console.log('📊 Question validation complete:', {
+      questionId: currentQuestion.id,
+      isCorrect,
+      correctAnswer: validationResult.correct_answer,
+      currentCorrectCount: correctAnswersCount
+    });
     
     // Add to question details with correct answer from server
     const questionDetail: QuizAnswerDetail = {
@@ -343,20 +414,32 @@ export const useSimpleQuiz = (topicId?: string) => {
       isCorrect
     };
     
-    setQuestionDetails(prev => [...prev, questionDetail]);
+    setQuestionDetails(prev => {
+      const updated = [...prev, questionDetail];
+      console.log('📋 Updated question details:', updated.length, 'total questions processed');
+      return updated;
+    });
     
     if (isCorrect) {
-      setCorrectAnswersCount(prev => prev + 1);
+      setCorrectAnswersCount(prev => {
+        const newCount = prev + 1;
+        console.log('✅ Correct answer! New count:', newCount);
+        return newCount;
+      });
+    } else {
+      console.log('❌ Incorrect answer. Count remains:', correctAnswersCount);
     }
 
     // Move to next question or complete quiz
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedAnswer(null);
+      setValidationResult(null); // Clear validation for next question
     } else {
+      console.log('🏁 Quiz complete, finishing...');
       completeQuiz();
     }
-  }, [selectedAnswer, questions, currentQuestionIndex, validateAnswer]);
+  }, [selectedAnswer, questions, currentQuestionIndex, validateAnswer, correctAnswersCount]);
 
   // Complete quiz
   const completeQuiz = useCallback(async () => {
@@ -372,9 +455,12 @@ export const useSimpleQuiz = (topicId?: string) => {
       let finalCorrectCount = correctAnswersCount;
       
       if (selectedAnswer && questions[currentQuestionIndex]) {
+        console.log('🔚 Processing final question in completeQuiz');
         const currentQuestion = questions[currentQuestionIndex];
         const validationResult = await validateAnswer(currentQuestion.id, selectedAnswer);
-        const isCorrect = validationResult.is_correct;
+        const isCorrect = validationResult.isCorrect; // Use transformed property name
+        
+        console.log('🎯 Final question result:', { isCorrect, correctAnswer: validationResult.correct_answer });
         
         if (isCorrect) {
           finalCorrectCount += 1;
@@ -390,6 +476,14 @@ export const useSimpleQuiz = (topicId?: string) => {
       
       const scorePercentage = Math.round((finalCorrectCount / questions.length) * 100);
 
+      console.log('📊 Final quiz statistics:', {
+        finalCorrectCount,
+        totalQuestions: questions.length,
+        scorePercentage,
+        questionDetails: finalQuestionDetails.length,
+        timeElapsed: totalElapsed
+      });
+
       // Update quiz session
       const { error: updateError } = await supabase
         .from('quiz_sessions')
@@ -403,8 +497,10 @@ export const useSimpleQuiz = (topicId?: string) => {
         .eq('id', currentSession.id);
 
       if (updateError) {
-        console.error('Error updating quiz session:', updateError);
+        console.error('❌ Error updating quiz session:', updateError);
         throw new Error('Failed to save quiz results');
+      } else {
+        console.log('✅ Quiz session updated successfully');
       }
 
       // Also insert into quiz_results for backward compatibility
@@ -419,7 +515,9 @@ export const useSimpleQuiz = (topicId?: string) => {
         });
 
       if (resultsError) {
-        console.error('Error saving quiz results:', resultsError);
+        console.error('❌ Error saving quiz results:', resultsError);
+      } else {
+        console.log('✅ Quiz results saved to quiz_results table');
       }
 
       // Update performance tables
@@ -432,16 +530,19 @@ export const useSimpleQuiz = (topicId?: string) => {
         });
 
       if (perfError) {
-        console.error('Error updating performance:', perfError);
+        console.error('❌ Error updating performance:', perfError);
+      } else {
+        console.log('✅ User performance updated successfully');
       }
 
       setQuizCompleted(true);
       setCorrectAnswersCount(finalCorrectCount);
       
-      console.log('✅ Quiz completed:', {
+      console.log('🎉 Quiz completion process finished:', {
         score: finalCorrectCount,
         total: questions.length,
-        percentage: scorePercentage
+        percentage: scorePercentage,
+        saved: !updateError && !resultsError && !perfError
       });
 
       toast({
@@ -475,6 +576,8 @@ export const useSimpleQuiz = (topicId?: string) => {
     setElapsedTime(0);
     setCurrentSession(null);
     setError(null);
+    setIsValidating(false);
+    setValidationResult(null);
   }, []);
 
   // Load questions when topic changes
@@ -501,16 +604,20 @@ export const useSimpleQuiz = (topicId?: string) => {
     elapsedTime,
     
     // Actions
-    startQuiz,
     handleAnswerSelect,
     goToNextQuestion,
+    startQuiz,
+    completeQuiz,
     resetQuiz,
     
-    // Utilities
+    // Validation
+    isValidating,
+    validationResult,
+
+    // Utils
     formatTime,
     
     // Computed
-    isAnswered: selectedAnswer !== null,
     scorePercentage: questions.length > 0 ? Math.round((correctAnswersCount / questions.length) * 100) : 0
   };
 };
