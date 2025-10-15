@@ -14,20 +14,21 @@ export const useAnswerValidation = () => {
     retryCount = 0
   ): Promise<ValidationResult> => {
     try {
-      console.log(`🔍 Validating answer for question ${questionId}:`, { 
+      console.log(`🔍 Crackit Answer Validation:`, { 
+        questionId,
         userAnswer, 
         retryCount,
-        questionIdType: typeof questionId,
-        questionIdLength: questionId.length
+        timestamp: new Date().toISOString()
       });
       
+      // Call the database validation function with UUID
       const { data, error } = await supabase.rpc('validate_quiz_answer', {
         p_question_id: questionId,
         p_user_answer: userAnswer
       });
 
       if (error) {
-        console.error('Validation error:', error);
+        console.error('❌ RPC validation error:', error);
         if (retryCount < 2) {
           console.log(`🔄 Retrying validation (attempt ${retryCount + 1})`);
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -36,36 +37,37 @@ export const useAnswerValidation = () => {
         throw error;
       }
 
-      console.log('✅ Raw validation result:', data);
+      console.log('✅ Database validation response:', data);
       
       if (!data) {
-        console.error('Null validation response');
+        console.error('❌ Null validation response');
         return {
           isCorrect: false,
-          correctAnswer: 'No response from validation',
+          correctAnswer: '',
           explanation: 'Validation service returned no data'
         };
       }
 
-      // Handle both direct data and wrapped data structures
-      const validationData = Array.isArray(data) && data.length > 0 ? data[0] : data;
+      // Parse the validation result - database returns jsonb object
+      const validationData = data as { is_correct: boolean; correct_answer: string; explanation: string };
       
-      if (typeof (validationData as any).is_correct === 'undefined') {
-        console.error('Invalid validation response structure:', validationData);
-        return {
-          isCorrect: false,
-          correctAnswer: 'Invalid response structure',
-          explanation: 'Validation service response is malformed'
-        };
-      }
-      
-      const result = {
-        isCorrect: Boolean((validationData as any).is_correct),
-        correctAnswer: (validationData as any).correct_answer || '',
-        explanation: (validationData as any).explanation || ''
+      // **CRACKIT EVALUATION RULES:**
+      // 1. Compare user selection with correct answer (case-insensitive, trimmed)
+      // 2. If match → Correct, else → Incorrect
+      // 3. No partial marks for multiple-choice
+      const result: ValidationResult = {
+        isCorrect: Boolean(validationData.is_correct),
+        correctAnswer: validationData.correct_answer || '',
+        explanation: validationData.explanation || 'No explanation provided'
       };
 
-      console.log('📊 Processed validation result:', result);
+      console.log('✅ Crackit Validation Result:', {
+        questionId,
+        isCorrect: result.isCorrect,
+        userAnswer,
+        correctAnswer: result.correctAnswer
+      });
+      
       return result;
       
     } catch (error) {

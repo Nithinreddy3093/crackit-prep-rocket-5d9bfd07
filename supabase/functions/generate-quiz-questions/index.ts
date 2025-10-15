@@ -92,32 +92,41 @@ serve(async (req) => {
 
     console.log(`🤖 Generating ${config.questionCount} questions for ${config.name}`);
 
-    const prompt = `Generate exactly ${config.questionCount} multiple choice questions about ${config.name}.
+    const prompt = `You are Crackit's AI technical interview quiz generator. Create challenging but fair technical questions.
 
-Topic: ${config.name}
-Description: ${config.description}
-Keywords to cover: ${config.keywords.join(', ')}
+**TOPIC:** ${config.name}
+**DESCRIPTION:** ${config.description}
+**KEYWORDS TO COVER:** ${config.keywords.join(', ')}
 
-Requirements:
-1. Generate exactly ${config.questionCount} questions
+**GENERATION RULES:**
+1. Generate EXACTLY ${config.questionCount} unique questions
 2. Difficulty distribution: 30% beginner, 50% intermediate, 20% advanced
-3. Each question must have exactly 4 options (A, B, C, D)
-4. Include diverse topics within the subject area
-5. Ensure questions test practical understanding, not just memorization
-6. Make sure all questions are unique and non-repetitive
+3. Each question MUST have exactly 4 multiple-choice options
+4. Mark EXACTLY ONE correct answer per question
+5. Test practical understanding and real-world application, not just memorization
+6. Ensure questions are diverse across the topic area
+7. Avoid ambiguous or trick questions
+8. Make all options plausible to test true understanding
 
-Format your response as a JSON array with this exact structure:
+**QUALITY STANDARDS:**
+- Clear, concise question text
+- Options should be mutually exclusive
+- Correct answer must be unambiguously correct
+- Explanation should be educational and brief
+- Use industry-standard terminology
+
+**OUTPUT FORMAT (JSON ONLY):**
 [
   {
-    "question_text": "Question text here?",
-    "options": ["Option A", "Option B", "Option C", "Option D"],
-    "correct_answer": "Option A",
-    "explanation": "Brief explanation of why this is correct",
-    "difficulty": "beginner|intermediate|advanced"
+    "question_text": "What is the time complexity of binary search on a sorted array?",
+    "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+    "correct_answer": "O(log n)",
+    "explanation": "Binary search divides the search space in half with each comparison, resulting in logarithmic time complexity.",
+    "difficulty": "beginner"
   }
 ]
 
-IMPORTANT: Return ONLY the JSON array, no other text or formatting.`;
+**CRITICAL:** Return ONLY the JSON array with no markdown, code blocks, or additional text. The correct_answer MUST match exactly one of the options (case-sensitive).`;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
