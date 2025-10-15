@@ -22,21 +22,21 @@ interface TopicConfig {
 const TOPIC_CONFIGS: Record<string, TopicConfig> = {
   'dsa': {
     name: 'Data Structures and Algorithms',
-    questionCount: 25,
+    questionCount: 15,
     timeLimit: 38,
-    description: 'Arrays, Linked Lists, Trees, Graphs, Sorting, and Searching Algorithms',
-    keywords: ['arrays', 'linked lists', 'stacks', 'queues', 'trees', 'graphs', 'sorting', 'searching', 'dynamic programming', 'recursion']
+    description: 'Arrays, Linked Lists, Trees, Graphs, Sorting, Searching, Time Complexity',
+    keywords: ['arrays', 'linked lists', 'stacks', 'queues', 'trees', 'graphs', 'sorting', 'searching', 'dynamic programming', 'recursion', 'time complexity']
   },
   'dbms': {
     name: 'Database Management',
-    questionCount: 20,
+    questionCount: 15,
     timeLimit: 30,
-    description: 'SQL, Normalization, Transactions, RDBMS concepts and queries',
+    description: 'SQL, Normalization, Transactions, RDBMS concepts',
     keywords: ['SQL', 'normalization', 'ACID', 'transactions', 'indexing', 'joins', 'constraints', 'triggers', 'stored procedures']
   },
   'os': {
     name: 'Operating Systems',
-    questionCount: 18,
+    questionCount: 15,
     timeLimit: 27,
     description: 'Process Management, Memory Management, File Systems, Scheduling',
     keywords: ['processes', 'threads', 'memory management', 'file systems', 'scheduling', 'deadlocks', 'synchronization', 'virtual memory']
@@ -50,14 +50,14 @@ const TOPIC_CONFIGS: Record<string, TopicConfig> = {
   },
   'web-development': {
     name: 'Web Development',
-    questionCount: 22,
+    questionCount: 15,
     timeLimit: 33,
-    description: 'HTML, CSS, JavaScript, React, RESTful APIs, and web architecture',
+    description: 'HTML, CSS, JavaScript, React, RESTful APIs, Web Architecture',
     keywords: ['HTML', 'CSS', 'JavaScript', 'React', 'APIs', 'HTTP', 'DOM', 'responsive design', 'frameworks']
   },
   'ai-ml': {
     name: 'AI & Machine Learning',
-    questionCount: 12,
+    questionCount: 15,
     timeLimit: 18,
     description: 'Neural Networks, Supervised/Unsupervised Learning, NLP, Computer Vision',
     keywords: ['neural networks', 'machine learning', 'deep learning', 'supervised learning', 'unsupervised learning', 'NLP', 'computer vision']
@@ -99,21 +99,23 @@ serve(async (req) => {
 **KEYWORDS TO COVER:** ${config.keywords.join(', ')}
 
 **GENERATION RULES:**
-1. Generate EXACTLY ${config.questionCount} unique questions
-2. Difficulty distribution: 30% beginner, 50% intermediate, 20% advanced
+1. Generate EXACTLY ${config.questionCount} FRESH, UNIQUE questions
+2. Difficulty distribution: 40% Easy, 40% Medium, 20% Hard
 3. Each question MUST have exactly 4 multiple-choice options
 4. Mark EXACTLY ONE correct answer per question
-5. Test practical understanding and real-world application, not just memorization
-6. Ensure questions are diverse across the topic area
-7. Avoid ambiguous or trick questions
-8. Make all options plausible to test true understanding
+5. Focus on interview-relevant, practical scenarios
+6. Ensure technical accuracy and clarity
+7. Each question must be ORIGINAL - avoid common/repeated questions
+8. Make all options plausible distractors to test true understanding
 
 **QUALITY STANDARDS:**
-- Clear, concise question text
-- Options should be mutually exclusive
+- Clear, unambiguous question text
+- Options should be mutually exclusive and plausible
 - Correct answer must be unambiguously correct
 - Explanation should be educational and brief
 - Use industry-standard terminology
+- Real-world relevance to technical interviews
+- No ambiguous or trick questions
 
 **OUTPUT FORMAT (JSON ONLY):**
 [
@@ -122,7 +124,7 @@ serve(async (req) => {
     "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
     "correct_answer": "O(log n)",
     "explanation": "Binary search divides the search space in half with each comparison, resulting in logarithmic time complexity.",
-    "difficulty": "beginner"
+    "difficulty": "easy"
   }
 ]
 

@@ -2,3 +2,6 @@ project_id = "vsjijepsawdphezxbaiq"
 
 [functions.generate-quiz-questions]
 verify_jwt = false
+
+[functions.ai-tutor]
+verify_jwt = false

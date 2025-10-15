@@ -17,6 +17,7 @@ import About from "./pages/About";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
 import Resources from "./pages/Resources";
+import AITutor from "./pages/AITutor";
 import Companies from "./pages/Companies";
 import CompaniesList from "./pages/CompaniesList";
 import Quiz from "./pages/Quiz"; 
@@ -107,6 +108,7 @@ const App = () => {
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/quiz" element={<Quiz />} />
                 <Route path="/quiz/:topicId" element={<Quiz />} />
+                <Route path="/ai-tutor" element={<AITutor />} />
                 <Route path="/resources" element={
                   <ProtectedRoute>
                     <Resources />

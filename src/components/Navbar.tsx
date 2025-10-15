@@ -55,6 +55,11 @@ const Navbar = () => {
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
+                  <Link to="/ai-tutor" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
+                    AI Tutor
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
                   <Link to="/resources" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
                     Resources
                   </Link>
@@ -147,6 +152,13 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Topics
+            </Link>
+            <Link 
+              to="/ai-tutor" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              AI Tutor
             </Link>
             <Link 
               to="/resources" 
