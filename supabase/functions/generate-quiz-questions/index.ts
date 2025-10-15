@@ -129,7 +129,7 @@ serve(async (req) => {
 **CRITICAL:** Return ONLY the JSON array with no markdown, code blocks, or additional text. The correct_answer MUST match exactly one of the options (case-sensitive).`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -18,8 +18,11 @@ export interface DashboardStats {
   topicPerformance: Array<{
     topic: string;
     averageScore: number;
+    bestScore: number;
     quizzesCompleted: number;
     lastAttempt: string;
+    weakAreas: string[];
+    improvement: string;
   }>;
 }
 
@@ -71,10 +74,11 @@ export const useSimpleDashboard = () => {
         ? Math.round(sessions.reduce((sum, session) => sum + session.score_percentage, 0) / totalQuizzes)
         : 0;
 
-      // Get topic performance
+      // Get topic performance with enhanced metrics
       const topicMap = new Map<string, {
         scores: number[];
         lastAttempt: string;
+        questionDetails: any[];
       }>();
 
       sessions.forEach(session => {
@@ -82,7 +86,8 @@ export const useSimpleDashboard = () => {
         if (!topicMap.has(topic)) {
           topicMap.set(topic, {
             scores: [],
-            lastAttempt: session.completed_at || ''
+            lastAttempt: session.completed_at || '',
+            questionDetails: []
           });
         }
         const topicData = topicMap.get(topic)!;
@@ -90,14 +95,44 @@ export const useSimpleDashboard = () => {
         if (session.completed_at && session.completed_at > topicData.lastAttempt) {
           topicData.lastAttempt = session.completed_at;
         }
+        if (session.question_details) {
+          topicData.questionDetails.push(...(Array.isArray(session.question_details) ? session.question_details : []));
+        }
       });
 
-      const topicPerformance = Array.from(topicMap.entries()).map(([topic, data]) => ({
-        topic,
-        averageScore: Math.round(data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length),
-        quizzesCompleted: data.scores.length,
-        lastAttempt: data.lastAttempt
-      })).sort((a, b) => new Date(b.lastAttempt).getTime() - new Date(a.lastAttempt).getTime());
+      const topicPerformance = Array.from(topicMap.entries()).map(([topic, data]) => {
+        const averageScore = Math.round(data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length);
+        const bestScore = Math.max(...data.scores);
+        
+        // Calculate improvement (last score vs first score)
+        const improvement = data.scores.length > 1 
+          ? data.scores[data.scores.length - 1] - data.scores[0]
+          : 0;
+        const improvementStr = improvement > 0 ? `+${improvement}%` : improvement < 0 ? `${improvement}%` : '0%';
+        
+        // Identify weak areas (questions answered incorrectly most often)
+        const incorrectTopics = new Map<string, number>();
+        data.questionDetails.forEach((detail: any) => {
+          if (!detail.isCorrect && detail.topic) {
+            incorrectTopics.set(detail.topic, (incorrectTopics.get(detail.topic) || 0) + 1);
+          }
+        });
+        
+        const weakAreas = Array.from(incorrectTopics.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([area]) => area);
+        
+        return {
+          topic,
+          averageScore,
+          bestScore,
+          quizzesCompleted: data.scores.length,
+          lastAttempt: data.lastAttempt,
+          weakAreas,
+          improvement: improvementStr
+        };
+      }).sort((a, b) => new Date(b.lastAttempt).getTime() - new Date(a.lastAttempt).getTime());
 
       // Format recent quizzes
       const recentQuizzes = sessions.slice(0, 5).map(session => ({
