@@ -74,6 +74,11 @@ const Navbar = () => {
                     About
                   </Link>
                 </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/contact" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
+                    Contact
+                  </Link>
+                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
             
@@ -180,6 +185,13 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               About
+            </Link>
+            <Link 
+              to="/contact" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Contact
             </Link>
           </div>
           <div className="pt-4 pb-3 border-t border-border">
