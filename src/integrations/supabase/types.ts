@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      career_applications: {
+        Row: {
+          applicant_email: string
+          applicant_name: string
+          cover_letter: string | null
+          experience_level: string
+          id: string
+          position: string
+          resume_url: string | null
+          status: string
+          submitted_at: string
+        }
+        Insert: {
+          applicant_email: string
+          applicant_name: string
+          cover_letter?: string | null
+          experience_level: string
+          id?: string
+          position: string
+          resume_url?: string | null
+          status?: string
+          submitted_at?: string
+        }
+        Update: {
+          applicant_email?: string
+          applicant_name?: string
+          cover_letter?: string | null
+          experience_level?: string
+          id?: string
+          position?: string
+          resume_url?: string | null
+          status?: string
+          submitted_at?: string
+        }
+        Relationships: []
+      }
+      contact_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          response_notes: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          response_notes?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          response_notes?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       learning_resources: {
         Row: {
           description: string
@@ -277,6 +343,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_rankings: {
+        Row: {
+          badges: Json
+          id: string
+          last_updated: string
+          overall_score: number
+          percentile: number
+          topic_scores: Json
+          total_attempts: number
+          user_id: string
+        }
+        Insert: {
+          badges?: Json
+          id?: string
+          last_updated?: string
+          overall_score?: number
+          percentile?: number
+          topic_scores?: Json
+          total_attempts?: number
+          user_id: string
+        }
+        Update: {
+          badges?: Json
+          id?: string
+          last_updated?: string
+          overall_score?: number
+          percentile?: number
+          topic_scores?: Json
+          total_attempts?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_rankings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
