@@ -65,6 +65,11 @@ const Navbar = () => {
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
+                  <Link to="/leaderboard" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
+                    Leaderboard
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
                   <Link to="/pricing" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
                     Pricing
                   </Link>
