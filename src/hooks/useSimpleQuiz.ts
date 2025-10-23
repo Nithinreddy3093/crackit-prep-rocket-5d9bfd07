@@ -506,13 +506,13 @@ export const useSimpleQuiz = (topicId?: string) => {
       // Also insert into quiz_results for backward compatibility
       const { error: resultsError } = await supabase
         .from('quiz_results')
-        .insert([{
+        .insert({
           user_id: user.id,
           topic: topicId || 'unknown',
-          score: scorePercentage,
-          completion_time: Math.floor(totalElapsed / 1000),
-          question_details: finalQuestionDetails as any
-        }]);
+          score: finalCorrectCount,
+          completion_time: totalElapsed,
+          question_details: JSON.stringify(finalQuestionDetails)
+        });
 
       if (resultsError) {
         console.error('❌ Error saving quiz results:', resultsError);

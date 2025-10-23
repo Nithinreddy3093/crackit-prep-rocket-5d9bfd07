@@ -5,9 +5,3 @@ verify_jwt = false
 
 [functions.ai-tutor]
 verify_jwt = false
-
-[functions.sync-leaderboard]
-verify_jwt = false
-
-[functions.evaluate-hr-answer]
-verify_jwt = false

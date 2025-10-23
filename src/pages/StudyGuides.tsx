@@ -1,114 +1,111 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { BookOpen, Code, Database, Cpu, Search, Download, BookOpenCheck, Lock, CheckCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import PaymentModal from '@/components/PaymentModal';
-import { Skeleton } from '@/components/ui/skeleton';
+import { BookOpen, Code, Database, Cpu, Search, Download, BookOpenCheck } from 'lucide-react';
 
 interface StudyGuide {
   id: string;
   title: string;
   description: string;
   category: string;
-  difficulty: string;
-  page_count: number;
-  is_premium: boolean;
-  price: number;
-  hasAccess?: boolean;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  pageCount: number;
+  format: 'PDF' | 'EPUB' | 'HTML';
+  icon: React.ReactNode;
 }
 
+const studyGuides: StudyGuide[] = [
+  {
+    id: 'guide-1',
+    title: 'Data Structures & Algorithms Fundamentals',
+    description: 'A comprehensive guide covering arrays, linked lists, trees, graphs, sorting, and searching algorithms with examples.',
+    category: 'DSA',
+    difficulty: 'beginner',
+    pageCount: 45,
+    format: 'PDF',
+    icon: <Code className="h-6 w-6" />
+  },
+  {
+    id: 'guide-2',
+    title: 'Advanced Data Structures & Algorithms',
+    description: 'Dive into complex algorithms, dynamic programming, and algorithmic design techniques for technical interviews.',
+    category: 'DSA',
+    difficulty: 'advanced',
+    pageCount: 68,
+    format: 'PDF',
+    icon: <Code className="h-6 w-6" />
+  },
+  {
+    id: 'guide-3',
+    title: 'Database Systems: SQL & NoSQL',
+    description: 'Master relational databases, learn SQL query optimization, and understand NoSQL database concepts.',
+    category: 'Databases',
+    difficulty: 'intermediate',
+    pageCount: 52,
+    format: 'PDF',
+    icon: <Database className="h-6 w-6" />
+  },
+  {
+    id: 'guide-4',
+    title: 'Operating Systems Concepts',
+    description: 'Understand process management, memory management, file systems, and synchronization techniques.',
+    category: 'OS',
+    difficulty: 'intermediate',
+    pageCount: 60,
+    format: 'PDF',
+    icon: <Cpu className="h-6 w-6" />
+  },
+  {
+    id: 'guide-5',
+    title: 'System Design Interview Guide',
+    description: 'Learn how to approach system design questions, with examples of commonly asked interview scenarios.',
+    category: 'System Design',
+    difficulty: 'advanced',
+    pageCount: 75,
+    format: 'PDF',
+    icon: <BookOpen className="h-6 w-6" />
+  },
+  {
+    id: 'guide-6',
+    title: 'Web Development Fundamentals',
+    description: 'Cover HTML, CSS, JavaScript, and modern frameworks with examples for front-end interviews.',
+    category: 'Web Dev',
+    difficulty: 'beginner',
+    pageCount: 48,
+    format: 'PDF',
+    icon: <Code className="h-6 w-6" />
+  },
+  {
+    id: 'guide-7',
+    title: 'Machine Learning Concepts',
+    description: 'Understand ML algorithms, neural networks, and common ML interview questions with examples.',
+    category: 'ML',
+    difficulty: 'advanced',
+    pageCount: 82,
+    format: 'PDF',
+    icon: <BookOpen className="h-6 w-6" />
+  },
+  {
+    id: 'guide-8',
+    title: 'Object-Oriented Programming',
+    description: 'Master OOP principles, design patterns, and best practices for software engineering interviews.',
+    category: 'Programming',
+    difficulty: 'intermediate',
+    pageCount: 55,
+    format: 'PDF',
+    icon: <Code className="h-6 w-6" />
+  },
+];
+
 const StudyGuides = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null);
-  const [studyGuides, setStudyGuides] = useState<StudyGuide[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [paymentModal, setPaymentModal] = useState<{
-    isOpen: boolean;
-    guideId: string;
-    guideTitle: string;
-    amount: number;
-  }>({
-    isOpen: false,
-    guideId: '',
-    guideTitle: '',
-    amount: 0,
-  });
-
-  useEffect(() => {
-    fetchStudyGuides();
-  }, [user]);
-
-  const fetchStudyGuides = async () => {
-    try {
-      setLoading(true);
-      const { data: guides, error: guidesError } = await supabase
-        .from('study_guides')
-        .select('*');
-
-      if (guidesError) throw guidesError;
-
-      // Check user access for premium guides
-      if (user && guides) {
-        const { data: accessData } = await supabase
-          .from('study_guide_access')
-          .select('guide_id, access_granted')
-          .eq('user_id', user.id)
-          .eq('access_granted', true);
-
-        const accessMap = new Map(accessData?.map((a: any) => [a.guide_id, true]));
-        
-        const guidesWithAccess = guides.map((guide: any) => ({
-          ...guide,
-          hasAccess: !guide.is_premium || accessMap.has(guide.id),
-        }));
-
-        setStudyGuides(guidesWithAccess as StudyGuide[]);
-      } else {
-        setStudyGuides(guides as StudyGuide[] || []);
-      }
-    } catch (error) {
-      console.error('Error fetching study guides:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDownload = (guide: StudyGuide) => {
-    if (!user) {
-      toast({
-        title: 'Login Required',
-        description: 'Please login to access study guides',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (guide.is_premium && !guide.hasAccess) {
-      setPaymentModal({
-        isOpen: true,
-        guideId: guide.id,
-        guideTitle: guide.title,
-        amount: guide.price,
-      });
-    } else {
-      // Download logic for free or purchased guides
-      toast({
-        title: 'Downloading...',
-        description: `Starting download of ${guide.title}`,
-      });
-      console.log(`Downloading ${guide.title}`);
-    }
-  };
 
   // Get all unique categories
   const categories = Array.from(new Set(studyGuides.map(guide => guide.category)));
@@ -123,26 +120,16 @@ const StudyGuides = () => {
     return matchesSearch && matchesCategory && matchesDifficulty;
   });
 
+  const handleDownload = (guideId: string) => {
+    alert(`Downloading guide ${guideId}`);
+  };
+
   const handleCategoryClick = (category: string) => {
     setSelectedCategory(selectedCategory === category ? null : category);
   };
 
   const handleDifficultyClick = (difficulty: string) => {
     setSelectedDifficulty(selectedDifficulty === difficulty ? null : difficulty);
-  };
-
-  const getIcon = (category: string) => {
-    switch (category) {
-      case 'DSA':
-        return <Code className="h-6 w-6 text-primary" />;
-      case 'Databases':
-        return <Database className="h-6 w-6 text-primary" />;
-      case 'OS':
-      case 'System Design':
-        return <Cpu className="h-6 w-6 text-primary" />;
-      default:
-        return <BookOpen className="h-6 w-6 text-primary" />;
-    }
   };
 
   return (
@@ -170,7 +157,7 @@ const StudyGuides = () => {
                 placeholder="Search study guides..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-darkBlue-700/50 border-darkBlue-600 text-white"
+                className="pl-10 bg-darkBlue-700/50 border-darkBlue-600"
               />
             </div>
             <Button 
@@ -224,81 +211,47 @@ const StudyGuides = () => {
         </div>
         
         {/* Study Guides Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="bg-darkBlue-800/50 border-darkBlue-700">
-                <div className="p-6">
-                  <Skeleton className="h-8 w-3/4 mb-4" />
-                  <Skeleton className="h-20 w-full mb-4" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : filteredGuides.length > 0 ? (
+        {filteredGuides.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredGuides.map((guide) => (
               <Card key={guide.id} className="bg-darkBlue-800/50 border-darkBlue-700 backdrop-blur-sm overflow-hidden hover:border-primary/30 transition-all">
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div className="bg-primary/10 p-3 rounded-lg">
-                      {getIcon(guide.category)}
+                      {guide.icon}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={`
-                        ${guide.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
-                          guide.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 
-                          'bg-red-500/20 text-red-400 border-red-500/30'}
-                      `}>
-                        {guide.difficulty.charAt(0).toUpperCase() + guide.difficulty.slice(1)}
-                      </Badge>
-                      {guide.is_premium && (
-                        guide.hasAccess ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <Lock className="h-5 w-5 text-yellow-500" />
-                        )
-                      )}
-                    </div>
+                    <Badge className={`
+                      ${guide.difficulty === 'beginner' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 
+                        guide.difficulty === 'intermediate' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : 
+                        'bg-red-500/20 text-red-400 border-red-500/30'}
+                    `}>
+                      {guide.difficulty.charAt(0).toUpperCase() + guide.difficulty.slice(1)}
+                    </Badge>
                   </div>
                   
                   <h3 className="text-lg font-semibold text-white mb-2">{guide.title}</h3>
                   <p className="text-gray-300 text-sm mb-4 line-clamp-3">{guide.description}</p>
                   
                   <div className="flex items-center justify-between text-sm text-white/60">
-                    <Badge variant="outline" className="bg-transparent border-white/20">
-                      {guide.category}
-                    </Badge>
+                    <div className="flex items-center">
+                      <Badge variant="outline" className="bg-transparent border-white/20">
+                        {guide.category}
+                      </Badge>
+                    </div>
                     <div>
-                      {guide.page_count} pages • PDF
+                      {guide.pageCount} pages • {guide.format}
                     </div>
                   </div>
-                  
-                  {guide.is_premium && !guide.hasAccess && (
-                    <div className="mt-4 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded text-center">
-                      <span className="text-yellow-400 font-semibold">₹{guide.price}</span>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="p-4 bg-darkBlue-700/50 border-t border-darkBlue-600">
                   <Button 
-                    onClick={() => handleDownload(guide)}
+                    onClick={() => handleDownload(guide.id)}
                     className="w-full"
-                    variant={guide.is_premium && !guide.hasAccess ? 'default' : 'outline'}
+                    variant="default"
                   >
-                    {guide.is_premium && !guide.hasAccess ? (
-                      <>
-                        <Lock className="h-4 w-4 mr-2" />
-                        Purchase Access
-                      </>
-                    ) : (
-                      <>
-                        <Download className="h-4 w-4 mr-2" />
-                        Download Guide
-                      </>
-                    )}
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Guide
                   </Button>
                 </div>
               </Card>
@@ -316,15 +269,6 @@ const StudyGuides = () => {
       </main>
       
       <Footer />
-      
-      <PaymentModal
-        isOpen={paymentModal.isOpen}
-        onClose={() => setPaymentModal({ ...paymentModal, isOpen: false })}
-        studyGuideId={paymentModal.guideId}
-        studyGuideTitle={paymentModal.guideTitle}
-        amount={paymentModal.amount}
-        onSuccess={fetchStudyGuides}
-      />
     </div>
   );
 };

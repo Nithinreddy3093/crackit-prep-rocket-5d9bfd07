@@ -65,16 +65,6 @@ const Navbar = () => {
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/leaderboard" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    Leaderboard
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/hr-interview" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    HR Practice
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
                   <Link to="/pricing" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
                     Pricing
                   </Link>
@@ -181,20 +171,6 @@ const Navbar = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Resources
-            </Link>
-            <Link 
-              to="/leaderboard" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Leaderboard
-            </Link>
-            <Link 
-              to="/hr-interview" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              HR Practice
             </Link>
             <Link 
               to="/pricing" 

@@ -80,50 +80,6 @@ export type Database = {
         }
         Relationships: []
       }
-      leaderboard: {
-        Row: {
-          badges_earned: string[] | null
-          category_scores: Json | null
-          id: string
-          last_activity: string | null
-          overall_score: number | null
-          rank_position: number | null
-          streak_count: number | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          badges_earned?: string[] | null
-          category_scores?: Json | null
-          id?: string
-          last_activity?: string | null
-          overall_score?: number | null
-          rank_position?: number | null
-          streak_count?: number | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          badges_earned?: string[] | null
-          category_scores?: Json | null
-          id?: string
-          last_activity?: string | null
-          overall_score?: number | null
-          rank_position?: number | null
-          streak_count?: number | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "leaderboard_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       learning_resources: {
         Row: {
           description: string
@@ -156,54 +112,6 @@ export type Database = {
           url?: string
         }
         Relationships: []
-      }
-      payments: {
-        Row: {
-          amount: number
-          created_at: string | null
-          id: string
-          status: string | null
-          study_guide_id: string | null
-          transaction_id: string | null
-          upi_id: string | null
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          id?: string
-          status?: string | null
-          study_guide_id?: string | null
-          transaction_id?: string | null
-          upi_id?: string | null
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
-          status?: string | null
-          study_guide_id?: string | null
-          transaction_id?: string | null
-          upi_id?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payments_study_guide_id_fkey"
-            columns: ["study_guide_id"]
-            isOneToOne: false
-            referencedRelation: "study_guides"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       performance_history: {
         Row: {
@@ -346,93 +254,6 @@ export type Database = {
         }
         Relationships: []
       }
-      study_guide_access: {
-        Row: {
-          access_granted: boolean | null
-          guide_id: string
-          id: string
-          payment_status: string | null
-          purchased_at: string | null
-          upi_transaction_id: string | null
-          user_id: string
-        }
-        Insert: {
-          access_granted?: boolean | null
-          guide_id: string
-          id?: string
-          payment_status?: string | null
-          purchased_at?: string | null
-          upi_transaction_id?: string | null
-          user_id: string
-        }
-        Update: {
-          access_granted?: boolean | null
-          guide_id?: string
-          id?: string
-          payment_status?: string | null
-          purchased_at?: string | null
-          upi_transaction_id?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "study_guide_access_guide_id_fkey"
-            columns: ["guide_id"]
-            isOneToOne: false
-            referencedRelation: "study_guides"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "study_guide_access_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      study_guides: {
-        Row: {
-          category: string
-          content: string | null
-          cover_image_url: string | null
-          created_at: string | null
-          description: string | null
-          difficulty: string
-          id: string
-          is_premium: boolean | null
-          page_count: number | null
-          price: number | null
-          title: string
-        }
-        Insert: {
-          category: string
-          content?: string | null
-          cover_image_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          difficulty: string
-          id?: string
-          is_premium?: boolean | null
-          page_count?: number | null
-          price?: number | null
-          title: string
-        }
-        Update: {
-          category?: string
-          content?: string | null
-          cover_image_url?: string | null
-          created_at?: string | null
-          description?: string | null
-          difficulty?: string
-          id?: string
-          is_premium?: boolean | null
-          page_count?: number | null
-          price?: number | null
-          title?: string
-        }
-        Relationships: []
-      }
       topic_scores: {
         Row: {
           created_at: string
@@ -564,44 +385,6 @@ export type Database = {
           },
         ]
       }
-      user_skills: {
-        Row: {
-          id: string
-          improvement_plan: Json | null
-          last_assessed: string | null
-          skill_name: string
-          skill_percentage: number | null
-          subskills: Json | null
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          improvement_plan?: Json | null
-          last_assessed?: string | null
-          skill_name: string
-          skill_percentage?: number | null
-          subskills?: Json | null
-          user_id: string
-        }
-        Update: {
-          id?: string
-          improvement_plan?: Json | null
-          last_assessed?: string | null
-          skill_name?: string
-          skill_percentage?: number | null
-          subskills?: Json | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_skills_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       users: {
         Row: {
           achievements: Json
@@ -647,11 +430,6 @@ export type Database = {
           topic_id: string
         }[]
       }
-      sync_user_to_leaderboard: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
-      update_leaderboard_rankings: { Args: never; Returns: undefined }
       update_user_performance: {
         Args: {
           p_completion_time?: number
