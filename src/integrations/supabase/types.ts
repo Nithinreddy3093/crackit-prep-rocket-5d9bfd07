@@ -647,10 +647,11 @@ export type Database = {
           topic_id: string
         }[]
       }
-      update_leaderboard_rankings: {
-        Args: Record<PropertyKey, never>
+      sync_user_to_leaderboard: {
+        Args: { p_user_id: string }
         Returns: undefined
       }
+      update_leaderboard_rankings: { Args: never; Returns: undefined }
       update_user_performance: {
         Args: {
           p_completion_time?: number
