@@ -23,6 +23,7 @@ import CompaniesList from "./pages/CompaniesList";
 import Quiz from "./pages/Quiz"; 
 import Blogs from "./pages/Blogs";
 import StudyGuides from "./pages/StudyGuides";
+import Leaderboard from "./pages/Leaderboard";
 import FAQ from "./pages/FAQ";
 import Support from "./pages/Support";
 import LogoAnimation from "./components/LogoAnimation";
@@ -32,6 +33,7 @@ import Careers from "./pages/Careers";
 import Contact from "./pages/Contact";
 import Features from "./pages/Features";
 import CookiePolicy from "./pages/CookiePolicy";
+import HRInterview from "./pages/HRInterview";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -125,6 +127,8 @@ const App = () => {
                 <Route path="/companies/:companyName" element={<Companies />} />
                 <Route path="/blog" element={<Blogs />} />
                 <Route path="/guides" element={<StudyGuides />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/hr-interview" element={<HRInterview />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/support" element={<Support />} />
                 <Route path="*" element={<NotFound />} />

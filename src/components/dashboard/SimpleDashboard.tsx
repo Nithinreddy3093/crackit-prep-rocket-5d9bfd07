@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Trophy, Clock, Target, BookOpen, TrendingUp, Calendar } from 'lucide-react';
 import { useSimpleDashboard } from '@/hooks/useSimpleDashboard';
+import SkillTracker from './SkillTracker';
 
 const SimpleDashboard: React.FC = () => {
   const { stats, isLoading, error, formatTime, formatDate, refreshData } = useSimpleDashboard();
@@ -100,6 +101,9 @@ const SimpleDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Skill Tracker */}
+      <SkillTracker />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Quiz Results */}
