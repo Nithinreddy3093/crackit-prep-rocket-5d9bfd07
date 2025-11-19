@@ -8,7 +8,6 @@ import { Trophy, TrendingUp, TrendingDown, Award, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import LeaderboardSyncButton from '@/components/dashboard/LeaderboardSyncButton';
 
 interface LeaderboardEntry {
   id: string;
@@ -89,17 +88,16 @@ const Leaderboard = () => {
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 flex items-center gap-3">
                 <Trophy className="h-10 w-10 text-yellow-500" />
                 Global Leaderboard
               </h1>
-              <p className="text-lg text-white/80">
+              <p className="text-lg text-white/80 text-center">
                 Compete with {leaderboard.length}+ learners worldwide
               </p>
             </div>
-            <LeaderboardSyncButton />
           </div>
         </div>
 

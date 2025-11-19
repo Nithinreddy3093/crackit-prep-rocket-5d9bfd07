@@ -503,36 +503,48 @@ export const useSimpleQuiz = (topicId?: string) => {
         console.log('✅ Quiz session updated successfully');
       }
 
-      // Also insert into quiz_results for backward compatibility
-      const { error: resultsError } = await supabase
-        .from('quiz_results')
-        .insert([{
-          user_id: user.id,
-          topic: topicId || 'unknown',
-          score: scorePercentage,
-          completion_time: Math.floor(totalElapsed / 1000),
-          question_details: finalQuestionDetails as any
-        }]);
+      // Save quiz results with retry logic
+      let resultsError = null;
+      for (let retry = 0; retry < 3; retry++) {
+        const { error } = await supabase
+          .from('quiz_results')
+          .insert([{
+            user_id: user.id,
+            topic: topicId || 'unknown',
+            score: scorePercentage,
+            completion_time: Math.floor(totalElapsed / 1000),
+            question_details: finalQuestionDetails as any
+          }]);
 
-      if (resultsError) {
-        console.error('❌ Error saving quiz results:', resultsError);
-      } else {
-        console.log('✅ Quiz results saved to quiz_results table');
+        resultsError = error;
+        if (!error) {
+          console.log('✅ Quiz results saved to quiz_results table');
+          break;
+        }
+        
+        console.error(`❌ Error saving quiz results (attempt ${retry + 1}/3):`, error);
+        if (retry < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (retry + 1)));
       }
 
-      // Update performance tables
-      const { error: perfError } = await supabase
-        .rpc('update_user_performance', {
-          p_user_id: user.id,
-          p_topic: topicId || 'unknown',
-          p_score: scorePercentage,
-          p_completion_time: totalElapsed
-        });
+      // Update performance tables with retry logic
+      let perfError = null;
+      for (let retry = 0; retry < 3; retry++) {
+        const { error } = await supabase
+          .rpc('update_user_performance', {
+            p_user_id: user.id,
+            p_topic: topicId || 'unknown',
+            p_score: scorePercentage,
+            p_completion_time: totalElapsed
+          });
 
-      if (perfError) {
-        console.error('❌ Error updating performance:', perfError);
-      } else {
-        console.log('✅ User performance updated successfully');
+        perfError = error;
+        if (!error) {
+          console.log('✅ User performance updated successfully');
+          break;
+        }
+        
+        console.error(`❌ Error updating performance (attempt ${retry + 1}/3):`, error);
+        if (retry < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (retry + 1)));
       }
 
       setQuizCompleted(true);

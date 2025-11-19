@@ -5,24 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface ResourceCardProps {
+  id: string;
   title: string;
   description: string;
-  type: 'video' | 'article' | 'course' | 'tutorial';
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
-  rating: number;
+  type: 'video' | 'article' | 'course' | 'tutorial' | 'documentation' | 'code';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  url: string;
   topic: string;
-  links: { title: string; url: string }[];
+  tags: string[];
 }
 
 const ResourceCard: React.FC<ResourceCardProps> = ({
   title,
   description,
   type,
-  level,
-  rating,
+  difficulty,
+  url,
   topic,
-  links
+  tags
 }) => {
+  const level = difficulty.charAt(0).toUpperCase() + difficulty.slice(1) as 'Beginner' | 'Intermediate' | 'Advanced';
+  const rating = 4.5;
   // Get icon based on resource type
   const getIcon = () => {
     switch (type) {

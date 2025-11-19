@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogIn, LogOut, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -261,6 +262,9 @@ const Navbar = () => {
           </div>
         </div>
       )}
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </nav>
   );
 };
