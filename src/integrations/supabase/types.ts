@@ -637,6 +637,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      batch_sync_leaderboard: { Args: never; Returns: undefined }
       get_secure_quiz_questions: {
         Args: { p_limit?: number; p_topic_id: string }
         Returns: {
