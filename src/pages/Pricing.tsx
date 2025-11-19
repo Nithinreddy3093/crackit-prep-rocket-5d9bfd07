@@ -26,7 +26,7 @@ const Pricing = () => {
               <div className="p-6">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Free</h3>
                 <p className="mt-4 flex items-baseline">
-                  <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$0</span>
+                  <span className="text-4xl font-extrabold text-gray-900 dark:text-white">₹0</span>
                   <span className="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">/month</span>
                 </p>
                 <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
@@ -87,7 +87,7 @@ const Pricing = () => {
               <div className="p-6 pt-8">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Pro</h3>
                 <p className="mt-4 flex items-baseline">
-                  <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$12</span>
+                  <span className="text-4xl font-extrabold text-gray-900 dark:text-white">₹999</span>
                   <span className="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">/month</span>
                 </p>
                 <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
@@ -138,7 +138,7 @@ const Pricing = () => {
               <div className="p-6">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white">Teams</h3>
                 <p className="mt-4 flex items-baseline">
-                  <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$29</span>
+                  <span className="text-4xl font-extrabold text-gray-900 dark:text-white">₹2,399</span>
                   <span className="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">/month</span>
                 </p>
                 <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">

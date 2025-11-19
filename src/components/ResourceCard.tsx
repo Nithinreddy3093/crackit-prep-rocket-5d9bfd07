@@ -7,18 +7,20 @@ import { BookOpen, Video, FileText, Code, ExternalLink, Star, Clock, BookMarked,
 import { toast } from '@/components/ui/use-toast';
 
 export interface ResourceProps {
-  id: string;
+  id: string | number;
   title: string;
   description: string;
-  type: 'article' | 'video' | 'course' | 'documentation' | 'code';
-  level: 'beginner' | 'intermediate' | 'advanced';
+  type: 'article' | 'video' | 'course' | 'documentation' | 'code' | 'tutorial';
+  level: 'beginner' | 'intermediate' | 'advanced' | 'Beginner' | 'Intermediate' | 'Advanced';
   topic: string;
-  url: string;
+  url?: string;
+  rating?: number;
+  links?: Array<{ title: string; url: string }>;
   source?: string;
   author?: string;
   ratings?: number;
   isFavorite?: boolean;
-  createdAt: string;
+  createdAt?: string;
   readTime?: string;
   imageUrl?: string;
 }
@@ -29,12 +31,14 @@ const ResourceCard = ({ resource }: { resource: ResourceProps }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const getIcon = () => {
-    switch (resource.type) {
+    const type = resource.type?.toLowerCase() || 'article';
+    switch (type) {
       case 'article':
         return <FileText className="h-5 w-5 text-primary resource-icon" />;
       case 'video':
         return <Video className="h-5 w-5 text-primary resource-icon" />;
       case 'course':
+      case 'tutorial':
         return <BookOpen className="h-5 w-5 text-primary resource-icon" />;
       case 'documentation':
         return <BookMarked className="h-5 w-5 text-primary resource-icon" />;
@@ -46,7 +50,8 @@ const ResourceCard = ({ resource }: { resource: ResourceProps }) => {
   };
 
   const getLevelColor = () => {
-    switch (resource.level) {
+    const level = resource.level?.toLowerCase() || 'beginner';
+    switch (level) {
       case 'beginner':
         return 'bg-emerald-500 hover:bg-emerald-600';
       case 'intermediate':
@@ -81,8 +86,8 @@ const ResourceCard = ({ resource }: { resource: ResourceProps }) => {
   };
 
   const handleShare = () => {
-    // In a real app this would open a sharing dialog
-    navigator.clipboard.writeText(resource.url);
+    const urlToShare = resource.url || (resource.links && resource.links[0]?.url) || '';
+    navigator.clipboard.writeText(urlToShare);
     toast({
       title: "Link copied!",
       description: "Resource link has been copied to clipboard.",
@@ -181,7 +186,11 @@ const ResourceCard = ({ resource }: { resource: ResourceProps }) => {
           </button>
         </div>
         <Button variant="outline" className="border-primary text-primary hover:bg-primary/10" asChild>
-          <a href={resource.url} target="_blank" rel="noopener noreferrer">
+          <a 
+            href={resource.url || (resource.links && resource.links[0]?.url) || '#'} 
+            target="_blank" 
+            rel="noopener noreferrer"
+          >
             View <ExternalLink className="ml-1 h-4 w-4" />
           </a>
         </Button>
