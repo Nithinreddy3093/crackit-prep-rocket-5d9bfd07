@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, Trophy, Clock, Target, RotateCcw } from 'lucide-react';
 import { QuizAnswerDetail } from '@/hooks/useSimpleQuiz';
+import { motion } from 'framer-motion';
+import ConfettiEffect from '@/components/common/ConfettiEffect';
 
 interface SimpleQuizResultsProps {
   correctAnswersCount: number;
@@ -26,18 +28,38 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
   onRestart
 }) => {
   const isPassed = scorePercentage >= 70;
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    if (isPassed) {
+      setShowConfetti(true);
+    }
+  }, [isPassed]);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <Card className="glass-card">
+    <>
+      <ConfettiEffect active={showConfetti} onComplete={() => setShowConfetti(false)} />
+      
+      <motion.div 
+        className="max-w-4xl mx-auto"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="glass-card-strong">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
+          <motion.div 
+            className="flex justify-center mb-4"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1, rotate: 360 }}
+            transition={{ duration: 0.6, type: 'spring' }}
+          >
             {isPassed ? (
-              <Trophy className="h-16 w-16 text-yellow-500" />
+              <Trophy className="h-16 w-16 text-yellow-500 drop-shadow-glow" />
             ) : (
               <Target className="h-16 w-16 text-blue-500" />
             )}
-          </div>
+          </motion.div>
           <CardTitle className="text-2xl font-bold text-white mb-2">
             Quiz Complete!
           </CardTitle>
@@ -141,7 +163,8 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
           </div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
+  </>
   );
 };
 
