@@ -38,23 +38,28 @@ const Quiz = () => {
   const { currentDifficulty, trackAnswer } = useAdaptiveDifficulty('beginner');
 
   const {
-    quizStarted,
-    quizCompleted,
+    questions,
     currentQuestion,
     currentQuestionIndex,
     totalQuestions,
     selectedAnswer,
-    score,
-    timeLeft,
-    isAnswerLocked,
-    handleStartQuiz,
-    handleSelectAnswer,
-    handleNextQuestion,
-    handleSubmitQuiz,
-    loading,
+    questionDetails,
+    correctAnswersCount,
+    quizStarted,
+    quizCompleted,
+    isLoading,
+    elapsedTime,
+    formatTime,
+    scorePercentage,
+    isValidating,
+    validationResult,
+    handleAnswerSelect,
+    goToNextQuestion,
+    startQuiz,
+    completeQuiz,
+    resetQuiz,
   } = useSimpleQuiz(topicParam);
 
-  // Check for saved progress on mount
   useEffect(() => {
     if (!quizStarted && !quizCompleted) {
       const saved = loadProgress();
@@ -62,19 +67,11 @@ const Quiz = () => {
         toast({
           title: 'Resume Quiz?',
           description: 'You have a quiz in progress. Would you like to continue?',
-          action: (
-            <Button size="sm" onClick={() => {
-              setQuizMode(saved.mode);
-            }}>
-              Resume
-            </Button>
-          ),
         });
       }
     }
-  }, [quizStarted, quizCompleted, topicParam]);
+  }, []);
 
-  // Save progress periodically
   useEffect(() => {
     if (quizStarted && !quizCompleted && quizMode) {
       saveProgress({
@@ -89,11 +86,11 @@ const Quiz = () => {
 
   const handleModeSelect = (mode: 'practice' | 'exam') => {
     setQuizMode(mode);
-    handleStartQuiz();
+    startQuiz();
   };
 
-  const handleAnswerSelect = (answer: string) => {
-    handleSelectAnswer(answer);
+  const handleAnswerSelectWithMode = (answer: string) => {
+    handleAnswerSelect(answer);
     
     if (quizMode === 'practice' && currentQuestion) {
       const isCorrect = answer === currentQuestion.correct_answer;
@@ -111,7 +108,7 @@ const Quiz = () => {
 
   const handleContinue = () => {
     setShowExplanation(false);
-    handleNextQuestion();
+    goToNextQuestion();
   };
 
   const handlePauseToggle = () => {
@@ -126,7 +123,15 @@ const Quiz = () => {
 
   const handleFinish = () => {
     clearProgress();
-    handleSubmitQuiz();
+    completeQuiz();
+  };
+
+  const handleRestart = () => {
+    clearProgress();
+    resetQuiz();
+    setQuizMode(null);
+    setIsPaused(false);
+    setShowExplanation(false);
   };
 
   if (!user) {
@@ -162,8 +167,9 @@ const Quiz = () => {
         {!quizStarted && !quizCompleted && (
           <SimpleQuizIntro 
             topic={topicParam} 
-            onStart={() => handleStartQuiz()} 
-            loading={loading}
+            questionCount={totalQuestions}
+            onStartQuiz={startQuiz}
+            isLoading={isLoading}
           />
         )}
 
@@ -181,24 +187,37 @@ const Quiz = () => {
                   Difficulty: <span className="ml-1 capitalize font-semibold">{currentDifficulty}</span>
                 </span>
               </div>
-              
-              {quizMode === 'exam' && timeLeft !== null && (
-                <div className="text-white font-semibold">
-                  Time: {timeLeft}s
-                </div>
-              )}
             </div>
 
             <SimpleQuizQuestion
               question={currentQuestion}
-              selectedAnswer={selectedAnswer}
-              onSelectAnswer={handleAnswerSelect}
-              onNext={quizMode === 'exam' ? handleNextQuestion : undefined}
-              currentQuestion={currentQuestionIndex + 1}
+              currentIndex={currentQuestionIndex}
               totalQuestions={totalQuestions}
-              isAnswerLocked={isAnswerLocked}
-              onFinish={currentQuestionIndex === totalQuestions - 1 ? handleFinish : undefined}
+              selectedAnswer={selectedAnswer}
+              onAnswerSelect={handleAnswerSelectWithMode}
+              onNextQuestion={goToNextQuestion}
+              elapsedTime={elapsedTime}
+              formatTime={formatTime}
+              topicTitle={topicParam}
+              isValidating={isValidating}
+              validationResult={validationResult}
             />
+
+            {quizMode === 'exam' && selectedAnswer && currentQuestionIndex < totalQuestions - 1 && (
+              <div className="mt-4 text-center">
+                <Button onClick={goToNextQuestion} size="lg">
+                  Next Question
+                </Button>
+              </div>
+            )}
+
+            {currentQuestionIndex === totalQuestions - 1 && selectedAnswer && (
+              <div className="mt-4 text-center">
+                <Button onClick={handleFinish} size="lg">
+                  Finish Quiz
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
@@ -219,8 +238,14 @@ const Quiz = () => {
 
         {quizCompleted && (
           <SimpleQuizResults 
-            score={score} 
-            topic={topicParam}
+            correctAnswersCount={correctAnswersCount}
+            totalQuestions={totalQuestions}
+            scorePercentage={scorePercentage}
+            elapsedTime={elapsedTime}
+            formatTime={formatTime}
+            topicTitle={topicParam}
+            questionDetails={questionDetails}
+            onRestart={handleRestart}
           />
         )}
       </main>
