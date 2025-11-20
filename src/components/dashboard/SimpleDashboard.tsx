@@ -1,237 +1,121 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Trophy, Clock, Target, BookOpen, TrendingUp, Calendar } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Trophy, Target, TrendingUp, Clock } from 'lucide-react';
 import { useSimpleDashboard } from '@/hooks/useSimpleDashboard';
-import SkillTracker from './SkillTracker';
+import SkillRadarChart from './SkillRadarChart';
+import PerformanceTrendChart from './PerformanceTrendChart';
+import StudyHeatmap from './StudyHeatmap';
+import StreakCounter from './StreakCounter';
+import ContinueLearning from './ContinueLearning';
 
 const SimpleDashboard: React.FC = () => {
-  const { stats, isLoading, error, formatTime, formatDate, refreshData } = useSimpleDashboard();
+  const { data, loading } = useSimpleDashboard();
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="glass-card animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-16 bg-white/10 rounded" />
-              </CardContent>
-            </Card>
-          ))}
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-32 bg-muted rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-24 bg-muted rounded-lg" />
+            ))}
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="max-w-6xl mx-auto p-6">
-        <Card className="glass-card">
-          <CardContent className="p-6 text-center">
-            <p className="text-red-400 mb-4">{error}</p>
-            <Button onClick={refreshData} variant="outline">
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-7xl mx-auto p-6 space-y-8">
       {/* Welcome Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-white/70">Track your learning progress and performance</p>
+        <h1 className="text-4xl font-bold mb-2">Your Learning Dashboard</h1>
+        <p className="text-muted-foreground">Track your progress and keep learning</p>
       </div>
 
       {/* Key Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="glass-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/60 text-sm font-medium">Total Quizzes</p>
-                <p className="text-2xl font-bold text-white">{stats.totalQuizzes}</p>
-              </div>
-              <BookOpen className="h-8 w-8 text-primary" />
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Quizzes</CardTitle>
+            <Trophy className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.totalQuizzes}</div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/60 text-sm font-medium">Average Score</p>
-                <p className="text-2xl font-bold text-white">{stats.averageScore}%</p>
-              </div>
-              <Target className="h-8 w-8 text-primary" />
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.averageScore}%</div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/60 text-sm font-medium">Time Spent</p>
-                <p className="text-2xl font-bold text-white">{formatTime(stats.totalTimeSpent)}</p>
-              </div>
-              <Clock className="h-8 w-8 text-primary" />
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Best Score</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.bestScore}%</div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white/60 text-sm font-medium">Best Score</p>
-                <p className="text-2xl font-bold text-white">
-                  {stats.recentQuizzes.length > 0 
-                    ? Math.max(...stats.recentQuizzes.map(q => q.score_percentage)) 
-                    : 0}%
-                </p>
-              </div>
-              <Trophy className="h-8 w-8 text-primary" />
-            </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Time</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{Math.floor(data.totalTime / 60)}h</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Skill Tracker */}
-      <SkillTracker />
+      {/* Streak Counter */}
+      <StreakCounter 
+        currentStreak={data.currentStreak} 
+        longestStreak={data.longestStreak} 
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Recent Quiz Results */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <Calendar className="mr-2 h-5 w-5" />
-              Recent Quizzes
-            </CardTitle>
-            <CardDescription className="text-white/60">
-              Your latest quiz attempts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {stats.recentQuizzes.length > 0 ? (
-              <div className="space-y-3">
-                {stats.recentQuizzes.map((quiz) => (
-                  <div 
-                    key={quiz.id} 
-                    className="flex justify-between items-center p-3 bg-white/5 rounded-lg"
-                  >
-                    <div>
-                      <p className="text-white font-medium capitalize">
-                        {quiz.topic_id.replace('-', ' ')}
-                      </p>
-                      <p className="text-white/60 text-sm">
-                        {quiz.correct_answers}/{quiz.total_questions} correct • {formatDate(quiz.completed_at)}
-                      </p>
-                    </div>
-                    <div className={`text-lg font-bold ${
-                      quiz.score_percentage >= 70 ? 'text-green-400' : 'text-orange-400'
-                    }`}>
-                      {quiz.score_percentage}%
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <BookOpen className="h-12 w-12 text-white/30 mx-auto mb-4" />
-                <p className="text-white/60">No quizzes completed yet</p>
-                <Button 
-                  onClick={() => window.location.href = '/topics'}
-                  className="mt-4 bg-primary hover:bg-primary/90"
-                >
-                  Take Your First Quiz
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Topic Performance */}
-        <Card className="glass-card">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center">
-              <TrendingUp className="mr-2 h-5 w-5" />
-              Topic Performance
-            </CardTitle>
-            <CardDescription className="text-white/60">
-              Your performance by topic
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {stats.topicPerformance.length > 0 ? (
-              <div className="space-y-3">
-                {stats.topicPerformance.map((topic) => (
-                  <div 
-                    key={topic.topic} 
-                    className="p-3 bg-white/5 rounded-lg"
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="text-white font-medium capitalize">
-                        {topic.topic.replace('-', ' ')}
-                      </h4>
-                      <span className={`text-lg font-bold ${
-                        topic.averageScore >= 70 ? 'text-green-400' : 'text-orange-400'
-                      }`}>
-                        {topic.averageScore}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm text-white/60">
-                      <span>{topic.quizzesCompleted} quiz{topic.quizzesCompleted !== 1 ? 'es' : ''}</span>
-                      <span>Last: {formatDate(topic.lastAttempt)}</span>
-                    </div>
-                    <div className="mt-2 w-full bg-white/10 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${
-                          topic.averageScore >= 70 ? 'bg-green-500' : 'bg-orange-500'
-                        }`}
-                        style={{ width: `${topic.averageScore}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Target className="h-12 w-12 text-white/30 mx-auto mb-4" />
-                <p className="text-white/60">No topic data yet</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SkillRadarChart data={data.skillData} />
+        <PerformanceTrendChart data={data.performanceData} />
       </div>
 
-      {/* Call to Action */}
-      {stats.totalQuizzes > 0 && (
-        <div className="text-center">
-          <Card className="glass-card inline-block">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Keep Learning!
-              </h3>
-              <p className="text-white/70 mb-4">
-                Practice more to improve your scores
-              </p>
-              <Button 
-                onClick={() => window.location.href = '/topics'}
-                size="lg"
-                className="bg-primary hover:bg-primary/90"
-              >
-                Continue Learning
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Heatmap and Recommendations */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <StudyHeatmap data={data.heatmapData} />
+        <ContinueLearning recommendations={data.recommendations} />
+      </div>
+
+      {/* Recent Quizzes */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Quiz Results</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {data.recentQuizzes.map((quiz, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div>
+                  <p className="font-medium">{quiz.topic}</p>
+                  <p className="text-sm text-muted-foreground">{quiz.date}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{quiz.score}%</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

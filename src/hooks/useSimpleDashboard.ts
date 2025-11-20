@@ -1,212 +1,173 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface DashboardStats {
-  totalQuizzes: number;
-  overallScore: number;
-  averageScore: number;
-  totalTimeSpent: number;
-  recentQuizzes: Array<{
-    id: string;
-    topic_id: string;
-    score_percentage: number;
-    completed_at: string;
-    correct_answers: number;
-    total_questions: number;
-  }>;
-  topicPerformance: Array<{
-    topic: string;
-    averageScore: number;
-    bestScore: number;
-    quizzesCompleted: number;
-    lastAttempt: string;
-    weakAreas: string[];
-    improvement: string;
-  }>;
-}
-
 export const useSimpleDashboard = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalQuizzes: 0,
-    overallScore: 0,
-    averageScore: 0,
-    totalTimeSpent: 0,
-    recentQuizzes: [],
-    topicPerformance: []
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const loadDashboardData = useCallback(async () => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      console.log('📊 Loading dashboard data for user:', user.id);
-
-      // Get recent quiz sessions
-      const { data: recentSessions, error: sessionsError } = await supabase
-        .from('quiz_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .not('completed_at', 'is', null)
-        .order('completed_at', { ascending: false })
-        .limit(10);
-
-      if (sessionsError) {
-        console.error('Error loading quiz sessions:', sessionsError);
-        throw new Error('Failed to load quiz data');
+  useEffect(() => {
+    const fetchResults = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
       }
 
-      const sessions = recentSessions || [];
+      try {
+        setLoading(true);
 
-      // Calculate overall statistics
-      const totalQuizzes = sessions.length;
-      const totalTimeSpent = sessions.reduce((sum, session) => sum + (session.time_spent_ms || 0), 0);
-      const averageScore = totalQuizzes > 0 
-        ? Math.round(sessions.reduce((sum, session) => sum + session.score_percentage, 0) / totalQuizzes)
-        : 0;
+        const { data, error } = await supabase
+          .from('quiz_results')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false });
 
-      // Get topic performance with enhanced metrics
-      const topicMap = new Map<string, {
-        scores: number[];
-        lastAttempt: string;
-        questionDetails: any[];
-      }>();
+        if (error) throw error;
+        setResults(data || []);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      sessions.forEach(session => {
-        const topic = session.topic_id;
-        if (!topicMap.has(topic)) {
-          topicMap.set(topic, {
-            scores: [],
-            lastAttempt: session.completed_at || '',
-            questionDetails: []
-          });
-        }
-        const topicData = topicMap.get(topic)!;
-        topicData.scores.push(session.score_percentage);
-        if (session.completed_at && session.completed_at > topicData.lastAttempt) {
-          topicData.lastAttempt = session.completed_at;
-        }
-        if (session.question_details) {
-          topicData.questionDetails.push(...(Array.isArray(session.question_details) ? session.question_details : []));
-        }
-      });
-
-      const topicPerformance = Array.from(topicMap.entries()).map(([topic, data]) => {
-        const averageScore = Math.round(data.scores.reduce((sum, score) => sum + score, 0) / data.scores.length);
-        const bestScore = Math.max(...data.scores);
-        
-        // Calculate improvement (last score vs first score)
-        const improvement = data.scores.length > 1 
-          ? data.scores[data.scores.length - 1] - data.scores[0]
-          : 0;
-        const improvementStr = improvement > 0 ? `+${improvement}%` : improvement < 0 ? `${improvement}%` : '0%';
-        
-        // Identify weak areas (questions answered incorrectly most often)
-        const incorrectTopics = new Map<string, number>();
-        data.questionDetails.forEach((detail: any) => {
-          if (!detail.isCorrect && detail.topic) {
-            incorrectTopics.set(detail.topic, (incorrectTopics.get(detail.topic) || 0) + 1);
-          }
-        });
-        
-        const weakAreas = Array.from(incorrectTopics.entries())
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 3)
-          .map(([area]) => area);
-        
-        return {
-          topic,
-          averageScore,
-          bestScore,
-          quizzesCompleted: data.scores.length,
-          lastAttempt: data.lastAttempt,
-          weakAreas,
-          improvement: improvementStr
-        };
-      }).sort((a, b) => new Date(b.lastAttempt).getTime() - new Date(a.lastAttempt).getTime());
-
-      // Format recent quizzes
-      const recentQuizzes = sessions.slice(0, 5).map(session => ({
-        id: session.id,
-        topic_id: session.topic_id,
-        score_percentage: session.score_percentage,
-        completed_at: session.completed_at || '',
-        correct_answers: session.correct_answers,
-        total_questions: session.total_questions
-      }));
-
-      const dashboardStats: DashboardStats = {
-        totalQuizzes,
-        overallScore: averageScore,
-        averageScore,
-        totalTimeSpent,
-        recentQuizzes,
-        topicPerformance
-      };
-
-      setStats(dashboardStats);
-      
-      console.log('✅ Dashboard data loaded:', dashboardStats);
-
-    } catch (err) {
-      console.error('❌ Error loading dashboard data:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
+    fetchResults();
   }, [user]);
 
-  // Refresh data
-  const refreshData = useCallback(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
-
-  // Load data on mount and when user changes
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
-
-  // Format time helper
-  const formatTime = useCallback((ms: number): string => {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${seconds}s`;
+  // Calculate skill data for radar chart
+  const skillData: Record<string, { total: number; count: number }> = results.reduce((acc, result) => {
+    if (!acc[result.topic]) {
+      acc[result.topic] = { total: 0, count: 0 };
     }
-    return `${seconds}s`;
-  }, []);
+    acc[result.topic].total += result.score;
+    acc[result.topic].count += 1;
+    return acc;
+  }, {} as Record<string, { total: number; count: number }>);
 
-  // Format date helper
-  const formatDate = useCallback((dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+  const skillChartData = Object.entries(skillData)
+    .slice(0, 6)
+    .map(([skill, data]) => ({
+      skill: skill.slice(0, 15),
+      score: Math.round(data.total / data.count),
+      fullMark: 100,
+    }));
+
+  // Calculate performance trend
+  const performanceData = results
+    .slice(0, 10)
+    .reverse()
+    .map(r => ({
+      date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      score: r.score,
+    }));
+
+  // Calculate heatmap data (last 84 days)
+  const heatmapData = [];
+  for (let i = 83; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    const count = results.filter(r => 
+      new Date(r.date).toISOString().split('T')[0] === dateStr
+    ).length;
+    heatmapData.push({
+      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      count,
     });
-  }, []);
+  }
+
+  // Calculate streak
+  const sortedDates = results
+    .map(r => new Date(r.date).toISOString().split('T')[0])
+    .sort()
+    .reverse();
+  
+  let currentStreak = 0;
+  let longestStreak = 0;
+  let temp = 0;
+  let lastDate = new Date().toISOString().split('T')[0];
+
+  for (const dateStr of sortedDates) {
+    const diffDays = Math.floor((new Date(lastDate).getTime() - new Date(dateStr).getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 1) {
+      temp++;
+      longestStreak = Math.max(longestStreak, temp);
+    } else {
+      temp = 1;
+    }
+    
+    lastDate = dateStr;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const hasActivityToday = sortedDates.includes(today) || sortedDates.includes(yesterday);
+  currentStreak = hasActivityToday ? temp : 0;
+
+  // AI-based recommendations
+  const topicPerformance: Record<string, { scores: number[]; count: number }> = results.reduce((acc, result) => {
+    if (!acc[result.topic]) {
+      acc[result.topic] = { scores: [], count: 0 };
+    }
+    acc[result.topic].scores.push(result.score);
+    acc[result.topic].count += 1;
+    return acc;
+  }, {} as Record<string, { scores: number[]; count: number }>);
+
+  const weakTopics = Object.entries(topicPerformance)
+    .map(([topic, data]) => ({
+      topic,
+      avgScore: data.scores.reduce((a, b) => a + b, 0) / data.scores.length,
+      count: data.count,
+    }))
+    .filter(t => t.avgScore < 70)
+    .sort((a, b) => a.avgScore - b.avgScore)
+    .slice(0, 3)
+    .map(t => ({
+      topic: t.topic,
+      reason: `Your average score is ${Math.round(t.avgScore)}%. Practice more to improve!`,
+      difficulty: t.avgScore < 50 ? 'Beginner' : 'Intermediate',
+    }));
+
+  const recommendations = weakTopics.length > 0 ? weakTopics : [
+    {
+      topic: 'Advanced Algorithms',
+      reason: 'Challenge yourself with advanced topics!',
+      difficulty: 'Advanced',
+    },
+    {
+      topic: 'System Design',
+      reason: 'Expand your knowledge to system architecture',
+      difficulty: 'Advanced',
+    },
+  ];
 
   return {
-    stats,
-    isLoading,
-    error,
-    refreshData,
-    formatTime,
-    formatDate
+    data: {
+      totalQuizzes: results.length,
+      averageScore: results.length > 0 
+        ? Math.round(results.reduce((sum, r) => sum + r.score, 0) / results.length)
+        : 0,
+      bestScore: results.length > 0 
+        ? Math.max(...results.map(r => r.score))
+        : 0,
+      totalTime: results.reduce((sum, r) => sum + (r.completion_time || 0), 0),
+      recentQuizzes: results
+        .slice(0, 5)
+        .map(r => ({
+          topic: r.topic,
+          score: r.score,
+          date: new Date(r.date).toLocaleDateString(),
+        })),
+      skillData: skillChartData,
+      performanceData,
+      heatmapData,
+      currentStreak,
+      longestStreak,
+      recommendations,
+    },
+    loading,
   };
 };
