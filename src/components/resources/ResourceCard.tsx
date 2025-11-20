@@ -82,18 +82,11 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
           </Badge>
         </div>
         
-        <div className="space-y-2 mt-4">
-          {links.map((link, index) => (
-            <a 
-              key={index}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-sm text-primary hover:underline flex items-center group"
-            >
-              <ExternalLink className="h-3 w-3 mr-2 transition-transform group-hover:translate-x-1" />
-              {link.title}
-            </a>
+        <div className="flex flex-wrap gap-1 mt-4">
+          {tags.map((tag, index) => (
+            <Badge key={index} variant="outline" className="text-xs">
+              {tag}
+            </Badge>
           ))}
         </div>
       </CardContent>
@@ -103,7 +96,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({
           variant="outline" 
           size="sm" 
           className="w-full text-primary border-primary/30 hover:bg-primary/10"
-          onClick={() => window.open(links[0].url, '_blank')}
+          onClick={() => window.open(url, '_blank')}
         >
           View Resource
         </Button>
