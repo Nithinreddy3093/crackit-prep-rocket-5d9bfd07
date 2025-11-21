@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, XCircle, Trophy, Clock, Target, RotateCcw } from 'lucide-react';
+import { CheckCircle, XCircle, Trophy, Clock, Target, RotateCcw, Save } from 'lucide-react';
 import { QuizAnswerDetail } from '@/hooks/useSimpleQuiz';
 import { motion } from 'framer-motion';
 import ConfettiEffect from '@/components/common/ConfettiEffect';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface SimpleQuizResultsProps {
   correctAnswersCount: number;
@@ -69,6 +70,20 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {/* Results Saved Indicator */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Alert className="bg-green-500/20 border-green-500/30">
+              <Save className="h-4 w-4 text-green-400" />
+              <AlertDescription className="text-green-400 ml-2">
+                Your quiz results have been saved successfully!
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+
           {/* Score Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-white/5 rounded-lg">

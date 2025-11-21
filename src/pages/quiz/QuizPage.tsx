@@ -49,16 +49,26 @@ const QuizPage = () => {
     
     if (quiz.quizCompleted) {
       return (
-        <SimpleQuizResults 
-          correctAnswersCount={quiz.correctAnswersCount}
-          totalQuestions={quiz.totalQuestions}
-          scorePercentage={quiz.scorePercentage}
-          elapsedTime={quiz.elapsedTime}
-          formatTime={quiz.formatTime}
-          topicTitle={topicId}
-          questionDetails={quiz.questionDetails}
-          onRestart={quiz.resetQuiz}
-        />
+        <>
+          {quiz.isLoading && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white/10 backdrop-blur-sm p-6 rounded-lg text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p className="text-white font-medium">Saving your results...</p>
+              </div>
+            </div>
+          )}
+          <SimpleQuizResults 
+            correctAnswersCount={quiz.correctAnswersCount}
+            totalQuestions={quiz.totalQuestions}
+            scorePercentage={quiz.scorePercentage}
+            elapsedTime={quiz.elapsedTime}
+            formatTime={quiz.formatTime}
+            topicTitle={topicId}
+            questionDetails={quiz.questionDetails}
+            onRestart={quiz.resetQuiz}
+          />
+        </>
       );
     }
     
