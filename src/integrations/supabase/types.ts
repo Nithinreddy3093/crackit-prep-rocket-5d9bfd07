@@ -662,6 +662,14 @@ export type Database = {
         }
         Returns: Json
       }
+      user_owns_quiz_result: {
+        Args: { check_user_id: string; result_id: string }
+        Returns: boolean
+      }
+      user_owns_quiz_session: {
+        Args: { check_user_id: string; session_id: string }
+        Returns: boolean
+      }
       validate_quiz_answer: {
         Args: { p_question_id: string; p_user_answer: string }
         Returns: Json
