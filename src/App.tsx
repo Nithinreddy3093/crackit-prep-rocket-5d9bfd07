@@ -20,7 +20,7 @@ import Resources from "./pages/Resources";
 import AITutor from "./pages/AITutor";
 import Companies from "./pages/Companies";
 import CompaniesList from "./pages/CompaniesList";
-import Quiz from "./pages/Quiz"; 
+import QuizPage from "./pages/quiz/QuizPage"; 
 import Blogs from "./pages/Blogs";
 import StudyGuides from "./pages/StudyGuides";
 import Leaderboard from "./pages/Leaderboard";
@@ -110,8 +110,7 @@ const App = () => {
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
-                <Route path="/quiz" element={<Quiz />} />
-                <Route path="/quiz/:topicId" element={<Quiz />} />
+                <Route path="/quiz/:topicId" element={<QuizPage />} />
                 <Route path="/ai-tutor" element={<AITutor />} />
                 <Route path="/resources" element={
                   <ProtectedRoute>

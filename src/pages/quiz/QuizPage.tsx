@@ -30,7 +30,8 @@ const QuizPage = () => {
       return (
         <ErrorState 
           errorMessage={quiz.error}
-          onRetry={() => window.location.href = '/topics'}
+          topicId={topicId}
+          onRetry={() => window.location.reload()}
         />
       );
     }
