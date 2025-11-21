@@ -72,9 +72,31 @@ serve(async (req) => {
   try {
     const { topicId, difficulty = 'mixed' } = await req.json();
     
-    if (!topicId || !TOPIC_CONFIGS[topicId]) {
+    console.log('📥 Received request for topicId:', topicId);
+    console.log('📚 Available topics:', Object.keys(TOPIC_CONFIGS));
+    
+    if (!topicId) {
+      console.error('❌ No topic ID provided in request');
       return new Response(
-        JSON.stringify({ error: 'Invalid topic ID' }),
+        JSON.stringify({ 
+          error: 'No topic ID provided',
+          availableTopics: Object.keys(TOPIC_CONFIGS),
+          message: 'Please select a valid topic from the available list'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!TOPIC_CONFIGS[topicId]) {
+      console.error(`❌ Invalid topic ID provided: ${topicId}`);
+      console.log('Valid topic IDs are:', Object.keys(TOPIC_CONFIGS));
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid topic ID',
+          providedTopic: topicId,
+          availableTopics: Object.keys(TOPIC_CONFIGS),
+          message: `Topic "${topicId}" not found. Please choose from: ${Object.keys(TOPIC_CONFIGS).join(', ')}`
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -223,10 +245,16 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error('Error in generate-quiz-questions:', error);
+    console.error('❌ Error in generate-quiz-questions:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+        error: error instanceof Error ? error.message : 'Internal server error',
+        message: 'Failed to generate quiz questions. Please try again or select a different topic.',
+        availableTopics: Object.keys(TOPIC_CONFIGS)
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

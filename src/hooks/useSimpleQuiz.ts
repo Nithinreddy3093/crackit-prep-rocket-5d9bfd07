@@ -131,7 +131,27 @@ export const useSimpleQuiz = (topicId?: string) => {
 
       if (response.error) {
         console.error('Edge function error:', response.error);
-        throw new Error(`Failed to generate questions: ${response.error.message || 'Unknown error'}`);
+        
+        // Provide more specific error messages
+        const errorMessage = response.error.message || 'Unknown error';
+        
+        if (errorMessage.includes('Invalid topic')) {
+          throw new Error(`Topic "${topicId}" is not available. Please select a different topic.`);
+        }
+        
+        if (errorMessage.includes('No topic ID')) {
+          throw new Error('No topic selected. Please go back and select a topic.');
+        }
+        
+        if (response.error.message?.includes('rate limit') || errorMessage.includes('429')) {
+          throw new Error('Too many requests. Please wait a moment and try again.');
+        }
+        
+        throw new Error(`Failed to generate questions: ${errorMessage}`);
+      }
+
+      if (!response.data) {
+        throw new Error('No response data received from question generator. Please try again.');
       }
 
       const { questions: aiQuestions, timeLimit } = response.data;
@@ -184,10 +204,23 @@ export const useSimpleQuiz = (topicId?: string) => {
       
     } catch (err) {
       console.error('❌ Error loading questions:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load questions';
+      
+      let errorMessage = 'Failed to load questions. Please try again.';
+      
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      
+      // Add user-friendly guidance based on error type
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (errorMessage.includes('Invalid topic')) {
+        errorMessage = `${errorMessage} Please go back to the topics page and select a valid topic.`;
+      }
+      
       setError(errorMessage);
       toast({
-        title: "Error loading quiz",
+        title: "Error Loading Quiz",
         description: errorMessage,
         variant: "destructive",
       });
