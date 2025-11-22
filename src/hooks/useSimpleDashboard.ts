@@ -6,6 +6,7 @@ export const useSimpleDashboard = () => {
   const { user } = useAuth();
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -16,6 +17,7 @@ export const useSimpleDashboard = () => {
 
       try {
         setLoading(true);
+        console.log('[useSimpleDashboard] Fetching quiz results...');
 
         const { data, error } = await supabase
           .from('quiz_results')
@@ -24,6 +26,7 @@ export const useSimpleDashboard = () => {
           .order('date', { ascending: false });
 
         if (error) throw error;
+        console.log('[useSimpleDashboard] Fetched', data?.length || 0, 'quiz results');
         setResults(data || []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -33,7 +36,13 @@ export const useSimpleDashboard = () => {
     };
 
     fetchResults();
-  }, [user]);
+  }, [user, lastRefresh]);
+
+  // Function to manually refresh dashboard data
+  const refetchDashboardData = () => {
+    console.log('[useSimpleDashboard] Manual refresh triggered');
+    setLastRefresh(Date.now());
+  };
 
   // Calculate skill data for radar chart
   const skillData: Record<string, { total: number; count: number }> = results.reduce((acc, result) => {
@@ -246,5 +255,6 @@ export const useSimpleDashboard = () => {
       improvementRate,
     },
     loading,
+    refetch: refetchDashboardData,
   };
 };

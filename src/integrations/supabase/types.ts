@@ -638,6 +638,19 @@ export type Database = {
     }
     Functions: {
       batch_sync_leaderboard: { Args: never; Returns: undefined }
+      complete_quiz_session: {
+        Args: {
+          p_completed_at: string
+          p_correct_answers: number
+          p_question_details: Json
+          p_score_percentage: number
+          p_session_id: string
+          p_time_spent_ms: number
+          p_total_questions: number
+          p_user_id: string
+        }
+        Returns: boolean
+      }
       get_secure_quiz_questions: {
         Args: { p_limit?: number; p_topic_id: string }
         Returns: {
@@ -648,8 +661,27 @@ export type Database = {
           topic_id: string
         }[]
       }
+      save_quiz_result: {
+        Args: {
+          p_completion_time: number
+          p_question_details: Json
+          p_score: number
+          p_topic: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       sync_user_to_leaderboard: {
         Args: { p_user_id: string }
+        Returns: undefined
+      }
+      track_quiz_performance: {
+        Args: {
+          p_completion_time: number
+          p_score: number
+          p_topic: string
+          p_user_id: string
+        }
         Returns: undefined
       }
       update_leaderboard_rankings: { Args: never; Returns: undefined }

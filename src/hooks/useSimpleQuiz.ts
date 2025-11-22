@@ -474,215 +474,108 @@ export const useSimpleQuiz = (topicId?: string) => {
     }
   }, [selectedAnswer, questions, currentQuestionIndex, validateAnswer, correctAnswersCount]);
 
-  // Complete quiz
+  // Complete quiz - Simplified version using new secure functions
   const completeQuiz = useCallback(async () => {
-    if (!currentSession || !user) return;
-
-    try {
-      setIsLoading(true);
-      
-      const totalElapsed = Date.now() - startTime;
-      
-      // Handle final question validation if needed
-      let finalQuestionDetails = [...questionDetails];
-      let finalCorrectCount = correctAnswersCount;
-      
-      if (selectedAnswer && questions[currentQuestionIndex]) {
-        console.log('🔚 Processing final question in completeQuiz');
-        const currentQuestion = questions[currentQuestionIndex];
-        const validationResult = await validateAnswer(currentQuestion.id, selectedAnswer);
-        const isCorrect = validationResult.isCorrect; // Use transformed property name
-        
-        console.log('🎯 Final question result:', { isCorrect, correctAnswer: validationResult.correct_answer });
-        
-        if (isCorrect) {
-          finalCorrectCount += 1;
-        }
-        
-        finalQuestionDetails.push({
-          questionId: currentQuestion.id,
-          userAnswer: selectedAnswer,
-          correctAnswer: validationResult.correct_answer,
-          isCorrect
-        });
-      }
-      
-      const scorePercentage = Math.round((finalCorrectCount / questions.length) * 100);
-
-      console.log('📊 Final quiz statistics:', {
-        finalCorrectCount,
-        totalQuestions: questions.length,
-        scorePercentage,
-        questionDetails: finalQuestionDetails.length,
-        timeElapsed: totalElapsed
-      });
-
-      // Update quiz session
-      const { error: updateError } = await supabase
-        .from('quiz_sessions')
-        .update({
-          completed_at: new Date().toISOString(),
-          correct_answers: finalCorrectCount,
-          score_percentage: scorePercentage,
-          time_spent_ms: totalElapsed,
-          question_details: JSON.stringify(finalQuestionDetails)
-        })
-        .eq('id', currentSession.id);
-
-      if (updateError) {
-        console.error('❌ Error updating quiz session:', updateError);
-        throw new Error('Failed to save quiz results');
-      } else {
-        console.log('✅ Quiz session updated successfully');
-      }
-
-      // Save quiz results with retry logic and better error handling
-      let resultsError = null;
-      let resultsSaved = false;
-      
-      for (let retry = 0; retry < 3; retry++) {
-        try {
-          const { data, error } = await supabase
-            .from('quiz_results')
-            .insert([{
-              user_id: user.id,
-              topic: topicId || 'unknown',
-              score: scorePercentage,
-              completion_time: Math.floor(totalElapsed / 1000),
-              question_details: finalQuestionDetails as any
-            }])
-            .select()
-            .single();
-
-          resultsError = error;
-          
-          if (!error && data) {
-            console.log('✅ Quiz results saved successfully:', data.id);
-            resultsSaved = true;
-            break;
-          }
-          
-          if (error) {
-            console.error(`❌ Error saving quiz results (attempt ${retry + 1}/3):`, {
-              message: error.message,
-              details: error.details,
-              hint: error.hint,
-              code: error.code
-            });
-          }
-        } catch (err) {
-          console.error(`❌ Exception saving quiz results (attempt ${retry + 1}/3):`, err);
-          resultsError = err as any;
-        }
-        
-        if (retry < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (retry + 1)));
-      }
-
-      // Update performance tables with retry logic and better error handling
-      let perfError = null;
-      let perfUpdated = false;
-      
-      for (let retry = 0; retry < 3; retry++) {
-        try {
-          const { data, error } = await supabase
-            .rpc('update_user_performance', {
-              p_user_id: user.id,
-              p_topic: topicId || 'unknown',
-              p_score: scorePercentage,
-              p_completion_time: totalElapsed
-            });
-
-          perfError = error;
-          
-          if (!error) {
-            console.log('✅ User performance updated successfully:', data);
-            perfUpdated = true;
-            break;
-          }
-          
-          if (error) {
-            console.error(`❌ Error updating performance (attempt ${retry + 1}/3):`, {
-              message: error.message,
-              details: error.details,
-              hint: error.hint,
-              code: error.code
-            });
-          }
-        } catch (err) {
-          console.error(`❌ Exception updating performance (attempt ${retry + 1}/3):`, err);
-          perfError = err as any;
-        }
-        
-        if (retry < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (retry + 1)));
-      }
-
-      setQuizCompleted(true);
-      setCorrectAnswersCount(finalCorrectCount);
-      
-      const allSaved = !updateError && resultsSaved && perfUpdated;
-      
-      console.log('🎉 Quiz completion process finished:', {
-        score: finalCorrectCount,
-        total: questions.length,
-        percentage: scorePercentage,
-        sessionUpdated: !updateError,
-        resultsSaved,
-        perfUpdated,
-        allSaved
-      });
-
-      // Show appropriate toast based on save status
-      if (allSaved) {
-        toast({
-          title: "Quiz Completed Successfully! 🎉",
-          description: `You scored ${finalCorrectCount}/${questions.length} (${scorePercentage}%). Results saved!`,
-          variant: "default",
-        });
-      } else {
-        // Partial failure - some data saved but not all
-        const failures = [];
-        if (updateError) failures.push('session update');
-        if (!resultsSaved) failures.push('results');
-        if (!perfUpdated) failures.push('performance');
-        
-        toast({
-          title: "Quiz Completed (with warnings)",
-          description: `Score: ${scorePercentage}%. Some data may not have saved (${failures.join(', ')}). Please check your dashboard.`,
-          variant: "destructive",
-        });
-        
-        console.warn('⚠️ Partial save failure:', { failures, updateError, resultsError, perfError });
-      }
-
-    } catch (err) {
-      console.error('❌ Critical error completing quiz:', err);
-      
-      // Still mark as completed so user can see results
-      setQuizCompleted(true);
-      
-      // Show detailed error to user
-      const errorMessage = err instanceof Error ? err.message : 'Failed to save quiz results';
-      const isAuthError = errorMessage.toLowerCase().includes('auth') || errorMessage.toLowerCase().includes('permission');
-      
+    if (!user?.id || !topicId) {
+      console.error('[completeQuiz] Missing user ID or topic ID');
       toast({
-        title: isAuthError ? "Authentication Error" : "Error Saving Results",
-        description: isAuthError 
-          ? "Please log in again to save your results. Your answers are preserved."
-          : `${errorMessage}. Your score: ${Math.round((correctAnswersCount / questions.length) * 100)}%`,
+        title: "Error",
+        description: "Unable to save quiz results. Please log in and try again.",
         variant: "destructive",
       });
-      
-      console.error('Quiz completion error details:', {
-        error: err,
-        userId: user?.id,
+      return;
+    }
+
+    setIsLoading(true);
+    const score = Math.round((correctAnswersCount / questions.length) * 100);
+
+    try {
+      console.log('[completeQuiz] Starting simplified quiz completion', {
+        userId: user.id,
         topicId,
-        questionsLength: questions.length,
-        correctCount: correctAnswersCount
+        score,
+        correctAnswers: correctAnswersCount,
+        totalQuestions: questions.length,
+        timeSpentMs: elapsedTime
+      });
+
+      // Step 1: Save quiz result using new secure function
+      console.log('[completeQuiz] Saving quiz result...');
+      const { data: resultId, error: resultError } = await supabase.rpc('save_quiz_result', {
+        p_user_id: user.id,
+        p_topic: topicId,
+        p_score: score,
+        p_completion_time: elapsedTime,
+        p_question_details: questionDetails as any
+      });
+
+      if (resultError) {
+        console.error('[completeQuiz] Failed to save quiz result:', resultError);
+        throw new Error('Failed to save quiz results');
+      }
+
+      console.log('[completeQuiz] Quiz result saved successfully:', resultId);
+
+      // Step 2: Complete the quiz session using new secure function
+      if (currentSession?.id) {
+        console.log('[completeQuiz] Completing quiz session:', currentSession.id);
+        const { data: sessionUpdated, error: sessionError } = await supabase.rpc('complete_quiz_session', {
+          p_session_id: currentSession.id,
+          p_user_id: user.id,
+          p_completed_at: new Date().toISOString(),
+          p_correct_answers: correctAnswersCount,
+          p_total_questions: questions.length,
+          p_score_percentage: score,
+          p_time_spent_ms: elapsedTime,
+          p_question_details: questionDetails as any
+        });
+
+        if (sessionError) {
+          console.error('[completeQuiz] Failed to complete session:', sessionError);
+        } else {
+          console.log('[completeQuiz] Session completed successfully');
+        }
+      }
+
+      // Step 3: Track performance metrics using new secure function
+      console.log('[completeQuiz] Tracking performance...');
+      const { error: perfError } = await supabase.rpc('track_quiz_performance', {
+        p_user_id: user.id,
+        p_topic: topicId,
+        p_score: score,
+        p_completion_time: elapsedTime
+      });
+
+      if (perfError) {
+        console.error('[completeQuiz] Failed to track performance:', perfError);
+        // Don't throw - performance tracking is secondary
+      } else {
+        console.log('[completeQuiz] Performance tracked successfully');
+      }
+
+      // Success!
+      toast({
+        title: "Quiz Completed! 🎉",
+        description: `You scored ${score}% with ${correctAnswersCount} out of ${questions.length} correct answers!`,
+      });
+
+      setQuizCompleted(true);
+      
+    } catch (error: any) {
+      console.error('[completeQuiz] Error during quiz completion:', error);
+      
+      // Mark as completed so user can see results
+      setQuizCompleted(true);
+      
+      toast({
+        title: "Failed to Save Results",
+        description: error?.message || "There was an error saving your quiz results. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  }, [currentSession, user, startTime, correctAnswersCount, selectedAnswer, questions, currentQuestionIndex, questionDetails, topicId, validateAnswer]);
+  }, [user, topicId, correctAnswersCount, questions.length, elapsedTime, questionDetails, currentSession]);
 
   // Reset quiz
   const resetQuiz = useCallback(() => {
