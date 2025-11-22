@@ -7,9 +7,13 @@ import PerformanceTrendChart from './PerformanceTrendChart';
 import StudyHeatmap from './StudyHeatmap';
 import StreakCounter from './StreakCounter';
 import ContinueLearning from './ContinueLearning';
+import TopicAnalytics from './analytics/TopicAnalytics';
+import TimeSpentAnalytics from './analytics/TimeSpentAnalytics';
+import ImprovementTrends from './analytics/ImprovementTrends';
 import AnimatedPage from '@/components/common/AnimatedPage';
 import GlassCard from '@/components/common/GlassCard';
 import { motion } from 'framer-motion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const SimpleDashboard: React.FC = () => {
   const { data, loading } = useSimpleDashboard();
@@ -119,17 +123,53 @@ const SimpleDashboard: React.FC = () => {
         longestStreak={data.longestStreak} 
       />
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SkillRadarChart data={data.skillData} />
-        <PerformanceTrendChart data={data.performanceData} />
-      </div>
+      {/* Analytics Tabs */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="topics">Topics</TabsTrigger>
+          <TabsTrigger value="time">Time</TabsTrigger>
+          <TabsTrigger value="trends">Trends</TabsTrigger>
+        </TabsList>
 
-      {/* Heatmap and Recommendations */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <StudyHeatmap data={data.heatmapData} />
-        <ContinueLearning recommendations={data.recommendations} />
-      </div>
+        <TabsContent value="overview" className="space-y-6 mt-6">
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <SkillRadarChart data={data.skillData} />
+            <PerformanceTrendChart data={data.performanceData} />
+          </div>
+
+          {/* Heatmap and Recommendations */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <StudyHeatmap data={data.heatmapData} />
+            <ContinueLearning recommendations={data.recommendations} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="topics" className="mt-6">
+          <TopicAnalytics 
+            strengths={data.strengths} 
+            weaknesses={data.weaknesses}
+          />
+        </TabsContent>
+
+        <TabsContent value="time" className="mt-6">
+          <TimeSpentAnalytics
+            data={data.timeSpentByTopic}
+            totalTime={data.totalTime}
+            avgTimePerQuiz={data.avgTimePerQuiz}
+            mostProductiveTime={data.mostProductiveTime}
+          />
+        </TabsContent>
+
+        <TabsContent value="trends" className="mt-6">
+          <ImprovementTrends
+            data={data.trendData}
+            overallTrend={data.overallTrend}
+            improvementRate={data.improvementRate}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Recent Quizzes */}
       <GlassCard>
