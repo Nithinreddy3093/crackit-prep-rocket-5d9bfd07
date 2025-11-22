@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Target, TrendingUp, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Trophy, Target, TrendingUp, Clock, RefreshCw } from 'lucide-react';
 import { useSimpleDashboard } from '@/hooks/useSimpleDashboard';
 import SkillRadarChart from './SkillRadarChart';
 import PerformanceTrendChart from './PerformanceTrendChart';
@@ -16,7 +18,16 @@ import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const SimpleDashboard: React.FC = () => {
-  const { data, loading } = useSimpleDashboard();
+  const location = useLocation();
+  const { data, loading, refetch } = useSimpleDashboard();
+  
+  // Auto-refresh when navigating to dashboard (e.g., after quiz completion)
+  useEffect(() => {
+    if (location.pathname === '/dashboard' && refetch) {
+      console.log('[SimpleDashboard] Auto-refreshing data on navigation');
+      refetch();
+    }
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -37,13 +48,25 @@ const SimpleDashboard: React.FC = () => {
     <AnimatedPage className="max-w-7xl mx-auto p-6 space-y-8">
       {/* Welcome Header */}
       <motion.div 
-        className="text-center"
+        className="flex items-center justify-between"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-4xl font-bold mb-2 gradient-text">Your Learning Dashboard</h1>
-        <p className="text-muted-foreground">Track your progress and keep learning</p>
+        <div className="text-center flex-1">
+          <h1 className="text-4xl font-bold mb-2 gradient-text">Your Learning Dashboard</h1>
+          <p className="text-muted-foreground">Track your progress and keep learning</p>
+        </div>
+        <Button
+          onClick={refetch}
+          variant="outline"
+          size="sm"
+          className="gap-2 ml-4"
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </motion.div>
 
       {/* Key Stats */}
