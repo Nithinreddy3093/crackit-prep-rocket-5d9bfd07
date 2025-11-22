@@ -106,30 +106,98 @@ export const useSimpleDashboard = () => {
   const hasActivityToday = sortedDates.includes(today) || sortedDates.includes(yesterday);
   currentStreak = hasActivityToday ? temp : 0;
 
-  // AI-based recommendations
-  const topicPerformance: Record<string, { scores: number[]; count: number }> = results.reduce((acc, result) => {
+  // Enhanced topic performance analysis
+  const topicPerformance: Record<string, { 
+    scores: number[]; 
+    count: number; 
+    totalTime: number;
+    recentScores: number[];
+  }> = results.reduce((acc, result) => {
     if (!acc[result.topic]) {
-      acc[result.topic] = { scores: [], count: 0 };
+      acc[result.topic] = { scores: [], count: 0, totalTime: 0, recentScores: [] };
     }
     acc[result.topic].scores.push(result.score);
     acc[result.topic].count += 1;
+    acc[result.topic].totalTime += result.completion_time || 0;
     return acc;
-  }, {} as Record<string, { scores: number[]; count: number }>);
+  }, {} as Record<string, { scores: number[]; count: number; totalTime: number; recentScores: number[] }>);
 
-  const weakTopics = Object.entries(topicPerformance)
-    .map(([topic, data]) => ({
+  // Calculate strengths and weaknesses
+  const topicStats = Object.entries(topicPerformance).map(([topic, data]) => {
+    const avgScore = Math.round(data.scores.reduce((a, b) => a + b, 0) / data.scores.length);
+    const recent = data.scores.slice(-3);
+    const older = data.scores.slice(0, -3);
+    const recentAvg = recent.length > 0 ? recent.reduce((a, b) => a + b, 0) / recent.length : avgScore;
+    const olderAvg = older.length > 0 ? older.reduce((a, b) => a + b, 0) / older.length : avgScore;
+    
+    let trend: 'up' | 'down' | 'stable' = 'stable';
+    if (recent.length >= 2 && older.length >= 2) {
+      const diff = recentAvg - olderAvg;
+      if (diff > 5) trend = 'up';
+      else if (diff < -5) trend = 'down';
+    }
+
+    return {
       topic,
-      avgScore: data.scores.reduce((a, b) => a + b, 0) / data.scores.length,
-      count: data.count,
-    }))
-    .filter(t => t.avgScore < 70)
+      avgScore,
+      attempts: data.count,
+      totalTime: data.totalTime,
+      trend,
+    };
+  });
+
+  const strengths = topicStats
+    .filter(t => t.avgScore >= 75)
+    .sort((a, b) => b.avgScore - a.avgScore)
+    .slice(0, 5);
+
+  const weaknesses = topicStats
+    .filter(t => t.avgScore < 75)
     .sort((a, b) => a.avgScore - b.avgScore)
-    .slice(0, 3)
-    .map(t => ({
-      topic: t.topic,
-      reason: `Your average score is ${Math.round(t.avgScore)}%. Practice more to improve!`,
-      difficulty: t.avgScore < 50 ? 'Beginner' : 'Intermediate',
+    .slice(0, 5);
+
+  // Time spent analytics
+  const timeSpentByTopic = topicStats.map(t => ({
+    topic: t.topic.slice(0, 15),
+    minutes: Math.round(t.totalTime / 60),
+    efficiency: t.avgScore,
+  }));
+
+  const avgTimePerQuiz = results.length > 0 
+    ? results.reduce((sum, r) => sum + (r.completion_time || 0), 0) / results.length
+    : 0;
+
+  // Find most productive time (mock for now - could be enhanced with hour-based data)
+  const mostProductiveTime = 'Afternoon';
+
+  // Improvement trends
+  const trendData = results
+    .slice(0, 15)
+    .reverse()
+    .map(r => ({
+      date: new Date(r.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      score: r.score,
+      accuracy: r.score, // Could be calculated differently
+      speed: Math.min(100, Math.round((600 / (r.completion_time || 600)) * 100)), // Speed score
     }));
+
+  // Calculate improvement rate
+  const recentAvg = trendData.length > 0 
+    ? trendData.slice(-5).reduce((sum, d) => sum + d.score, 0) / Math.min(5, trendData.length)
+    : 0;
+  const olderAvg = trendData.length > 5
+    ? trendData.slice(0, 5).reduce((sum, d) => sum + d.score, 0) / 5
+    : recentAvg;
+  
+  const improvementRate = Math.round(recentAvg - olderAvg);
+  const overallTrend: 'improving' | 'stable' | 'declining' = improvementRate > 5 ? 'improving' : improvementRate < -5 ? 'declining' : 'stable';
+
+  // AI-based recommendations
+  const weakTopics = weaknesses.slice(0, 3).map(t => ({
+    topic: t.topic,
+    reason: `Your average score is ${t.avgScore}%. Practice more to improve!`,
+    difficulty: t.avgScore < 50 ? 'Beginner' : 'Intermediate',
+  }));
 
   const recommendations = weakTopics.length > 0 ? weakTopics : [
     {
@@ -167,6 +235,15 @@ export const useSimpleDashboard = () => {
       currentStreak,
       longestStreak,
       recommendations,
+      // New analytics data
+      strengths,
+      weaknesses,
+      timeSpentByTopic,
+      avgTimePerQuiz,
+      mostProductiveTime,
+      trendData,
+      overallTrend,
+      improvementRate,
     },
     loading,
   };
