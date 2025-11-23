@@ -65,14 +65,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
   const [showAnimation, setShowAnimation] = useState(true);
-  
-  // Add Perplexity API key to the window object for global access
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // @ts-ignore
-      window.PERPLEXITY_API_KEY = "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";
-    }
-  }, []);
 
   // Always show animation on every refresh
   useEffect(() => {
@@ -127,7 +119,8 @@ const App = () => {
                 <Route path="/blog" element={<Blogs />} />
                 <Route path="/guides" element={<StudyGuides />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/hr-interview" element={<HRInterview />} />
+                {/* HR Interview temporarily disabled - feature under development */}
+                {/* <Route path="/hr-interview" element={<HRInterview />} /> */}
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/support" element={<Support />} />
                 <Route path="*" element={<NotFound />} />
