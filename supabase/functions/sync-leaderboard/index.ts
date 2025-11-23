@@ -41,6 +41,14 @@ serve(async (req) => {
       }
     }
 
+    // Update all rankings once after syncing all users
+    const { error: rankingError } = await supabaseClient
+      .rpc('update_leaderboard_rankings');
+    
+    if (rankingError) {
+      console.error('Error updating rankings:', rankingError);
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 

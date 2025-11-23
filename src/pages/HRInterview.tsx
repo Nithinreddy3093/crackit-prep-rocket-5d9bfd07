@@ -94,7 +94,15 @@ const HRInterview = () => {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8 max-w-6xl">
-        <div className="mb-8 text-center">
+        {/* Coming Soon Banner */}
+        <div className="mb-8 p-6 bg-primary/10 border-2 border-primary/30 rounded-lg text-center">
+          <h2 className="text-2xl font-bold text-primary mb-2">Coming Soon</h2>
+          <p className="text-muted-foreground">
+            HR Interview Practice is currently under development. Check back soon for this exciting feature!
+          </p>
+        </div>
+        
+        <div className="mb-8 text-center opacity-50 pointer-events-none">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 flex items-center justify-center gap-3">
             <MessageSquare className="h-10 w-10 text-primary" />
             AI-Powered HR Interview Practice
