@@ -45,6 +45,32 @@ export const useSimpleDashboard = () => {
   };
 
   // Calculate skill data for radar chart
+  // Set up real-time subscription for quiz results
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('dashboard-quiz-results')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'quiz_results',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('[useSimpleDashboard] New quiz result:', payload);
+          refetchDashboardData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const skillData: Record<string, { total: number; count: number }> = results.reduce((acc, result) => {
     if (!acc[result.topic]) {
       acc[result.topic] = { total: 0, count: 0 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, Trophy, Clock, Target, RotateCcw, Save } from 'lucide-react';
@@ -28,6 +29,7 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
   questionDetails,
   onRestart
 }) => {
+  const navigate = useNavigate();
   const isPassed = scorePercentage >= 70;
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -36,6 +38,10 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
       setShowConfetti(true);
     }
   }, [isPassed]);
+
+  const handleViewDashboard = () => {
+    navigate('/dashboard', { state: { quizCompleted: true } });
+  };
 
   return (
     <>
@@ -160,7 +166,14 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="flex justify-center space-x-4 pt-4">
+          <div className="flex flex-wrap justify-center gap-4 pt-4">
+            <Button 
+              onClick={handleViewDashboard}
+              className="bg-primary hover:bg-primary/90 text-white"
+            >
+              <Trophy className="mr-2 h-4 w-4" />
+              View Dashboard
+            </Button>
             <Button 
               onClick={onRestart}
               variant="outline"
@@ -171,7 +184,8 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
             </Button>
             <Button 
               onClick={() => window.location.href = '/topics'}
-              className="bg-primary hover:bg-primary/90 text-white"
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10"
             >
               Choose Another Topic
             </Button>

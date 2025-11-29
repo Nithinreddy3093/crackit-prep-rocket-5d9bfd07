@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Trophy, Target, TrendingUp, Clock, RefreshCw } from 'lucide-react';
@@ -23,11 +24,44 @@ const SimpleDashboard: React.FC = () => {
   
   // Auto-refresh when navigating to dashboard (e.g., after quiz completion)
   useEffect(() => {
+    const locationState = location.state as { quizCompleted?: boolean; refreshData?: boolean } | undefined;
+    
     if (location.pathname === '/dashboard' && refetch) {
       console.log('[SimpleDashboard] Auto-refreshing data on navigation');
       refetch();
     }
-  }, [location.pathname]);
+    
+    // Check for quiz completion flag from navigation state
+    if (locationState?.quizCompleted || locationState?.refreshData) {
+      console.log('[SimpleDashboard] Quiz completed - refreshing dashboard data');
+      refetch();
+      // Clear the state so it doesn't trigger again
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.pathname, location.state, refetch]);
+
+  // Set up real-time subscription for quiz results
+  useEffect(() => {
+    const channel = supabase
+      .channel('quiz-results-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'quiz_results'
+        },
+        (payload) => {
+          console.log('[SimpleDashboard] New quiz result detected:', payload);
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
 
   if (loading) {
     return (
