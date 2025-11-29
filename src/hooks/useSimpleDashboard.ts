@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -38,11 +38,11 @@ export const useSimpleDashboard = () => {
     fetchResults();
   }, [user, lastRefresh]);
 
-  // Function to manually refresh dashboard data
-  const refetchDashboardData = () => {
+  // Function to manually refresh dashboard data - memoized to prevent infinite loops
+  const refetchDashboardData = useCallback(() => {
     console.log('[useSimpleDashboard] Manual refresh triggered');
     setLastRefresh(Date.now());
-  };
+  }, []);
 
   // Calculate skill data for radar chart
   // Set up real-time subscription for quiz results
