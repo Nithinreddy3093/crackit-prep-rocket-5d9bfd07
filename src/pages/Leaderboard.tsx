@@ -33,6 +33,27 @@ const Leaderboard = () => {
 
   useEffect(() => {
     fetchLeaderboard();
+
+    // Set up real-time subscription for leaderboard updates
+    const channel = supabase
+      .channel('leaderboard-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leaderboard'
+        },
+        (payload) => {
+          console.log('Leaderboard updated in real-time:', payload);
+          fetchLeaderboard();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchLeaderboard = async () => {
@@ -130,7 +151,7 @@ const Leaderboard = () => {
               <div className="text-center">
                 <div className="flex items-center justify-center gap-1 text-yellow-400">
                   <Award className="h-4 w-4" />
-                  <span className="font-bold">{userRank.badges_earned.length}</span>
+                  <span className="font-bold">{userRank.badges_earned?.length || 0}</span>
                 </div>
                 <p className="text-xs text-white/60">Badges</p>
               </div>
@@ -208,7 +229,7 @@ const Leaderboard = () => {
                         <td className="p-4 text-center">
                           <div className="flex items-center justify-center gap-1 text-yellow-400">
                             <Award className="h-4 w-4" />
-                            <span className="font-semibold">{entry.badges_earned.length}</span>
+                            <span className="font-semibold">{entry.badges_earned?.length || 0}</span>
                           </div>
                         </td>
                       </tr>
