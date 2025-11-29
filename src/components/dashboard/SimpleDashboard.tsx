@@ -26,11 +26,6 @@ const SimpleDashboard: React.FC = () => {
   useEffect(() => {
     const locationState = location.state as { quizCompleted?: boolean; refreshData?: boolean } | undefined;
     
-    if (location.pathname === '/dashboard' && refetch) {
-      console.log('[SimpleDashboard] Auto-refreshing data on navigation');
-      refetch();
-    }
-    
     // Check for quiz completion flag from navigation state
     if (locationState?.quizCompleted || locationState?.refreshData) {
       console.log('[SimpleDashboard] Quiz completed - refreshing dashboard data');
@@ -38,9 +33,11 @@ const SimpleDashboard: React.FC = () => {
       // Clear the state so it doesn't trigger again
       window.history.replaceState({}, document.title);
     }
-  }, [location.pathname, location.state, refetch]);
+    // Only run on location.state changes, not on refetch changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
-  // Set up real-time subscription for quiz results
+  // Set up real-time subscription for quiz results (runs once on mount)
   useEffect(() => {
     const channel = supabase
       .channel('quiz-results-changes')
@@ -61,7 +58,9 @@ const SimpleDashboard: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refetch]);
+    // Only set up subscription once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
