@@ -7,24 +7,26 @@ import { Input } from '@/components/ui/input';
 import { Search, Book, Play, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AnimatedPage from '@/components/common/AnimatedPage';
+import VideoModal from '@/components/resources/VideoModal';
 
 interface ResourceItem {
   id: string;
   title: string;
   description: string;
   icon: string;
-  watchUrl?: string;
+  youtubeVideoId: string;
   downloadUrl?: string;
   category: 'frontend' | 'backend' | 'database' | 'tools';
 }
 
+// YouTube video IDs extracted from the provided URLs
 const resourcesData: ResourceItem[] = [
   {
     id: 'git',
     title: 'Git',
     description: 'Learn here',
     icon: '🔀',
-    watchUrl: 'https://www.youtube.com/results?search_query=git+tutorial',
+    youtubeVideoId: '8JJ101D3knE',
     downloadUrl: 'https://git-scm.com/downloads',
     category: 'tools'
   },
@@ -33,7 +35,7 @@ const resourcesData: ResourceItem[] = [
     title: 'Javascript',
     description: 'Learn here',
     icon: '📜',
-    watchUrl: 'https://www.youtube.com/results?search_query=javascript+tutorial',
+    youtubeVideoId: 'EerdGm-ehJQ',
     downloadUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript',
     category: 'frontend'
   },
@@ -42,7 +44,7 @@ const resourcesData: ResourceItem[] = [
     title: 'TypeScript',
     description: 'Learn here',
     icon: '💙',
-    watchUrl: 'https://www.youtube.com/results?search_query=typescript+tutorial',
+    youtubeVideoId: 'd56mG7DezGs',
     downloadUrl: 'https://www.typescriptlang.org/download',
     category: 'frontend'
   },
@@ -51,7 +53,7 @@ const resourcesData: ResourceItem[] = [
     title: 'ReactJs',
     description: 'Learn here',
     icon: '⚛️',
-    watchUrl: 'https://www.youtube.com/results?search_query=react+tutorial',
+    youtubeVideoId: 'SqcY0GlETPk',
     downloadUrl: 'https://react.dev/',
     category: 'frontend'
   },
@@ -60,7 +62,7 @@ const resourcesData: ResourceItem[] = [
     title: 'NextJs',
     description: 'Learn here',
     icon: '▲',
-    watchUrl: 'https://www.youtube.com/results?search_query=nextjs+tutorial',
+    youtubeVideoId: 'ZVnjOPwW4ZA',
     downloadUrl: 'https://nextjs.org/',
     category: 'frontend'
   },
@@ -69,7 +71,7 @@ const resourcesData: ResourceItem[] = [
     title: 'TailwindCSS',
     description: 'Learn here',
     icon: '🌊',
-    watchUrl: 'https://www.youtube.com/results?search_query=tailwind+css+tutorial',
+    youtubeVideoId: '6biMWgD6_JY',
     downloadUrl: 'https://tailwindcss.com/docs/installation',
     category: 'frontend'
   },
@@ -78,7 +80,7 @@ const resourcesData: ResourceItem[] = [
     title: 'Backend',
     description: 'Learn here',
     icon: '🖥️',
-    watchUrl: 'https://www.youtube.com/results?search_query=backend+development+tutorial',
+    youtubeVideoId: 'T55Kb8rrH1g',
     downloadUrl: 'https://nodejs.org/',
     category: 'backend'
   },
@@ -87,7 +89,7 @@ const resourcesData: ResourceItem[] = [
     title: 'CN,OS,DBMS',
     description: 'Learn here',
     icon: '🎯',
-    watchUrl: 'https://www.youtube.com/results?search_query=computer+networks+os+dbms',
+    youtubeVideoId: 'kBdlM6hNDAE',
     downloadUrl: 'https://www.geeksforgeeks.org/computer-science-engineering/',
     category: 'database'
   },
@@ -96,7 +98,7 @@ const resourcesData: ResourceItem[] = [
     title: 'Python',
     description: 'Learn here',
     icon: '🐍',
-    watchUrl: 'https://www.youtube.com/results?search_query=python+tutorial',
+    youtubeVideoId: '_uQrJ0TkZlc',
     downloadUrl: 'https://www.python.org/downloads/',
     category: 'backend'
   },
@@ -105,7 +107,7 @@ const resourcesData: ResourceItem[] = [
     title: 'Node.js',
     description: 'Learn here',
     icon: '🟢',
-    watchUrl: 'https://www.youtube.com/results?search_query=nodejs+tutorial',
+    youtubeVideoId: 'vJEO57B05Sg',
     downloadUrl: 'https://nodejs.org/',
     category: 'backend'
   },
@@ -114,7 +116,7 @@ const resourcesData: ResourceItem[] = [
     title: 'MongoDB',
     description: 'Learn here',
     icon: '🍃',
-    watchUrl: 'https://www.youtube.com/results?search_query=mongodb+tutorial',
+    youtubeVideoId: 'c2M-rlkkT5o',
     downloadUrl: 'https://www.mongodb.com/try/download/community',
     category: 'database'
   },
@@ -123,7 +125,7 @@ const resourcesData: ResourceItem[] = [
     title: 'Docker',
     description: 'Learn here',
     icon: '🐳',
-    watchUrl: 'https://www.youtube.com/results?search_query=docker+tutorial',
+    youtubeVideoId: 'exmSJpIPs',
     downloadUrl: 'https://www.docker.com/get-started',
     category: 'tools'
   }
@@ -132,6 +134,7 @@ const resourcesData: ResourceItem[] = [
 const Resources = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedVideo, setSelectedVideo] = useState<{ id: string; title: string } | null>(null);
 
   const categories = ['all', 'frontend', 'backend', 'database', 'tools'];
 
@@ -140,6 +143,14 @@ const Resources = () => {
     const matchesCategory = selectedCategory === 'all' || resource.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const handleWatchClick = (resource: ResourceItem) => {
+    setSelectedVideo({ id: resource.youtubeVideoId, title: resource.title });
+  };
+
+  const handleCloseModal = () => {
+    setSelectedVideo(null);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
@@ -235,7 +246,7 @@ const Resources = () => {
                     {/* Action Buttons */}
                     <div className="flex gap-3 pt-2 w-full">
                       <Button
-                        onClick={() => window.open(resource.watchUrl, '_blank')}
+                        onClick={() => handleWatchClick(resource)}
                         className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                         size="sm"
                       >
@@ -269,6 +280,14 @@ const Resources = () => {
           )}
         </div>
       </AnimatedPage>
+      
+      {/* Video Modal */}
+      <VideoModal
+        isOpen={!!selectedVideo}
+        onClose={handleCloseModal}
+        videoId={selectedVideo?.id || ''}
+        title={selectedVideo?.title || ''}
+      />
       
       <Footer />
     </div>
