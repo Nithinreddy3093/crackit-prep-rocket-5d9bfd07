@@ -195,98 +195,125 @@ serve(async (req) => {
 
 **CRITICAL:** Return ONLY the JSON array with no markdown, code blocks, or additional text. The correct_answer MUST match exactly one of the options (case-sensitive).`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 8192
-          }
-        })
-      }
-    );
-
-    const data = await response.json();
+    // Retry logic with exponential backoff
+    const maxRetries = 3;
+    let lastError: Error | null = null;
     
-    if (!response.ok) {
-      console.error('Gemini API error:', data);
-      throw new Error('Failed to generate questions');
-    }
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // Use gemini-1.5-flash for better quota limits and stability
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 8192
+              }
+            })
+          }
+        );
 
-    try {
-      const text = data.candidates[0].content.parts[0].text;
-      
-      // Extract JSON from the response
-      const jsonMatch = text.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) {
-        throw new Error('No valid JSON found in response');
-      }
-      
-      const questions = JSON.parse(jsonMatch[0]);
-      
-      // Validate and transform questions with proper UUIDs
-      const validatedQuestions = questions.map((q: any, index: number) => ({
-        id: crypto.randomUUID(), // Generate proper UUID
-        question_text: q.question_text || q.question,
-        options: Array.isArray(q.options) ? q.options : [],
-        correct_answer: q.correct_answer,
-        explanation: q.explanation || '',
-        difficulty: q.difficulty || 'intermediate',
-        topic_id: topicId
-      })).filter((q: any) => 
-        q.question_text && 
-        Array.isArray(q.options) && 
-        q.options.length === 4 && 
-        q.correct_answer
-      );
-
-      console.log(`✅ Generated ${validatedQuestions.length} valid questions`);
-      
-      // Store questions in database for future secure access
-      if (validatedQuestions.length > 0) {
-        console.log(`💾 Storing ${validatedQuestions.length} questions in database...`);
+        const data = await response.json();
         
-        const { error: insertError } = await supabase
-          .from('questions')
-          .insert(validatedQuestions.map(q => ({
-            id: q.id,
-            question_text: q.question_text,
-            options: q.options,
-            correct_answer: q.correct_answer,
-            explanation: q.explanation,
-            difficulty: q.difficulty,
-            topic_id: q.topic_id
-          })));
+        if (!response.ok) {
+          console.error(`Gemini API error (attempt ${attempt + 1}):`, data);
+          
+          // Check if it's a rate limit error
+          if (data.error?.code === 429) {
+            const retryDelay = Math.pow(2, attempt) * 1000; // Exponential backoff
+            console.log(`Rate limited. Waiting ${retryDelay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+          
+          throw new Error(`API error: ${data.error?.message || 'Unknown error'}`);
+        }
 
-        if (insertError) {
-          console.error('Error storing questions:', insertError);
-          // Don't fail the entire request, just log the error
-        } else {
-          console.log('✅ Questions stored successfully in database');
+        // Success - process the response
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!text) {
+          throw new Error('No text in API response');
+        }
+        
+        // Extract JSON from the response
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) {
+          throw new Error('No valid JSON found in response');
+        }
+        
+        const questions = JSON.parse(jsonMatch[0]);
+        
+        // Validate and transform questions with proper UUIDs
+        const validatedQuestions = questions.map((q: any) => ({
+          id: crypto.randomUUID(),
+          question_text: q.question_text || q.question,
+          options: Array.isArray(q.options) ? q.options : [],
+          correct_answer: q.correct_answer,
+          explanation: q.explanation || '',
+          difficulty: q.difficulty || 'intermediate',
+          topic_id: topicId
+        })).filter((q: any) => 
+          q.question_text && 
+          Array.isArray(q.options) && 
+          q.options.length === 4 && 
+          q.correct_answer
+        );
+
+        console.log(`✅ Generated ${validatedQuestions.length} valid questions`);
+        
+        // Store questions in database for future secure access
+        if (validatedQuestions.length > 0) {
+          console.log(`💾 Storing ${validatedQuestions.length} questions in database...`);
+          
+          const { error: insertError } = await supabase
+            .from('questions')
+            .insert(validatedQuestions.map(q => ({
+              id: q.id,
+              question_text: q.question_text,
+              options: q.options,
+              correct_answer: q.correct_answer,
+              explanation: q.explanation,
+              difficulty: q.difficulty,
+              topic_id: q.topic_id
+            })));
+
+          if (insertError) {
+            console.error('Error storing questions:', insertError);
+          } else {
+            console.log('✅ Questions stored successfully in database');
+          }
+        }
+
+        return new Response(
+          JSON.stringify({
+            questions: validatedQuestions,
+            topic: config.name,
+            timeLimit: config.timeLimit,
+            totalQuestions: validatedQuestions.length
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+        
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
+        
+        if (attempt < maxRetries - 1) {
+          const retryDelay = Math.pow(2, attempt) * 1000;
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
       }
-
-      return new Response(
-        JSON.stringify({
-          questions: validatedQuestions,
-          topic: config.name,
-          timeLimit: config.timeLimit,
-          totalQuestions: validatedQuestions.length
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-
-    } catch (parseError) {
-      console.error('Error parsing AI response:', parseError);
-      throw new Error('Failed to parse generated questions');
     }
-
+    
+    // All retries failed
+    throw lastError || new Error('Failed to generate questions after retries');
   } catch (error) {
     console.error('❌ Error in generate-quiz-questions:', error);
     console.error('Error details:', {
