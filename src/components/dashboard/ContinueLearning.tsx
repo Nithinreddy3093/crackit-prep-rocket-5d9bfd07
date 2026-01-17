@@ -42,7 +42,7 @@ const ContinueLearning: React.FC<ContinueLearningProps> = ({ recommendations }) 
               <Button 
                 size="sm" 
                 variant="ghost"
-                onClick={() => navigate(`/quiz?topic=${encodeURIComponent(rec.topic)}`)}
+                onClick={() => navigate(`/quiz/${encodeURIComponent(rec.topic)}`)}
               >
                 Start <ArrowRight className="h-4 w-4 ml-1" />
               </Button>

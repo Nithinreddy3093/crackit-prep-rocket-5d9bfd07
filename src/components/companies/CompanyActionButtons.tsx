@@ -16,7 +16,7 @@ const CompanyActionButtons: React.FC<CompanyActionButtonsProps> = ({ company, co
   const { toast } = useToast();
 
   const handleStartPractice = () => {
-    navigate(`/quiz?topic=${company.quizTopicId}`);
+    navigate(`/quiz/${company.quizTopicId}`);
   };
 
   const handleViewResources = () => {
