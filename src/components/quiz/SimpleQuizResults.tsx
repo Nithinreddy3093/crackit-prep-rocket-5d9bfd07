@@ -153,11 +153,28 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
                       <XCircle className="h-5 w-5" />
                     )}
                   </div>
-                  <div className="flex-grow space-y-1">
+                  <div className="flex-grow space-y-2">
                     <p className="text-sm text-white/60">Question {index + 1}</p>
-                    <p className="text-white font-medium">Your answer: {detail.userAnswer}</p>
-                    {!detail.isCorrect && (
-                      <p className="text-green-400 text-sm">Correct answer: {detail.correctAnswer}</p>
+                    {detail.questionText && (
+                      <p className="text-white font-medium">{detail.questionText}</p>
+                    )}
+                    <div className="space-y-1">
+                      <p className={`text-sm ${detail.isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                        Your answer: {detail.userAnswer || 'Not answered'}
+                      </p>
+                      {!detail.isCorrect && detail.correctAnswer && (
+                        <p className="text-green-400 text-sm">Correct answer: {detail.correctAnswer}</p>
+                      )}
+                      {detail.isCorrect && detail.correctAnswer && (
+                        <p className="text-green-400 text-sm">✓ {detail.correctAnswer}</p>
+                      )}
+                    </div>
+                    {detail.explanation && (
+                      <div className="mt-2 p-2 bg-white/5 rounded-md">
+                        <p className="text-sm text-white/70">
+                          <span className="font-medium text-white/80">Explanation:</span> {detail.explanation}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
