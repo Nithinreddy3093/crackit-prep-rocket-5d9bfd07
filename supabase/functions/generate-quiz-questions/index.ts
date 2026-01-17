@@ -226,6 +226,15 @@ Return ONLY this JSON array format:
         
         const questions = JSON.parse(jsonMatch[0]);
         
+        // Map AI difficulty to database values
+        const mapDifficulty = (aiDifficulty: string): string => {
+          const lower = (aiDifficulty || 'intermediate').toLowerCase().trim();
+          if (lower === 'easy' || lower === 'beginner') return 'beginner';
+          if (lower === 'medium' || lower === 'intermediate') return 'intermediate';
+          if (lower === 'hard' || lower === 'advanced' || lower === 'difficult') return 'advanced';
+          return 'intermediate'; // default
+        };
+
         // Validate and transform questions
         const validatedQuestions = questions
           .map((q: any) => ({
@@ -234,7 +243,7 @@ Return ONLY this JSON array format:
             options: Array.isArray(q.options) ? q.options : [],
             correct_answer: q.correct_answer,
             explanation: q.explanation || '',
-            difficulty: q.difficulty || 'intermediate',
+            difficulty: mapDifficulty(q.difficulty),
             topic_id: topicId
           }))
           .filter((q: any) => 
