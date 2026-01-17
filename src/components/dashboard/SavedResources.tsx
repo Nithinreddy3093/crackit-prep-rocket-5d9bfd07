@@ -88,7 +88,7 @@ const SavedResources: React.FC<SavedResourcesProps> = ({ resources: propResource
         <Bookmark className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
         <h3 className="text-lg font-semibold text-foreground mb-1">No saved resources yet</h3>
         <p className="text-muted-foreground mb-4">Complete more quizzes to get personalized resource recommendations.</p>
-        <Button variant="default" onClick={() => window.location.href = '/quiz'}>
+        <Button variant="default" onClick={() => window.location.href = '/topics'}>
           Take a Quiz
         </Button>
       </div>
