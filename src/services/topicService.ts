@@ -115,6 +115,79 @@ export const TOPIC_CONFIGS: Record<string, Topic> = {
     timeLimit: 18,
     category: 'Technology',
     color: 'from-red-500 to-pink-600'
+  },
+  // Company-specific mock test topics
+  'infosys-prep': {
+    id: 'infosys-prep',
+    title: 'Infosys Mock Test',
+    description: 'InfyTQ pattern: Aptitude, Reasoning, Java, SQL, and Pseudocode questions.',
+    icon: 'Building2',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 45,
+    category: 'Company Prep',
+    color: 'from-blue-600 to-blue-800'
+  },
+  'tcs-nqt': {
+    id: 'tcs-nqt',
+    title: 'TCS NQT Mock Test',
+    description: 'TCS National Qualifier Test: Numerical, Verbal, Reasoning, Programming.',
+    icon: 'Building2',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 50,
+    category: 'Company Prep',
+    color: 'from-indigo-600 to-purple-700'
+  },
+  'wipro-nlth': {
+    id: 'wipro-nlth',
+    title: 'Wipro NLTH Mock Test',
+    description: 'Wipro pattern: Aptitude, Essay Writing, Coding, and Technical MCQs.',
+    icon: 'Building2',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 45,
+    category: 'Company Prep',
+    color: 'from-teal-500 to-green-600'
+  },
+  'accenture-prep': {
+    id: 'accenture-prep',
+    title: 'Accenture Mock Test',
+    description: 'Cognitive Assessment, Technical MCQs, and Coding problems.',
+    icon: 'Building2',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 40,
+    category: 'Company Prep',
+    color: 'from-purple-500 to-violet-700'
+  },
+  'cognizant-genC': {
+    id: 'cognizant-genC',
+    title: 'Cognizant GenC Mock Test',
+    description: 'GenC pattern: Aptitude, Automata Fix, Hand Coding, and Technical.',
+    icon: 'Building2',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 45,
+    category: 'Company Prep',
+    color: 'from-sky-500 to-blue-600'
+  },
+  'aptitude': {
+    id: 'aptitude',
+    title: 'General Aptitude',
+    description: 'Quantitative Aptitude, Logical Reasoning, Verbal Ability for placements.',
+    icon: 'Calculator',
+    difficulty: 'beginner',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 30,
+    category: 'Aptitude',
+    color: 'from-yellow-500 to-orange-500'
   }
 };
 

@@ -83,7 +83,7 @@ export const companyData: Record<string, CompanyData> = {
       { text: 'Strong communication skills', mandatory: false }
     ],
     specialConditions: ['Bond: 1 year for System Engineer', 'Training in Mysore campus for 3-6 months'],
-    quizTopicId: 'aptitude',
+    quizTopicId: 'infosys-prep',
     resourceTags: ['aptitude', 'java', 'sql', 'dsa']
   },
   tcs: {
@@ -128,7 +128,7 @@ export const companyData: Record<string, CompanyData> = {
       { text: 'Good analytical and communication skills', mandatory: false }
     ],
     specialConditions: ['Service Agreement: 2 years bond with ₹75,000 penalty', 'Initial posting can be anywhere in India'],
-    quizTopicId: 'aptitude',
+    quizTopicId: 'tcs-nqt',
     resourceTags: ['aptitude', 'reasoning', 'programming', 'sql']
   },
   wipro: {
@@ -171,7 +171,7 @@ export const companyData: Record<string, CompanyData> = {
       { text: 'Adaptability and willingness to relocate', mandatory: false }
     ],
     specialConditions: ['Service Agreement: 1 year for campus hires', 'Initial training in Bangalore/Chennai'],
-    quizTopicId: 'aptitude',
+    quizTopicId: 'wipro-nlth',
     resourceTags: ['aptitude', 'logical-reasoning', 'verbal', 'programming']
   },
   accenture: {
@@ -214,7 +214,7 @@ export const companyData: Record<string, CompanyData> = {
       { text: 'No active backlogs at time of joining', mandatory: false }
     ],
     specialConditions: ['Communication skills are heavily weighted', 'Flexible work arrangements available'],
-    quizTopicId: 'aptitude',
+    quizTopicId: 'accenture-prep',
     resourceTags: ['communication', 'aptitude', 'programming', 'sql']
   },
   cognizant: {
@@ -258,7 +258,7 @@ export const companyData: Record<string, CompanyData> = {
       { text: 'Good problem-solving skills', mandatory: false }
     ],
     specialConditions: ['SVAR (AI Interview) is unique to Cognizant', 'GenC Elevate requires higher coding skills'],
-    quizTopicId: 'aptitude',
+    quizTopicId: 'cognizant-genC',
     resourceTags: ['aptitude', 'programming', 'sql', 'dsa']
   }
 };
