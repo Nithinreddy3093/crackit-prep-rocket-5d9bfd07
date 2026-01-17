@@ -61,6 +61,49 @@ const TOPIC_CONFIGS: Record<string, TopicConfig> = {
     timeLimit: 18,
     description: 'Neural Networks, Supervised/Unsupervised Learning, NLP, Computer Vision',
     keywords: ['neural networks', 'machine learning', 'deep learning', 'supervised learning', 'unsupervised learning', 'NLP', 'computer vision']
+  },
+  // Company-specific mock test topics
+  'infosys-prep': {
+    name: 'Infosys Interview Preparation',
+    questionCount: 15,
+    timeLimit: 45,
+    description: 'Infosys InfyTQ and SP/SE interview pattern - Aptitude, Reasoning, Java, SQL, Pseudocode',
+    keywords: ['aptitude', 'logical reasoning', 'verbal ability', 'Java programming', 'SQL queries', 'pseudocode', 'data structures', 'puzzles', 'InfyTQ pattern', 'coding test']
+  },
+  'tcs-nqt': {
+    name: 'TCS NQT Preparation',
+    questionCount: 15,
+    timeLimit: 50,
+    description: 'TCS National Qualifier Test pattern - Numerical Ability, Verbal, Reasoning, Programming Logic',
+    keywords: ['numerical ability', 'verbal ability', 'reasoning ability', 'programming logic', 'coding', 'C programming', 'data interpretation', 'TCS NQT pattern', 'email writing']
+  },
+  'wipro-nlth': {
+    name: 'Wipro NLTH Preparation',
+    questionCount: 15,
+    timeLimit: 45,
+    description: 'Wipro National Level Talent Hunt - Aptitude, Essay Writing, Coding, Technical MCQs',
+    keywords: ['aptitude', 'essay writing', 'coding round', 'Java', 'Python', 'data structures', 'logical reasoning', 'verbal ability', 'Wipro NLTH pattern']
+  },
+  'accenture-prep': {
+    name: 'Accenture Interview Preparation',
+    questionCount: 15,
+    timeLimit: 40,
+    description: 'Accenture hiring pattern - Cognitive Assessment, Technical, Coding, Communication',
+    keywords: ['cognitive ability', 'technical MCQs', 'coding assessment', 'Java', 'Python', 'DBMS', 'networking', 'problem solving', 'Accenture pattern']
+  },
+  'cognizant-genC': {
+    name: 'Cognizant GenC Preparation',
+    questionCount: 15,
+    timeLimit: 45,
+    description: 'Cognizant GenC and GenC Elevate pattern - Aptitude, Automata Fix, Hand Coding',
+    keywords: ['quantitative aptitude', 'logical reasoning', 'automata fix', 'hand coding', 'Java', 'Python', 'SQL', 'verbal ability', 'Cognizant GenC pattern']
+  },
+  'aptitude': {
+    name: 'General Aptitude',
+    questionCount: 15,
+    timeLimit: 30,
+    description: 'Quantitative Aptitude, Logical Reasoning, Verbal Ability for placement tests',
+    keywords: ['percentages', 'profit loss', 'time speed distance', 'number series', 'coding decoding', 'blood relations', 'syllogisms', 'reading comprehension']
   }
 };
 
