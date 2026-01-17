@@ -15,9 +15,11 @@ export interface SimpleQuestion {
 
 export interface QuizAnswerDetail {
   questionId: string;
+  questionText: string;
   userAnswer: string;
   correctAnswer: string;
   isCorrect: boolean;
+  explanation?: string;
 }
 
 interface QuizSession {
@@ -442,9 +444,11 @@ export const useSimpleQuiz = (topicId?: string) => {
     // Add to question details with correct answer from server
     const questionDetail: QuizAnswerDetail = {
       questionId: currentQuestion.id,
+      questionText: currentQuestion.question_text,
       userAnswer: selectedAnswer,
       correctAnswer: validationResult.correct_answer,
-      isCorrect
+      isCorrect,
+      explanation: validationResult.explanation
     };
     
     setQuestionDetails(prev => {
