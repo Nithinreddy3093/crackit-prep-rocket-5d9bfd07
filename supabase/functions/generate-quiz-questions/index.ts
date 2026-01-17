@@ -14,7 +14,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 interface TopicConfig {
   name: string;
   questionCount: number;
-  timeLimit: number; // in minutes
+  timeLimit: number;
   description: string;
   keywords: string[];
 }
@@ -62,7 +62,6 @@ const TOPIC_CONFIGS: Record<string, TopicConfig> = {
     description: 'Neural Networks, Supervised/Unsupervised Learning, NLP, Computer Vision',
     keywords: ['neural networks', 'machine learning', 'deep learning', 'supervised learning', 'unsupervised learning', 'NLP', 'computer vision']
   },
-  // Company-specific mock test topics
   'infosys-prep': {
     name: 'Infosys Interview Preparation',
     questionCount: 15,
@@ -113,42 +112,37 @@ serve(async (req) => {
   }
 
   try {
-    const { topicId, difficulty = 'mixed' } = await req.json();
+    const { topicId } = await req.json();
     
     console.log('📥 Received request for topicId:', topicId);
     console.log('📚 Available topics:', Object.keys(TOPIC_CONFIGS));
     
     if (!topicId) {
-      console.error('❌ No topic ID provided in request');
       return new Response(
         JSON.stringify({ 
           error: 'No topic ID provided',
-          availableTopics: Object.keys(TOPIC_CONFIGS),
-          message: 'Please select a valid topic from the available list'
+          availableTopics: Object.keys(TOPIC_CONFIGS)
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
     if (!TOPIC_CONFIGS[topicId]) {
-      console.error(`❌ Invalid topic ID provided: ${topicId}`);
-      console.log('Valid topic IDs are:', Object.keys(TOPIC_CONFIGS));
       return new Response(
         JSON.stringify({ 
           error: 'Invalid topic ID',
           providedTopic: topicId,
-          availableTopics: Object.keys(TOPIC_CONFIGS),
-          message: `Topic "${topicId}" not found. Please choose from: ${Object.keys(TOPIC_CONFIGS).join(', ')}`
+          availableTopics: Object.keys(TOPIC_CONFIGS)
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const config = TOPIC_CONFIGS[topicId];
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     
-    if (!geminiApiKey) {
-      console.error('GEMINI_API_KEY not found in environment');
+    if (!lovableApiKey) {
+      console.error('LOVABLE_API_KEY not found in environment');
       return new Response(
         JSON.stringify({ error: 'AI service not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -157,137 +151,110 @@ serve(async (req) => {
 
     console.log(`🤖 Generating ${config.questionCount} questions for ${config.name}`);
 
-    const prompt = `You are Crackit's AI technical interview quiz generator. Create challenging but fair technical questions.
+    const systemPrompt = `You are a technical interview quiz generator. Create challenging but fair multiple-choice questions. Return ONLY a valid JSON array with no markdown, code blocks, or extra text.`;
 
-**TOPIC:** ${config.name}
-**DESCRIPTION:** ${config.description}
-**KEYWORDS TO COVER:** ${config.keywords.join(', ')}
+    const userPrompt = `Generate exactly ${config.questionCount} multiple-choice questions for: ${config.name}
 
-**GENERATION RULES:**
-1. Generate EXACTLY ${config.questionCount} FRESH, UNIQUE questions
-2. Difficulty distribution: 40% Easy, 40% Medium, 20% Hard
-3. Each question MUST have exactly 4 multiple-choice options
-4. Mark EXACTLY ONE correct answer per question
-5. Focus on interview-relevant, practical scenarios
-6. Ensure technical accuracy and clarity
-7. Each question must be ORIGINAL - avoid common/repeated questions
-8. Make all options plausible distractors to test true understanding
+Topic: ${config.description}
+Keywords: ${config.keywords.join(', ')}
 
-**QUALITY STANDARDS:**
-- Clear, unambiguous question text
-- Options should be mutually exclusive and plausible
-- Correct answer must be unambiguously correct
-- Explanation should be educational and brief
-- Use industry-standard terminology
-- Real-world relevance to technical interviews
-- No ambiguous or trick questions
+Requirements:
+- Difficulty mix: 40% Easy, 40% Medium, 20% Hard
+- Each question has exactly 4 options
+- Only ONE correct answer per question
+- Focus on practical interview scenarios
 
-**OUTPUT FORMAT (JSON ONLY):**
-[
-  {
-    "question_text": "What is the time complexity of binary search on a sorted array?",
-    "options": ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
-    "correct_answer": "O(log n)",
-    "explanation": "Binary search divides the search space in half with each comparison, resulting in logarithmic time complexity.",
-    "difficulty": "easy"
-  }
-]
+Return ONLY this JSON array format:
+[{"question_text":"Question?","options":["A","B","C","D"],"correct_answer":"B","explanation":"Why B is correct","difficulty":"easy"}]`;
 
-**CRITICAL:** Return ONLY the JSON array with no markdown, code blocks, or additional text. The correct_answer MUST match exactly one of the options (case-sensitive).`;
-
-    // Retry logic with exponential backoff
+    // Retry logic
     const maxRetries = 3;
     let lastError: Error | null = null;
     
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        // Use gemini-1.5-flash for better quota limits and stability
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.7,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 8192
-              }
-            })
-          }
-        );
-
-        const data = await response.json();
+        console.log(`Attempt ${attempt + 1}/${maxRetries}`);
         
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${lovableApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 8192
+          })
+        });
+
         if (!response.ok) {
-          console.error(`Gemini API error (attempt ${attempt + 1}):`, data);
+          const errorText = await response.text();
+          console.error(`API error (${response.status}):`, errorText);
           
-          // Check if it's a rate limit error
-          if (data.error?.code === 429) {
-            const retryDelay = Math.pow(2, attempt) * 1000; // Exponential backoff
-            console.log(`Rate limited. Waiting ${retryDelay}ms before retry...`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
+          if (response.status === 429) {
+            const delay = Math.pow(2, attempt) * 1000;
+            console.log(`Rate limited, waiting ${delay}ms...`);
+            await new Promise(r => setTimeout(r, delay));
             continue;
           }
           
-          throw new Error(`API error: ${data.error?.message || 'Unknown error'}`);
+          if (response.status === 402) {
+            throw new Error('AI credits exhausted. Please try again later.');
+          }
+          
+          throw new Error(`API error: ${response.status}`);
         }
 
-        // Success - process the response
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
         
-        if (!text) {
-          throw new Error('No text in API response');
+        if (!content) {
+          throw new Error('No content in API response');
         }
-        
-        // Extract JSON from the response
-        const jsonMatch = text.match(/\[[\s\S]*\]/);
+
+        // Extract JSON from response
+        const jsonMatch = content.match(/\[[\s\S]*\]/);
         if (!jsonMatch) {
-          throw new Error('No valid JSON found in response');
+          console.error('No JSON found in:', content.substring(0, 200));
+          throw new Error('Invalid response format');
         }
         
         const questions = JSON.parse(jsonMatch[0]);
         
-        // Validate and transform questions with proper UUIDs
-        const validatedQuestions = questions.map((q: any) => ({
-          id: crypto.randomUUID(),
-          question_text: q.question_text || q.question,
-          options: Array.isArray(q.options) ? q.options : [],
-          correct_answer: q.correct_answer,
-          explanation: q.explanation || '',
-          difficulty: q.difficulty || 'intermediate',
-          topic_id: topicId
-        })).filter((q: any) => 
-          q.question_text && 
-          Array.isArray(q.options) && 
-          q.options.length === 4 && 
-          q.correct_answer
-        );
+        // Validate and transform questions
+        const validatedQuestions = questions
+          .map((q: any) => ({
+            id: crypto.randomUUID(),
+            question_text: q.question_text || q.question,
+            options: Array.isArray(q.options) ? q.options : [],
+            correct_answer: q.correct_answer,
+            explanation: q.explanation || '',
+            difficulty: q.difficulty || 'intermediate',
+            topic_id: topicId
+          }))
+          .filter((q: any) => 
+            q.question_text && 
+            q.options.length === 4 && 
+            q.correct_answer
+          );
 
         console.log(`✅ Generated ${validatedQuestions.length} valid questions`);
         
-        // Store questions in database for future secure access
+        // Store in database
         if (validatedQuestions.length > 0) {
-          console.log(`💾 Storing ${validatedQuestions.length} questions in database...`);
-          
           const { error: insertError } = await supabase
             .from('questions')
-            .insert(validatedQuestions.map(q => ({
-              id: q.id,
-              question_text: q.question_text,
-              options: q.options,
-              correct_answer: q.correct_answer,
-              explanation: q.explanation,
-              difficulty: q.difficulty,
-              topic_id: q.topic_id
-            })));
+            .insert(validatedQuestions);
 
           if (insertError) {
-            console.error('Error storing questions:', insertError);
+            console.error('DB insert error:', insertError);
           } else {
-            console.log('✅ Questions stored successfully in database');
+            console.log('✅ Questions stored in database');
           }
         }
 
@@ -306,24 +273,19 @@ serve(async (req) => {
         console.error(`Attempt ${attempt + 1} failed:`, lastError.message);
         
         if (attempt < maxRetries - 1) {
-          const retryDelay = Math.pow(2, attempt) * 1000;
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          await new Promise(r => setTimeout(r, Math.pow(2, attempt) * 1000));
         }
       }
     }
     
-    // All retries failed
-    throw lastError || new Error('Failed to generate questions after retries');
+    throw lastError || new Error('Failed after retries');
+
   } catch (error) {
-    console.error('❌ Error in generate-quiz-questions:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
+    console.error('❌ Error:', error);
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Internal server error',
-        message: 'Failed to generate quiz questions. Please try again or select a different topic.',
+        message: 'Failed to generate quiz questions. Please try again.',
         availableTopics: Object.keys(TOPIC_CONFIGS)
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
