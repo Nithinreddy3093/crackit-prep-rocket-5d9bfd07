@@ -177,6 +177,54 @@ export const TOPIC_CONFIGS: Record<string, Topic> = {
     category: 'Company Prep',
     color: 'from-sky-500 to-blue-600'
   },
+  'amazon-sde': {
+    id: 'amazon-sde',
+    title: 'Amazon SDE Mock Test',
+    description: 'Amazon pattern: DSA, System Design, Leadership Principles, and OOD.',
+    icon: 'Building2',
+    difficulty: 'advanced',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 60,
+    category: 'Company Prep',
+    color: 'from-orange-500 to-yellow-600'
+  },
+  'microsoft-sde': {
+    id: 'microsoft-sde',
+    title: 'Microsoft SDE Mock Test',
+    description: 'Microsoft pattern: DSA, System Design, OOPs, and Behavioral questions.',
+    icon: 'Building2',
+    difficulty: 'advanced',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 60,
+    category: 'Company Prep',
+    color: 'from-cyan-500 to-blue-600'
+  },
+  'google-swe': {
+    id: 'google-swe',
+    title: 'Google SWE Mock Test',
+    description: 'Google pattern: Advanced DSA, System Design, Googleyness assessment.',
+    icon: 'Building2',
+    difficulty: 'advanced',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 60,
+    category: 'Company Prep',
+    color: 'from-red-500 to-green-500'
+  },
+  'ibm-prep': {
+    id: 'ibm-prep',
+    title: 'IBM Mock Test',
+    description: 'IBM Cognitive Assessment: Aptitude, Reasoning, Programming, and Verbal.',
+    icon: 'Building2',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 45,
+    category: 'Company Prep',
+    color: 'from-blue-600 to-indigo-700'
+  },
   'aptitude': {
     id: 'aptitude',
     title: 'General Aptitude',
