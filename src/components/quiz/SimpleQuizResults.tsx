@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, XCircle, Trophy, Clock, Target, RotateCcw, Save } from 'lucide-react';
+import { CheckCircle, XCircle, Trophy, Clock, Target, RotateCcw, Save, RefreshCw } from 'lucide-react';
 import { QuizAnswerDetail } from '@/hooks/useSimpleQuiz';
 import { motion } from 'framer-motion';
 import ConfettiEffect from '@/components/common/ConfettiEffect';
@@ -17,6 +17,7 @@ interface SimpleQuizResultsProps {
   topicTitle?: string;
   questionDetails: QuizAnswerDetail[];
   onRestart: () => void;
+  onRetry?: () => void;
 }
 
 const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
@@ -27,7 +28,8 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
   formatTime,
   topicTitle,
   questionDetails,
-  onRestart
+  onRestart,
+  onRetry
 }) => {
   const navigate = useNavigate();
   const isPassed = scorePercentage >= 70;
@@ -191,13 +193,22 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
               <Trophy className="mr-2 h-4 w-4" />
               View Dashboard
             </Button>
+            {onRetry && (
+              <Button 
+                onClick={onRetry}
+                className="bg-accent hover:bg-accent/90 text-white"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry with New Questions
+              </Button>
+            )}
             <Button 
               onClick={onRestart}
               variant="outline"
               className="border-white/20 text-white hover:bg-white/10"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
-              Try Again
+              Try Again (Same Questions)
             </Button>
             <Button 
               onClick={() => window.location.href = '/topics'}

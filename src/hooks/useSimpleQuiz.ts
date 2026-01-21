@@ -598,6 +598,30 @@ export const useSimpleQuiz = (topicId?: string) => {
     setValidationResult(null);
   }, []);
 
+  // Retry quiz with fresh questions
+  const retryQuiz = useCallback(async () => {
+    if (!topicId) return;
+    
+    // Reset all state
+    setQuizStarted(false);
+    setQuizCompleted(false);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setUserAnswers([]);
+    setQuestionDetails([]);
+    setCorrectAnswersCount(0);
+    setStartTime(0);
+    setElapsedTime(0);
+    setCurrentSession(null);
+    setError(null);
+    setIsValidating(false);
+    setValidationResult(null);
+    setQuestions([]); // Clear existing questions
+    
+    // Load fresh questions
+    await loadQuestions(topicId);
+  }, [topicId, loadQuestions]);
+
   // Load questions when topic changes
   useEffect(() => {
     if (topicId && !quizStarted) {
@@ -627,6 +651,7 @@ export const useSimpleQuiz = (topicId?: string) => {
     startQuiz,
     completeQuiz,
     resetQuiz,
+    retryQuiz,
     
     // Validation
     isValidating,
