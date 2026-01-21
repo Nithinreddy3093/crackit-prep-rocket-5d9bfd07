@@ -58,6 +58,7 @@ const Quiz = () => {
     startQuiz,
     completeQuiz,
     resetQuiz,
+    retryQuiz,
   } = useSimpleQuiz(topicParam);
 
   useEffect(() => {
@@ -132,6 +133,14 @@ const Quiz = () => {
     setQuizMode(null);
     setIsPaused(false);
     setShowExplanation(false);
+  };
+
+  const handleRetry = async () => {
+    clearProgress();
+    setQuizMode(null);
+    setIsPaused(false);
+    setShowExplanation(false);
+    await retryQuiz();
   };
 
   if (!user) {
@@ -246,6 +255,7 @@ const Quiz = () => {
             topicTitle={topicParam}
             questionDetails={questionDetails}
             onRestart={handleRestart}
+            onRetry={handleRetry}
           />
         )}
       </main>
