@@ -260,6 +260,178 @@ export const companyData: Record<string, CompanyData> = {
     specialConditions: ['SVAR (AI Interview) is unique to Cognizant', 'GenC Elevate requires higher coding skills'],
     quizTopicId: 'cognizant-genC',
     resourceTags: ['aptitude', 'programming', 'sql', 'dsa']
+  },
+  amazon: {
+    name: 'Amazon',
+    shortName: 'Amazon',
+    logo: '📦',
+    tagline: 'Work Hard. Have Fun. Make History.',
+    description: 'Amazon is a multinational technology company focusing on e-commerce, cloud computing (AWS), AI, and digital streaming. Known for its rigorous interview process emphasizing Leadership Principles and system design.',
+    hiringPattern: 'Amazon conducts campus hiring for SDE-1 roles and off-campus drives throughout the year. They focus heavily on DSA, System Design, and behavioral questions based on Leadership Principles.',
+    rolesOffered: ['Software Development Engineer (SDE-1)', 'Quality Assurance Engineer', 'Support Engineer', 'Business Analyst'],
+    averageSalary: '₹12 - 32 LPA',
+    difficulty: 'Hard',
+    topics: [
+      { name: 'Data Structures & Algorithms', priority: 'high', description: 'Arrays, Trees, Graphs, Dynamic Programming, Recursion' },
+      { name: 'System Design', priority: 'high', description: 'Scalability, Load Balancing, Database Design, Microservices' },
+      { name: 'Leadership Principles', priority: 'high', description: 'Customer Obsession, Ownership, Bias for Action, Deep Dive' },
+      { name: 'Object-Oriented Design', priority: 'medium', description: 'Design patterns, SOLID principles, Class diagrams' },
+      { name: 'Problem Solving', priority: 'medium', description: 'Optimization techniques, Time/Space complexity analysis' },
+      { name: 'Operating Systems', priority: 'low', description: 'Multithreading, Concurrency, Memory management' }
+    ],
+    process: [
+      { step: 'Online Assessment (OA)', description: 'Coding problems + Work Simulation questions', tips: 'Practice medium-hard LeetCode problems', duration: '90 mins' },
+      { step: 'Phone Screen', description: '1-2 coding problems with a recruiter or engineer', tips: 'Think aloud and communicate your approach', duration: '45-60 mins' },
+      { step: 'Onsite/Virtual Loop', description: '4-5 rounds: DSA, System Design, Bar Raiser, Hiring Manager', tips: 'Use STAR method for behavioral questions' },
+      { step: 'Bar Raiser Interview', description: 'Behavioral deep-dive on Leadership Principles', tips: 'Prepare 10+ stories covering different LPs' },
+      { step: 'Hiring Manager Round', description: 'Team fit, role discussion, and final evaluation', tips: 'Ask insightful questions about the team' }
+    ],
+    questionPatterns: [
+      { type: 'Coding - DSA', frequency: 'common', examples: ['Two Pointers', 'Sliding Window', 'BFS/DFS', 'Dynamic Programming'] },
+      { type: 'System Design', frequency: 'common', examples: ['Design URL Shortener', 'Design Twitter', 'Design Parking Lot'] },
+      { type: 'Leadership Principles', frequency: 'common', examples: ['Tell me about a time you disagreed with your manager', 'Describe a failure'] },
+      { type: 'Object-Oriented Design', frequency: 'occasional', examples: ['Design Chess', 'Design Elevator', 'Design Library System'] },
+      { type: 'SQL & Database', frequency: 'rare', examples: ['Complex queries', 'Database optimization'] }
+    ],
+    requirements: [
+      { text: 'Strong problem-solving skills with DSA proficiency', mandatory: true },
+      { text: 'B.Tech/M.Tech from recognized university', mandatory: true },
+      { text: 'Good understanding of at least one OOP language', mandatory: true },
+      { text: 'Excellent communication and collaboration skills', mandatory: true },
+      { text: 'Prior internship experience preferred', mandatory: false }
+    ],
+    specialConditions: ['Bar Raiser can veto any candidate', 'Multiple rounds on same day during onsite'],
+    quizTopicId: 'amazon-sde',
+    resourceTags: ['dsa', 'system-design', 'leadership-principles', 'oops']
+  },
+  microsoft: {
+    name: 'Microsoft',
+    shortName: 'Microsoft',
+    logo: '🪟',
+    tagline: 'Empowering every person and organization on the planet to achieve more',
+    description: 'Microsoft is a global technology leader in cloud computing (Azure), productivity software (Office 365), gaming (Xbox), and AI. Known for collaborative culture and focus on growth mindset.',
+    hiringPattern: 'Microsoft hires through campus placement, internships, and off-campus referrals. They emphasize coding skills, problem-solving, and cultural fit. IDC (India Development Center) roles are highly competitive.',
+    rolesOffered: ['Software Engineer', 'Program Manager', 'Data Scientist', 'Support Engineer'],
+    averageSalary: '₹15 - 40 LPA',
+    difficulty: 'Hard',
+    topics: [
+      { name: 'Data Structures & Algorithms', priority: 'high', description: 'Trees, Graphs, DP, String manipulation, Recursion' },
+      { name: 'System Design Basics', priority: 'high', description: 'Architecture, Scalability, API design' },
+      { name: 'Object-Oriented Programming', priority: 'high', description: 'Design patterns, Inheritance, Polymorphism' },
+      { name: 'Database Concepts', priority: 'medium', description: 'SQL, NoSQL, Indexing, Normalization' },
+      { name: 'Operating Systems', priority: 'medium', description: 'Threading, Process management, Memory' },
+      { name: 'Computer Networks', priority: 'low', description: 'HTTP, TCP/IP, DNS, Load balancing' }
+    ],
+    process: [
+      { step: 'Online Coding Test', description: '3 coding problems on Codility or HackerRank', tips: 'Focus on correctness before optimization', duration: '75 mins' },
+      { step: 'Group Fly Round', description: 'On-campus coding round on paper', tips: 'Write clean, readable code', duration: '60 mins' },
+      { step: 'Technical Round 1', description: 'DSA problem-solving with code writing', tips: 'Discuss edge cases proactively' },
+      { step: 'Technical Round 2', description: 'System design or advanced coding', tips: 'Think about scalability from the start' },
+      { step: 'Hiring Manager / AA Round', description: 'Behavioral + technical fit assessment', tips: 'Show growth mindset and curiosity' }
+    ],
+    questionPatterns: [
+      { type: 'Coding - Algorithms', frequency: 'common', examples: ['Binary Search variants', 'Tree traversals', 'Graph algorithms', 'DP'] },
+      { type: 'Coding - Data Structures', frequency: 'common', examples: ['LinkedList manipulation', 'Stack/Queue problems', 'Heap operations'] },
+      { type: 'System Design', frequency: 'occasional', examples: ['Design notification system', 'Design cache', 'Design rate limiter'] },
+      { type: 'Behavioral', frequency: 'common', examples: ['Growth mindset examples', 'Conflict resolution', 'Learning from failure'] },
+      { type: 'OS & Networking', frequency: 'rare', examples: ['Thread synchronization', 'Deadlock scenarios'] }
+    ],
+    requirements: [
+      { text: 'Strong fundamentals in CS and programming', mandatory: true },
+      { text: 'B.E/B.Tech/M.Tech in CS/IT or related field', mandatory: true },
+      { text: 'Proficiency in at least one programming language', mandatory: true },
+      { text: 'Good analytical and problem-solving skills', mandatory: true },
+      { text: 'Competitive programming experience is a plus', mandatory: false }
+    ],
+    specialConditions: ['Growth mindset is a key evaluation criteria', 'Multiple positions in Azure, Office, and other teams'],
+    quizTopicId: 'microsoft-sde',
+    resourceTags: ['dsa', 'system-design', 'oops', 'os']
+  },
+  google: {
+    name: 'Google',
+    shortName: 'Google',
+    logo: '🔍',
+    tagline: 'Organize the world\'s information and make it universally accessible',
+    description: 'Google is the world\'s leading search engine company and a pioneer in AI, cloud computing, and digital advertising. Known for exceptionally high interview bar and focus on algorithmic thinking.',
+    hiringPattern: 'Google hires through campus placements at top institutes, internships (STEP, SWE Intern), and experienced hiring. The process is highly competitive with focus on algorithms and "Googleyness".',
+    rolesOffered: ['Software Engineer (L3)', 'Software Engineer Intern', 'Site Reliability Engineer', 'Technical Solutions Engineer'],
+    averageSalary: '₹25 - 50 LPA',
+    difficulty: 'Hard',
+    topics: [
+      { name: 'Advanced Algorithms', priority: 'high', description: 'Graph algorithms, DP, Greedy, Divide & Conquer' },
+      { name: 'Data Structures', priority: 'high', description: 'Trees, Tries, Heaps, Hash Maps, Segment Trees' },
+      { name: 'System Design', priority: 'high', description: 'Distributed systems, MapReduce, Consistency models' },
+      { name: 'Time/Space Complexity', priority: 'high', description: 'Big-O analysis, Optimization techniques' },
+      { name: 'Behavioral (Googleyness)', priority: 'medium', description: 'Collaboration, Ambiguity handling, Leadership' },
+      { name: 'Domain Knowledge', priority: 'low', description: 'ML basics, Networking (for specific roles)' }
+    ],
+    process: [
+      { step: 'Online Assessment', description: 'Coding challenges on Google\'s platform', tips: 'Practice on LeetCode Hard problems', duration: '90 mins' },
+      { step: 'Phone Interviews (2)', description: 'Algorithmic coding with Google engineers', tips: 'Use Google Docs for coding', duration: '45 mins each' },
+      { step: 'Virtual Onsite (4-5 rounds)', description: 'Coding, System Design, Googleyness rounds', tips: 'Be ready to code on whiteboard/docs' },
+      { step: 'Hiring Committee Review', description: 'All feedback reviewed by hiring committee', tips: 'Consistent performance across rounds matters' },
+      { step: 'Team Matching', description: 'Match with suitable team post-approval', tips: 'Research teams you\'re interested in' }
+    ],
+    questionPatterns: [
+      { type: 'Algorithmic Coding', frequency: 'common', examples: ['Graph traversal', 'Dynamic Programming', 'Binary Search on answer'] },
+      { type: 'Data Structure Design', frequency: 'common', examples: ['LRU Cache', 'Implement Trie', 'Design HashMap'] },
+      { type: 'System Design', frequency: 'common', examples: ['Design YouTube', 'Design Google Drive', 'Design Search Autocomplete'] },
+      { type: 'Googleyness & Leadership', frequency: 'common', examples: ['Handling disagreements', 'Working in ambiguity', 'Mentoring others'] },
+      { type: 'Math & Puzzles', frequency: 'rare', examples: ['Probability problems', 'Brain teasers'] }
+    ],
+    requirements: [
+      { text: 'Exceptional problem-solving and algorithmic skills', mandatory: true },
+      { text: 'Strong coding ability in at least one language', mandatory: true },
+      { text: 'B.Tech/M.Tech from premier institute preferred', mandatory: true },
+      { text: 'Understanding of computer science fundamentals', mandatory: true },
+      { text: 'Competitive programming achievements valued', mandatory: false }
+    ],
+    specialConditions: ['Hiring Committee decides final outcome', 'Team matching happens after approval'],
+    quizTopicId: 'google-swe',
+    resourceTags: ['algorithms', 'system-design', 'dsa', 'competitive-programming']
+  },
+  ibm: {
+    name: 'IBM',
+    shortName: 'IBM',
+    logo: '🖥️',
+    tagline: 'Let\'s put smart to work',
+    description: 'IBM (International Business Machines) is a global technology company providing cloud computing, AI, and consulting services. With over 100 years of innovation, IBM offers diverse roles in technology and consulting.',
+    hiringPattern: 'IBM conducts campus recruitment through IBM Cognitive Ability Assessment. They hire for Associate System Engineer, Application Developer, and Consultant roles. Off-campus drives are also frequent.',
+    rolesOffered: ['Associate System Engineer', 'Application Developer', 'Package Consultant', 'Data Scientist'],
+    averageSalary: '₹4.5 - 12 LPA',
+    difficulty: 'Medium',
+    topics: [
+      { name: 'Aptitude & Reasoning', priority: 'high', description: 'Quantitative, Logical reasoning, Verbal ability' },
+      { name: 'Programming Fundamentals', priority: 'high', description: 'Java, Python, C++ basics and OOPs' },
+      { name: 'Data Structures', priority: 'medium', description: 'Arrays, Strings, LinkedList, Trees' },
+      { name: 'Database & SQL', priority: 'medium', description: 'Queries, Joins, Normalization' },
+      { name: 'Computer Networks', priority: 'medium', description: 'OSI model, Protocols, Networking basics' },
+      { name: 'Cloud & AI Basics', priority: 'low', description: 'IBM Cloud, Watson AI fundamentals' }
+    ],
+    process: [
+      { step: 'Cognitive Ability Assessment', description: 'MCQs on aptitude, reasoning, English, domain', tips: 'Practice verbal and quantitative aptitude', duration: '60 mins' },
+      { step: 'Coding Assessment', description: '1-2 coding problems of easy-medium level', tips: 'Focus on code correctness and edge cases', duration: '45 mins' },
+      { step: 'Technical Interview', description: 'Programming, CS fundamentals, Project discussion', tips: 'Be thorough with your resume projects' },
+      { step: 'Managerial Interview', description: 'Situational questions and team fit assessment', tips: 'Show leadership and collaboration skills' },
+      { step: 'HR Interview', description: 'Background verification, Salary negotiation', tips: 'Be clear about your career goals' }
+    ],
+    questionPatterns: [
+      { type: 'MCQ - Aptitude', frequency: 'common', examples: ['Number series', 'Percentages', 'Probability', 'Data interpretation'] },
+      { type: 'MCQ - Reasoning', frequency: 'common', examples: ['Coding-Decoding', 'Blood relations', 'Syllogisms', 'Puzzles'] },
+      { type: 'Verbal Ability', frequency: 'common', examples: ['Reading comprehension', 'Grammar', 'Vocabulary'] },
+      { type: 'Technical MCQs', frequency: 'common', examples: ['DBMS concepts', 'OS basics', 'Networking', 'Programming'] },
+      { type: 'Coding', frequency: 'occasional', examples: ['Array manipulation', 'String operations', 'Basic algorithms'] }
+    ],
+    requirements: [
+      { text: 'Minimum 60% in 10th, 12th, and Graduation', mandatory: true },
+      { text: 'No active backlogs at the time of joining', mandatory: true },
+      { text: 'B.E/B.Tech/MCA/M.Tech in relevant fields', mandatory: true },
+      { text: 'Good communication skills', mandatory: true },
+      { text: 'Willingness to work in any IBM location', mandatory: false }
+    ],
+    specialConditions: ['IBM offers diverse roles across consulting and technology', 'Global mobility opportunities available'],
+    quizTopicId: 'ibm-prep',
+    resourceTags: ['aptitude', 'programming', 'sql', 'verbal']
   }
 };
 
