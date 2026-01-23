@@ -84,6 +84,7 @@ export type Database = {
         Row: {
           badges_earned: string[] | null
           category_scores: Json | null
+          display_name: string | null
           id: string
           last_activity: string | null
           overall_score: number | null
@@ -95,6 +96,7 @@ export type Database = {
         Insert: {
           badges_earned?: string[] | null
           category_scores?: Json | null
+          display_name?: string | null
           id?: string
           last_activity?: string | null
           overall_score?: number | null
@@ -106,6 +108,7 @@ export type Database = {
         Update: {
           badges_earned?: string[] | null
           category_scores?: Json | null
+          display_name?: string | null
           id?: string
           last_activity?: string | null
           overall_score?: number | null
