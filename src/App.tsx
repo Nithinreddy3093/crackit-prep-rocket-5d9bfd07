@@ -24,6 +24,7 @@ import QuizPage from "./pages/quiz/QuizPage";
 import Blogs from "./pages/Blogs";
 import StudyGuides from "./pages/StudyGuides";
 import Leaderboard from "./pages/Leaderboard";
+import UserProfile from "./pages/UserProfile";
 import FAQ from "./pages/FAQ";
 import Support from "./pages/Support";
 import LogoAnimation from "./components/LogoAnimation";
@@ -119,6 +120,7 @@ const App = () => {
                 <Route path="/blog" element={<Blogs />} />
                 <Route path="/guides" element={<StudyGuides />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/profile/:userId" element={<UserProfile />} />
                 {/* HR Interview temporarily disabled - feature under development */}
                 {/* <Route path="/hr-interview" element={<HRInterview />} /> */}
                 <Route path="/faq" element={<FAQ />} />
