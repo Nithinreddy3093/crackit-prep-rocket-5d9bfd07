@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, MessageSquare, Lock } from 'lucide-react';
+import { Mail, MessageSquare, Lock, Phone, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -65,7 +65,7 @@ export default function Contact() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -85,16 +85,32 @@ export default function Contact() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-primary" />
-                  Live Chat
+                  <Phone className="w-5 h-5 text-primary" />
+                  Phone
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-2">AI Tutor</p>
-                <a href="/ai-tutor" className="text-primary hover:underline">
-                  Chat with AI Assistant
+                <p className="text-sm text-muted-foreground mb-2">Call or WhatsApp</p>
+                <a href="tel:+917093569420" className="text-primary hover:underline">
+                  +91 7093569420
                 </a>
-                <p className="text-xs text-muted-foreground mt-2">Available 24/7</p>
+                <p className="text-xs text-muted-foreground mt-2">Mon-Sat, 10am-6pm IST</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-primary" />
+                  Location
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-2">We're Remote</p>
+                <p className="text-primary font-medium">
+                  100% Online Platform
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">Accessible worldwide</p>
               </CardContent>
             </Card>
 
