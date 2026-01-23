@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card } from '@/components/ui/card';
-import { Trophy, Award, Zap, Medal, Crown, Star, Users, Target, Flame } from 'lucide-react';
+import { Trophy, Award, Zap, Medal, Crown, Star, Users, Target, Flame, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,12 +24,17 @@ interface LeaderboardEntry {
 }
 
 const Leaderboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [userRank, setUserRank] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string>('overall');
+
+  const handleViewProfile = (userId: string) => {
+    navigate(`/profile/${userId}`);
+  };
 
   useEffect(() => {
     fetchLeaderboard();
@@ -231,7 +237,10 @@ const Leaderboard = () => {
           >
             {/* Second Place */}
             <div className="mt-8">
-              <Card className="bg-gradient-to-b from-gray-400/20 to-gray-400/5 border-gray-400/30 p-4 text-center backdrop-blur-sm">
+              <Card 
+                className="bg-gradient-to-b from-gray-400/20 to-gray-400/5 border-gray-400/30 p-4 text-center backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform hover:ring-2 ring-gray-400/50"
+                onClick={() => handleViewProfile(topThree[1].user_id)}
+              >
                 <div className="flex justify-center mb-3">
                   <div className={`w-16 h-16 rounded-full ${getAvatarColor(2)} flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-gray-400/30`}>
                     {getInitials(getDisplayName(topThree[1]))}
@@ -246,7 +255,10 @@ const Leaderboard = () => {
 
             {/* First Place */}
             <div>
-              <Card className="bg-gradient-to-b from-yellow-400/20 to-yellow-400/5 border-yellow-400/40 p-4 text-center backdrop-blur-sm ring-2 ring-yellow-400/20">
+              <Card 
+                className="bg-gradient-to-b from-yellow-400/20 to-yellow-400/5 border-yellow-400/40 p-4 text-center backdrop-blur-sm ring-2 ring-yellow-400/20 cursor-pointer hover:scale-105 transition-transform hover:ring-4"
+                onClick={() => handleViewProfile(topThree[0].user_id)}
+              >
                 <div className="flex justify-center mb-3">
                   <div className={`w-20 h-20 rounded-full ${getAvatarColor(1)} flex items-center justify-center text-white font-bold text-2xl shadow-xl ring-4 ring-yellow-400/40`}>
                     {getInitials(getDisplayName(topThree[0]))}
@@ -261,7 +273,10 @@ const Leaderboard = () => {
 
             {/* Third Place */}
             <div className="mt-12">
-              <Card className="bg-gradient-to-b from-amber-500/20 to-amber-500/5 border-amber-500/30 p-4 text-center backdrop-blur-sm">
+              <Card 
+                className="bg-gradient-to-b from-amber-500/20 to-amber-500/5 border-amber-500/30 p-4 text-center backdrop-blur-sm cursor-pointer hover:scale-105 transition-transform hover:ring-2 ring-amber-500/50"
+                onClick={() => handleViewProfile(topThree[2].user_id)}
+              >
                 <div className="flex justify-center mb-3">
                   <div className={`w-14 h-14 rounded-full ${getAvatarColor(3)} flex items-center justify-center text-white font-bold text-lg shadow-lg ring-4 ring-amber-500/30`}>
                     {getInitials(getDisplayName(topThree[2]))}
@@ -336,7 +351,8 @@ const Leaderboard = () => {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.02 }}
-                          className={getRowStyles(displayRank, isCurrentUser)}
+                          className={`${getRowStyles(displayRank, isCurrentUser)} cursor-pointer group`}
+                          onClick={() => handleViewProfile(entry.user_id)}
                         >
                           <td className="p-4">
                             <div className="flex items-center justify-center">
@@ -345,11 +361,11 @@ const Leaderboard = () => {
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full ${getAvatarColor(displayRank)} flex items-center justify-center text-white font-semibold text-sm shadow-md`}>
+                              <div className={`w-10 h-10 rounded-full ${getAvatarColor(displayRank)} flex items-center justify-center text-white font-semibold text-sm shadow-md group-hover:ring-2 ring-primary/50 transition-all`}>
                                 {getInitials(getDisplayName(entry))}
                               </div>
-                              <div>
-                                <span className="text-white font-medium block">
+                              <div className="flex items-center gap-2">
+                                <span className="text-white font-medium block group-hover:text-primary transition-colors">
                                   {getDisplayName(entry)}
                                   {isCurrentUser && (
                                     <Badge variant="outline" className="ml-2 text-xs border-primary/50 text-primary">
@@ -357,6 +373,7 @@ const Leaderboard = () => {
                                     </Badge>
                                   )}
                                 </span>
+                                <ExternalLink className="h-3 w-3 text-white/30 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </div>
                             </div>
                           </td>
