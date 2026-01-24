@@ -103,6 +103,70 @@ const TOPIC_CONFIGS: Record<string, TopicConfig> = {
     timeLimit: 30,
     description: 'Quantitative Aptitude, Logical Reasoning, Verbal Ability for placement tests',
     keywords: ['percentages', 'profit loss', 'time speed distance', 'number series', 'coding decoding', 'blood relations', 'syllogisms', 'reading comprehension']
+  },
+  // UPSC Civil Services Topics
+  'upsc-polity': {
+    name: 'Indian Polity & Governance (UPSC)',
+    questionCount: 15,
+    timeLimit: 30,
+    description: 'UPSC Prelims pattern - Constitution, Parliament, Judiciary, Federalism, Local Governance',
+    keywords: ['constitution', 'fundamental rights', 'directive principles', 'parliament', 'supreme court', 'high court', 'president', 'governor', 'panchayati raj', 'constitutional amendments', 'federalism', 'centre-state relations', 'election commission']
+  },
+  'upsc-history': {
+    name: 'Indian History (UPSC)',
+    questionCount: 15,
+    timeLimit: 30,
+    description: 'UPSC Prelims pattern - Ancient, Medieval, Modern India, Freedom Struggle, Art & Culture',
+    keywords: ['indus valley', 'vedic period', 'maurya empire', 'gupta dynasty', 'delhi sultanate', 'mughal empire', 'british rule', 'freedom movement', 'gandhi', 'nehru', 'indian art', 'architecture', 'cultural heritage']
+  },
+  'upsc-geography': {
+    name: 'Indian & World Geography (UPSC)',
+    questionCount: 15,
+    timeLimit: 30,
+    description: 'UPSC Prelims pattern - Physical, Economic, Human Geography, Environment',
+    keywords: ['indian rivers', 'mountains', 'climate', 'monsoon', 'soil types', 'natural resources', 'agriculture', 'industries', 'population', 'urbanization', 'world geography', 'continents', 'oceans']
+  },
+  'upsc-economy': {
+    name: 'Indian Economy (UPSC)',
+    questionCount: 15,
+    timeLimit: 30,
+    description: 'UPSC Prelims pattern - Macroeconomics, Planning, Banking, Budget, International Trade',
+    keywords: ['gdp', 'inflation', 'monetary policy', 'fiscal policy', 'rbi', 'banking', 'budget', 'taxation', 'five year plans', 'niti aayog', 'fdi', 'exports', 'imports', 'government schemes']
+  },
+  'upsc-science': {
+    name: 'Science & Technology (UPSC)',
+    questionCount: 15,
+    timeLimit: 25,
+    description: 'UPSC Prelims pattern - Current S&T developments, Space, Biotech, IT, Defense',
+    keywords: ['isro', 'space missions', 'drdo', 'nuclear energy', 'biotechnology', 'nanotechnology', 'artificial intelligence', 'cyber security', 'it act', 'scientific discoveries', 'health technology']
+  },
+  'upsc-environment': {
+    name: 'Environment & Ecology (UPSC)',
+    questionCount: 15,
+    timeLimit: 25,
+    description: 'UPSC Prelims pattern - Biodiversity, Climate Change, Conservation, Environmental Laws',
+    keywords: ['biodiversity', 'hotspots', 'national parks', 'wildlife sanctuaries', 'climate change', 'global warming', 'pollution', 'waste management', 'environmental laws', 'paris agreement', 'sustainable development', 'renewable energy']
+  },
+  'upsc-csat': {
+    name: 'CSAT Paper II (UPSC)',
+    questionCount: 20,
+    timeLimit: 40,
+    description: 'UPSC CSAT pattern - Comprehension, Logical Reasoning, Analytical Ability, Decision Making',
+    keywords: ['reading comprehension', 'logical reasoning', 'analytical ability', 'decision making', 'problem solving', 'data interpretation', 'basic numeracy', 'mental ability', 'critical thinking']
+  },
+  'upsc-current-affairs': {
+    name: 'Current Affairs (UPSC)',
+    questionCount: 15,
+    timeLimit: 30,
+    description: 'UPSC pattern - National & International events, Government Schemes, Summits, Awards',
+    keywords: ['national events', 'international relations', 'government schemes', 'budget highlights', 'supreme court judgments', 'appointments', 'awards', 'summits', 'sports', 'science news']
+  },
+  'upsc-ethics': {
+    name: 'Ethics & Integrity (UPSC Mains)',
+    questionCount: 15,
+    timeLimit: 30,
+    description: 'UPSC Mains GS Paper IV pattern - Ethics in Public Administration, Case Studies',
+    keywords: ['ethics', 'integrity', 'aptitude', 'emotional intelligence', 'public service values', 'probity', 'accountability', 'transparency', 'case studies', 'moral thinkers', 'corporate governance']
   }
 };
 

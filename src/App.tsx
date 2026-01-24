@@ -35,6 +35,7 @@ import Contact from "./pages/Contact";
 import Features from "./pages/Features";
 import CookiePolicy from "./pages/CookiePolicy";
 import HRInterview from "./pages/HRInterview";
+import UPSC from "./pages/UPSC";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -104,6 +105,7 @@ const App = () => {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/quiz/:topicId" element={<QuizPage />} />
+                <Route path="/upsc" element={<UPSC />} />
                 <Route path="/ai-tutor" element={<AITutor />} />
                 <Route path="/resources" element={
                   <ProtectedRoute>
