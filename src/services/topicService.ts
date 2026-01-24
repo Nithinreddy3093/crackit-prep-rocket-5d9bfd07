@@ -236,6 +236,115 @@ export const TOPIC_CONFIGS: Record<string, Topic> = {
     timeLimit: 30,
     category: 'Aptitude',
     color: 'from-yellow-500 to-orange-500'
+  },
+  // UPSC Civil Services Topics
+  'upsc-polity': {
+    id: 'upsc-polity',
+    title: 'Indian Polity & Governance',
+    description: 'Constitution, Parliament, Judiciary, Federalism, Panchayati Raj, Public Policy.',
+    icon: 'Scale',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 30,
+    category: 'UPSC',
+    color: 'from-blue-500 to-indigo-600'
+  },
+  'upsc-history': {
+    id: 'upsc-history',
+    title: 'Indian History',
+    description: 'Ancient, Medieval, Modern India, Art & Culture, Freedom Movement.',
+    icon: 'BookOpen',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 30,
+    category: 'UPSC',
+    color: 'from-amber-500 to-orange-600'
+  },
+  'upsc-geography': {
+    id: 'upsc-geography',
+    title: 'Indian & World Geography',
+    description: 'Physical, Economic, Human Geography, Environment, Climate.',
+    icon: 'Globe',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 30,
+    category: 'UPSC',
+    color: 'from-green-500 to-emerald-600'
+  },
+  'upsc-economy': {
+    id: 'upsc-economy',
+    title: 'Indian Economy',
+    description: 'Macroeconomics, Planning, Banking, Budget, International Trade.',
+    icon: 'TrendingUp',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 30,
+    category: 'UPSC',
+    color: 'from-purple-500 to-violet-600'
+  },
+  'upsc-science': {
+    id: 'upsc-science',
+    title: 'Science & Technology',
+    description: 'Current S&T developments, Space, Biotech, IT, Defense Technology.',
+    icon: 'Atom',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 25,
+    category: 'UPSC',
+    color: 'from-cyan-500 to-teal-600'
+  },
+  'upsc-environment': {
+    id: 'upsc-environment',
+    title: 'Environment & Ecology',
+    description: 'Biodiversity, Climate Change, Conservation, Pollution, Sustainable Development.',
+    icon: 'Leaf',
+    difficulty: 'intermediate',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 25,
+    category: 'UPSC',
+    color: 'from-lime-500 to-green-600'
+  },
+  'upsc-csat': {
+    id: 'upsc-csat',
+    title: 'CSAT (Aptitude)',
+    description: 'Comprehension, Logical Reasoning, Analytical Ability, Decision Making, Math.',
+    icon: 'Brain',
+    difficulty: 'intermediate',
+    questionsCount: 20,
+    questionCount: 20,
+    timeLimit: 40,
+    category: 'UPSC',
+    color: 'from-rose-500 to-pink-600'
+  },
+  'upsc-current-affairs': {
+    id: 'upsc-current-affairs',
+    title: 'Current Affairs',
+    description: 'National & International events, Government Schemes, Sports, Awards.',
+    icon: 'Newspaper',
+    difficulty: 'beginner',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 30,
+    category: 'UPSC',
+    color: 'from-red-500 to-orange-500'
+  },
+  'upsc-ethics': {
+    id: 'upsc-ethics',
+    title: 'Ethics & Integrity',
+    description: 'Ethics in Public Administration, Emotional Intelligence, Case Studies.',
+    icon: 'Heart',
+    difficulty: 'advanced',
+    questionsCount: 15,
+    questionCount: 15,
+    timeLimit: 30,
+    category: 'UPSC',
+    color: 'from-violet-500 to-purple-600'
   }
 };
 
