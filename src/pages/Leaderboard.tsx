@@ -5,12 +5,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card } from '@/components/ui/card';
-import { Trophy, Award, Zap, Medal, Crown, Star, Users, Target, Flame, ExternalLink } from 'lucide-react';
+import { Trophy, Award, Zap, Medal, Crown, Star, Users, Target, Flame, ExternalLink, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import MobilePodium from '@/components/leaderboard/MobilePodium';
+import MobileLeaderboardRow from '@/components/leaderboard/MobileLeaderboardRow';
+import TimeFilter from '@/components/leaderboard/TimeFilter';
+import ExamTypeFilter from '@/components/leaderboard/ExamTypeFilter';
 
 interface LeaderboardEntry {
   id: string;
@@ -23,6 +27,9 @@ interface LeaderboardEntry {
   display_name: string | null;
 }
 
+type TimeRange = 'weekly' | 'monthly' | 'all-time';
+type ExamType = 'all' | 'tech' | 'upsc';
+
 const Leaderboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -31,6 +38,20 @@ const Leaderboard = () => {
   const [userRank, setUserRank] = useState<LeaderboardEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string>('overall');
+  const [timeRange, setTimeRange] = useState<TimeRange>('all-time');
+  const [examType, setExamType] = useState<ExamType>('all');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const categories = [
+    { value: 'overall', label: 'Overall' },
+    { value: 'dsa', label: 'DSA' },
+    { value: 'oops', label: 'OOPs' },
+    { value: 'dbms', label: 'DBMS' },
+    { value: 'os', label: 'OS' },
+    { value: 'upsc-polity', label: 'Polity' },
+    { value: 'upsc-history', label: 'History' },
+    { value: 'upsc-geography', label: 'Geography' },
+  ];
 
   const handleViewProfile = (userId: string) => {
     navigate(`/profile/${userId}`);
@@ -85,7 +106,13 @@ const Leaderboard = () => {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchLeaderboard();
   };
 
   const getRankDisplay = (rank: number) => {
@@ -160,24 +187,60 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-darkBlue-900 via-darkBlue-800 to-darkBlue-700">
       <Navbar />
-      <main className="flex-grow container mx-auto px-4 py-8 max-w-6xl">
+      <main className="flex-grow container mx-auto px-4 py-6 md:py-8 max-w-6xl pb-24 md:pb-8">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
+          className="text-center mb-6 md:mb-10"
         >
-          <div className="inline-flex items-center gap-3 mb-4">
-            <Trophy className="h-12 w-12 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)]" />
-            <h1 className="text-4xl md:text-5xl font-bold text-white">
+          <div className="inline-flex items-center gap-3 mb-3 md:mb-4">
+            <Trophy className="h-8 w-8 md:h-12 md:w-12 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.4)]" />
+            <h1 className="text-3xl md:text-5xl font-bold text-white">
               Leaderboard
             </h1>
           </div>
-          <p className="text-lg text-white/70 flex items-center justify-center gap-2">
-            <Users className="h-5 w-5" />
+          <p className="text-sm md:text-lg text-white/70 flex items-center justify-center gap-2">
+            <Users className="h-4 w-4 md:h-5 md:w-5" />
             <span>{leaderboard.length} active learners competing</span>
           </p>
         </motion.div>
+
+        {/* Filters - Mobile: Horizontal scroll, Desktop: Row */}
+        <div className="mb-6 space-y-3">
+          {/* Time & Exam Type Filters */}
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4">
+            <TimeFilter value={timeRange} onChange={setTimeRange} />
+            <ExamTypeFilter value={examType} onChange={setExamType} />
+            <button
+              onClick={handleRefresh}
+              className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              disabled={refreshing}
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          {/* Category Pills - Horizontal Scroll on Mobile */}
+          <ScrollArea className="w-full">
+            <div className="flex items-center gap-2 pb-2 px-1">
+              {categories.map((cat) => (
+                <button
+                  key={cat.value}
+                  onClick={() => setCategory(cat.value)}
+                  className={`relative px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${
+                    category === cat.value
+                      ? 'text-white bg-primary'
+                      : 'text-white/60 bg-white/5 hover:bg-white/10 hover:text-white/80'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" className="invisible" />
+          </ScrollArea>
+        </div>
 
         {/* User Rank Card */}
         {userRank && (
@@ -186,40 +249,40 @@ const Leaderboard = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="mb-8 bg-gradient-to-r from-primary/30 via-primary/20 to-secondary/20 border-primary/40 p-6 backdrop-blur-sm">
+            <Card className="mb-6 md:mb-8 bg-gradient-to-r from-primary/30 via-primary/20 to-secondary/20 border-primary/40 p-4 md:p-6 backdrop-blur-sm">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 rounded-full ${getAvatarColor(userRank.rank_position)} flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
+                  <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full ${getAvatarColor(userRank.rank_position)} flex items-center justify-center text-white font-bold text-lg md:text-xl shadow-lg`}>
                     {getInitials(getDisplayName(userRank))}
                   </div>
                   <div>
-                    <Badge variant="secondary" className="mb-1 bg-white/20 text-white border-0">
+                    <Badge variant="secondary" className="mb-1 bg-white/20 text-white border-0 text-xs">
                       Your Position
                     </Badge>
-                    <h3 className="text-2xl font-bold text-white">Rank #{userRank.rank_position}</h3>
-                    <p className="text-white/70">{getDisplayName(userRank)}</p>
+                    <h3 className="text-xl md:text-2xl font-bold text-white">Rank #{userRank.rank_position}</h3>
+                    <p className="text-white/70 text-sm">{getDisplayName(userRank)}</p>
                   </div>
                 </div>
                 <div className="flex gap-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-white">{userRank.overall_score}</div>
-                    <p className="text-white/60 text-sm flex items-center gap-1">
+                    <div className="text-2xl md:text-3xl font-bold text-white">{userRank.overall_score}</div>
+                    <p className="text-white/60 text-xs md:text-sm flex items-center gap-1">
                       <Target className="h-3 w-3" /> Score
                     </p>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-orange-400 flex items-center gap-1">
-                      <Flame className="h-6 w-6" />
+                    <div className="text-2xl md:text-3xl font-bold text-orange-400 flex items-center gap-1">
+                      <Flame className="h-5 w-5 md:h-6 md:w-6" />
                       {userRank.streak_count}
                     </div>
-                    <p className="text-white/60 text-sm">Streak</p>
+                    <p className="text-white/60 text-xs md:text-sm">Streak</p>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-yellow-400 flex items-center gap-1">
-                      <Star className="h-6 w-6" />
+                    <div className="text-2xl md:text-3xl font-bold text-yellow-400 flex items-center gap-1">
+                      <Star className="h-5 w-5 md:h-6 md:w-6" />
                       {userRank.badges_earned?.length || 0}
                     </div>
-                    <p className="text-white/60 text-sm">Badges</p>
+                    <p className="text-white/60 text-xs md:text-sm">Badges</p>
                   </div>
                 </div>
               </div>
@@ -227,13 +290,18 @@ const Leaderboard = () => {
           </motion.div>
         )}
 
-        {/* Top 3 Podium */}
+        {/* Mobile Podium */}
+        {!loading && topThree.length >= 3 && (
+          <MobilePodium topThree={topThree} />
+        )}
+
+        {/* Desktop Top 3 Podium */}
         {!loading && topThree.length >= 3 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="grid grid-cols-3 gap-4 mb-8"
+            className="hidden md:grid grid-cols-3 gap-4 mb-8"
           >
             {/* Second Place */}
             <div className="mt-8">
@@ -291,23 +359,39 @@ const Leaderboard = () => {
           </motion.div>
         )}
 
-        {/* Category Tabs */}
-        <Tabs defaultValue="overall" className="mb-6" onValueChange={setCategory}>
-          <TabsList className="grid grid-cols-3 md:grid-cols-6 w-full bg-white/5 border border-white/10">
-            <TabsTrigger value="overall" className="data-[state=active]:bg-primary">Overall</TabsTrigger>
-            <TabsTrigger value="dsa" className="data-[state=active]:bg-primary">DSA</TabsTrigger>
-            <TabsTrigger value="oops" className="data-[state=active]:bg-primary">OOPs</TabsTrigger>
-            <TabsTrigger value="dbms" className="data-[state=active]:bg-primary">DBMS</TabsTrigger>
-            <TabsTrigger value="os" className="data-[state=active]:bg-primary">OS</TabsTrigger>
-            <TabsTrigger value="ai-ml" className="data-[state=active]:bg-primary">AI/ML</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Mobile List View */}
+        <div className="md:hidden space-y-2 mb-6">
+          {loading ? (
+            Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                <Skeleton className="h-8 w-8 bg-white/10" />
+                <Skeleton className="h-10 w-10 rounded-full bg-white/10" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-24 bg-white/10 mb-1" />
+                  <Skeleton className="h-3 w-16 bg-white/10" />
+                </div>
+                <Skeleton className="h-6 w-12 bg-white/10" />
+              </div>
+            ))
+          ) : (
+            (category === 'overall' ? restOfLeaderboard : leaderboard).map((entry, index) => (
+              <MobileLeaderboardRow
+                key={entry.id}
+                entry={entry}
+                isCurrentUser={entry.user_id === user?.id}
+                rankChange={0}
+                index={index}
+              />
+            ))
+          )}
+        </div>
 
-        {/* Leaderboard Table */}
+        {/* Desktop Table */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
+          className="hidden md:block"
         >
           <Card className="bg-white/5 backdrop-blur-md border-white/10 overflow-hidden">
             <div className="overflow-x-auto">
@@ -317,8 +401,8 @@ const Leaderboard = () => {
                     <th className="text-left p-4 text-white/80 font-semibold w-20">Rank</th>
                     <th className="text-left p-4 text-white/80 font-semibold">Player</th>
                     <th className="text-center p-4 text-white/80 font-semibold">Score</th>
-                    <th className="text-center p-4 text-white/80 font-semibold hidden md:table-cell">Streak</th>
-                    <th className="text-center p-4 text-white/80 font-semibold hidden md:table-cell">Badges</th>
+                    <th className="text-center p-4 text-white/80 font-semibold">Streak</th>
+                    <th className="text-center p-4 text-white/80 font-semibold">Badges</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -333,8 +417,8 @@ const Leaderboard = () => {
                           </div>
                         </td>
                         <td className="p-4"><Skeleton className="h-6 w-14 mx-auto bg-white/10" /></td>
-                        <td className="p-4 hidden md:table-cell"><Skeleton className="h-6 w-10 mx-auto bg-white/10" /></td>
-                        <td className="p-4 hidden md:table-cell"><Skeleton className="h-6 w-10 mx-auto bg-white/10" /></td>
+                        <td className="p-4"><Skeleton className="h-6 w-10 mx-auto bg-white/10" /></td>
+                        <td className="p-4"><Skeleton className="h-6 w-10 mx-auto bg-white/10" /></td>
                       </tr>
                     ))
                   ) : (
@@ -380,13 +464,13 @@ const Leaderboard = () => {
                           <td className="p-4 text-center">
                             <span className="text-white font-bold text-lg">{displayScore}</span>
                           </td>
-                          <td className="p-4 text-center hidden md:table-cell">
+                          <td className="p-4 text-center">
                             <div className="flex items-center justify-center gap-1 text-orange-400">
                               <Flame className="h-4 w-4" />
                               <span className="font-semibold">{entry.streak_count}</span>
                             </div>
                           </td>
-                          <td className="p-4 text-center hidden md:table-cell">
+                          <td className="p-4 text-center">
                             <div className="flex items-center justify-center gap-1 text-yellow-400">
                               <Star className="h-4 w-4" />
                               <span className="font-semibold">{entry.badges_earned?.length || 0}</span>

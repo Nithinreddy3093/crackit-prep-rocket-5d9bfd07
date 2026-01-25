@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Trophy, BarChart3, User } from 'lucide-react';
+import { Home, BookOpen, Trophy, GraduationCap, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { motion } from 'framer-motion';
 
 const MobileBottomNav = () => {
   const navigate = useNavigate();
@@ -10,40 +11,48 @@ const MobileBottomNav = () => {
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
+    { icon: GraduationCap, label: 'UPSC', path: '/upsc' },
     { icon: BookOpen, label: 'Topics', path: '/topics' },
-    { icon: Trophy, label: 'Leaderboard', path: '/leaderboard' },
-    { icon: BarChart3, label: 'Dashboard', path: '/dashboard', requireAuth: true },
-    { icon: User, label: 'Profile', path: user ? '/dashboard' : '/login' },
+    { icon: Trophy, label: 'Ranks', path: '/leaderboard' },
+    { icon: User, label: 'Me', path: user ? '/dashboard' : '/login' },
   ];
 
-  const handleNavClick = (path: string, requireAuth?: boolean) => {
-    if (requireAuth && !user) {
-      navigate('/login');
-    } else {
-      navigate(path);
-    }
+  const handleNavClick = (path: string) => {
+    navigate(path);
   };
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border z-50 safe-area-pb">
-      <div className="flex items-center justify-around px-2 py-2">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-border z-50 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-center justify-around px-1 py-1.5">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || 
+            (item.path !== '/' && location.pathname.startsWith(item.path));
           
           return (
-            <button
+            <motion.button
               key={item.path}
-              onClick={() => handleNavClick(item.path, item.requireAuth)}
-              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+              onClick={() => handleNavClick(item.path)}
+              whileTap={{ scale: 0.9 }}
+              className={`relative flex flex-col items-center gap-0.5 min-w-[56px] min-h-[48px] px-2 py-1.5 rounded-xl transition-all ${
                 isActive
-                  ? 'text-primary bg-primary/10'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  ? 'text-primary'
+                  : 'text-muted-foreground'
               }`}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{item.label}</span>
-            </button>
+              {isActive && (
+                <motion.div
+                  layoutId="activeTab"
+                  className="absolute inset-0 bg-primary/10 rounded-xl"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+              <Icon className={`h-5 w-5 relative z-10 ${isActive ? 'stroke-[2.5px]' : ''}`} />
+              <span className={`text-[10px] font-medium relative z-10 ${isActive ? 'font-semibold' : ''}`}>
+                {item.label}
+              </span>
+            </motion.button>
           );
         })}
       </div>
