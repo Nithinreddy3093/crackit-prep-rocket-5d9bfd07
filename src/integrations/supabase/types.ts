@@ -85,37 +85,52 @@ export type Database = {
           badges_earned: string[] | null
           category_scores: Json | null
           display_name: string | null
+          exam_type: string | null
           id: string
           last_activity: string | null
+          last_rank_update: string | null
+          monthly_score: number | null
           overall_score: number | null
+          rank_change: number | null
           rank_position: number | null
           streak_count: number | null
           updated_at: string | null
           user_id: string
+          weekly_score: number | null
         }
         Insert: {
           badges_earned?: string[] | null
           category_scores?: Json | null
           display_name?: string | null
+          exam_type?: string | null
           id?: string
           last_activity?: string | null
+          last_rank_update?: string | null
+          monthly_score?: number | null
           overall_score?: number | null
+          rank_change?: number | null
           rank_position?: number | null
           streak_count?: number | null
           updated_at?: string | null
           user_id: string
+          weekly_score?: number | null
         }
         Update: {
           badges_earned?: string[] | null
           category_scores?: Json | null
           display_name?: string | null
+          exam_type?: string | null
           id?: string
           last_activity?: string | null
+          last_rank_update?: string | null
+          monthly_score?: number | null
           overall_score?: number | null
+          rank_change?: number | null
           rank_position?: number | null
           streak_count?: number | null
           updated_at?: string | null
           user_id?: string
+          weekly_score?: number | null
         }
         Relationships: [
           {
@@ -466,6 +481,48 @@ export type Database = {
         }
         Relationships: []
       }
+      upsc_progress: {
+        Row: {
+          best_score: number | null
+          created_at: string | null
+          daily_streak: number | null
+          id: string
+          last_practice_date: string | null
+          questions_attempted: number | null
+          questions_correct: number | null
+          subject_id: string
+          total_time_spent: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          best_score?: number | null
+          created_at?: string | null
+          daily_streak?: number | null
+          id?: string
+          last_practice_date?: string | null
+          questions_attempted?: number | null
+          questions_correct?: number | null
+          subject_id: string
+          total_time_spent?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          best_score?: number | null
+          created_at?: string | null
+          daily_streak?: number | null
+          id?: string
+          last_practice_date?: string | null
+          questions_attempted?: number | null
+          questions_correct?: number | null
+          subject_id?: string
+          total_time_spent?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_badges: {
         Row: {
           badge_description: string
@@ -641,6 +698,7 @@ export type Database = {
     }
     Functions: {
       batch_sync_leaderboard: { Args: never; Returns: undefined }
+      calculate_rank_changes: { Args: never; Returns: undefined }
       complete_quiz_session: {
         Args: {
           p_completed_at: string
@@ -688,6 +746,16 @@ export type Database = {
         Returns: undefined
       }
       update_leaderboard_rankings: { Args: never; Returns: undefined }
+      update_upsc_progress: {
+        Args: {
+          p_questions_attempted: number
+          p_questions_correct: number
+          p_subject_id: string
+          p_time_spent?: number
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       update_user_performance: {
         Args: {
           p_completion_time?: number
