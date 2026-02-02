@@ -8,6 +8,7 @@ import { Search, Book, Play, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AnimatedPage from '@/components/common/AnimatedPage';
 import VideoModal from '@/components/resources/VideoModal';
+import AIRecommendedCarousel from '@/components/resources/AIRecommendedCarousel';
 
 interface ResourceItem {
   id: string;
@@ -214,6 +215,13 @@ const Resources = () => {
               </Button>
             ))}
           </motion.div>
+        </div>
+
+        {/* AI Recommended Resources Carousel */}
+        <div className="max-w-7xl mx-auto mb-8">
+          <AIRecommendedCarousel
+            onPlayVideo={(videoId, title) => setSelectedVideo({ id: videoId, title })}
+          />
         </div>
 
         {/* Resources Grid */}
