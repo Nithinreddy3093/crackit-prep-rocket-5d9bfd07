@@ -72,23 +72,42 @@ const Leaderboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [timeRange, examType, category]);
 
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('leaderboard')
-        .select('*')
-        .order('rank_position', { ascending: true })
-        .limit(100);
+        .select('*');
+
+      // Apply exam type filter
+      if (examType !== 'all') {
+        query = query.eq('exam_type', examType);
+      }
+
+      // Apply time range filter using score columns
+      if (timeRange === 'weekly') {
+        query = query.order('weekly_score', { ascending: false, nullsFirst: false });
+      } else if (timeRange === 'monthly') {
+        query = query.order('monthly_score', { ascending: false, nullsFirst: false });
+      } else {
+        query = query.order('overall_score', { ascending: false });
+      }
+
+      query = query.limit(100);
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
-      const typedData = (data || []).map(entry => ({
+      const typedData = (data || []).map((entry, index) => ({
         ...entry,
         category_scores: entry.category_scores as Record<string, number> | null,
         badges_earned: entry.badges_earned as string[] | null,
+        // Recalculate rank_position based on current sort
+        rank_position: index + 1,
       }));
 
       setLeaderboard(typedData);
@@ -374,7 +393,7 @@ const Leaderboard = () => {
               </div>
             ))
           ) : (
-            (category === 'overall' ? restOfLeaderboard : leaderboard).map((entry, index) => (
+            restOfLeaderboard.map((entry, index) => (
               <MobileLeaderboardRow
                 key={entry.id}
                 entry={entry}

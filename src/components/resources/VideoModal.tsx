@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -41,11 +42,12 @@ const VideoModal: React.FC<VideoModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-4xl p-0 bg-[#0f172a] border-white/10 overflow-hidden">
         <DialogHeader className="p-4 pb-0">
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-white text-lg font-semibold">
-              {title}
-            </DialogTitle>
-          </div>
+          <DialogTitle className="text-white text-lg font-semibold">
+            {title}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            Video player for {title}. Use the controls to play, pause, and adjust volume.
+          </DialogDescription>
         </DialogHeader>
         
         {/* Video Container */}
