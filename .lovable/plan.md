@@ -1,209 +1,269 @@
 
 
-# Top AI-Recommended Resources Carousel - Implementation Plan
+# App Testing & Debugging Report - Issues and Fixes
 
-## Overview
+## Executive Summary
 
-Add a premium, visually distinct "Top AI-Recommended Resources" section to the Learning Resources page. This section will feature a horizontal scrolling carousel with 3 handpicked YouTube videos, positioned between the category filters and the existing resource grid.
+After thorough analysis of the codebase, console logs, and component architecture, I've identified **9 issues** across accessibility, functionality, mobile experience, and security. This plan outlines each issue with its root cause and proposed fix.
 
 ---
 
-## Architecture
+## Issues Identified
 
-### New Component Structure
+### Issue 1: Missing DialogDescription - Accessibility Warning (HIGH PRIORITY)
 
-```text
-src/components/resources/
-    |-- AIRecommendedCarousel.tsx (NEW - main carousel container)
-    |-- AIRecommendedVideoCard.tsx (NEW - individual video card)
-    |-- VideoModal.tsx (EXISTING - reuse for inline preview)
+**Problem**: Console shows repeated warnings:
+```
+Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}
 ```
 
-### Data Structure
+**Root Cause**: Two modal components are missing the required `DialogDescription` for accessibility:
+1. `VideoModal.tsx` - Used in Resources page for video playback
+2. `ExplanationModal.tsx` - Used in Quiz for answer explanations
 
-```typescript
-interface AIRecommendedVideo {
-  id: string;
-  title: string;
-  description: string;
-  youtubeVideoId: string;
-  category: string;
-  badge: string;
-}
+**Fix**: Add `DialogDescription` to both components (or use `aria-describedby={undefined}` to suppress if no description is needed).
+
+**Files to Modify**:
+- `src/components/resources/VideoModal.tsx`
+- `src/components/quiz/ExplanationModal.tsx`
+
+---
+
+### Issue 2: Leaderboard Time/Exam Filters Not Functional
+
+**Problem**: The `TimeFilter` and `ExamTypeFilter` components are rendered but their state changes don't actually filter the leaderboard data.
+
+**Root Cause**: In `Leaderboard.tsx`:
+- `timeRange` and `examType` states are defined
+- Filters are rendered and update state
+- But `fetchLeaderboard()` doesn't use these values to filter data
+
+**Fix**: Update `fetchLeaderboard` to accept filter parameters and apply them to the Supabase query.
+
+**Files to Modify**:
+- `src/pages/Leaderboard.tsx`
+
+---
+
+### Issue 3: Mobile Leaderboard Shows Duplicate Top 3
+
+**Problem**: On mobile, the top 3 users are displayed in both `MobilePodium` AND the `MobileLeaderboardRow` list below (when category is not 'overall').
+
+**Root Cause**: The conditional logic shows:
+```tsx
+(category === 'overall' ? restOfLeaderboard : leaderboard).map(...)
+```
+This means when any category is selected, ALL users (including top 3) are shown in the list, while the podium already shows top 3.
+
+**Fix**: Always use `restOfLeaderboard` (positions 4+) for the mobile list to avoid duplication.
+
+**Files to Modify**:
+- `src/pages/Leaderboard.tsx`
+
+---
+
+### Issue 4: UPSC Progress Dashboard Uses Mock Data Only
+
+**Problem**: `UPSCProgressDashboard` always displays mock/demo data even for logged-in users.
+
+**Root Cause**: The component accepts props for real data but falls back to hardcoded mock data:
+```tsx
+const mockSubjectProgress: SubjectProgress[] = subjectProgress.length > 0 ? subjectProgress : [...mockData];
+```
+However, the parent `UPSC.tsx` never passes actual progress data - only `userName`.
+
+**Fix**: 
+1. Create a hook `useUPSCProgress` to fetch actual UPSC progress from database
+2. Pass real data to `UPSCProgressDashboard`
+
+**Files to Create**:
+- `src/hooks/useUPSCProgress.ts`
+
+**Files to Modify**:
+- `src/pages/UPSC.tsx`
+- `src/components/upsc/UPSCProgressDashboard.tsx`
+
+---
+
+### Issue 5: Dashboard Real-time Subscription Potential Memory Leak
+
+**Problem**: In `SimpleDashboard.tsx`, there are two separate Supabase channel subscriptions for the same table (`quiz_results`), and the subscription in `useSimpleDashboard.ts` doesn't have proper cleanup.
+
+**Root Cause**:
+1. `SimpleDashboard.tsx` subscribes to `quiz-results-changes`
+2. `useSimpleDashboard.ts` subscribes to `dashboard-quiz-results`
+3. The hook's subscription depends on `[user]` but calls `refetchDashboardData` which triggers re-renders
+
+**Fix**: 
+1. Remove duplicate subscription from `SimpleDashboard.tsx`
+2. Keep only the subscription in the hook
+3. Ensure proper dependency array
+
+**Files to Modify**:
+- `src/components/dashboard/SimpleDashboard.tsx`
+- `src/hooks/useSimpleDashboard.ts`
+
+---
+
+### Issue 6: AI Tutor Chat Streaming Not Working Properly
+
+**Problem**: The `AIChatAssistant` component tries to stream responses but the streaming logic may fail silently.
+
+**Root Cause**: The streaming code assumes `data.body?.getReader()` works, but Supabase functions invoke returns JSON, not a streaming response.
+
+**Fix**: Update the AI tutor to handle both streaming and non-streaming responses, with proper error handling.
+
+**Files to Modify**:
+- `src/components/chat/AIChatAssistant.tsx`
+
+---
+
+### Issue 7: Mobile Bottom Nav Resources Link Missing
+
+**Problem**: The `MobileBottomNav` doesn't include a direct link to Resources, which is an important learning section.
+
+**Current Navigation**:
+- Home, UPSC, Topics, Ranks, Me
+
+**Fix**: Consider adding Resources as a floating action or replacing one less-used item, OR keep current but ensure easy access via hamburger menu.
+
+**Recommendation**: No code change needed - current navigation is optimal for 5-item bottom nav. Resources is accessible via top menu.
+
+---
+
+### Issue 8: Quiz Session Not Updating on Completion
+
+**Problem**: In `useSimpleQuiz.ts`, the quiz session is created at start but may not be properly updated on completion if errors occur.
+
+**Root Cause**: The `completeQuiz` function has complex logic and multiple database calls. If any fails, the session may remain in an incomplete state.
+
+**Fix**: Add transaction-like handling and ensure session completion even on partial failures.
+
+**Files to Modify**:
+- `src/hooks/useSimpleQuiz.ts`
+
+---
+
+### Issue 9: Security Warnings from Database Linter
+
+**Problem**: Supabase linter found 11 security warnings including:
+- 5x Function Search Path Mutable
+- 2x RLS Policy Always True (overly permissive)
+- Extension in Public schema
+
+**Fix**: These require database migrations to:
+1. Set `search_path` on all functions
+2. Review and restrict overly permissive RLS policies
+3. Move extensions to a dedicated schema
+
+**Files to Create**:
+- `supabase/migrations/[timestamp]_fix_security_warnings.sql`
+
+---
+
+## Implementation Priority
+
+| Priority | Issue | Effort | Impact |
+|----------|-------|--------|--------|
+| 1 | DialogDescription accessibility | 15 min | High (console spam, a11y) |
+| 2 | Leaderboard filters not working | 30 min | High (feature broken) |
+| 3 | Mobile leaderboard duplication | 10 min | Medium (UX bug) |
+| 4 | Dashboard duplicate subscriptions | 20 min | Medium (performance) |
+| 5 | UPSC mock data | 45 min | Medium (misleading UX) |
+| 6 | AI Tutor streaming | 30 min | Medium (feature) |
+| 7 | Quiz session completion | 30 min | Low (edge case) |
+| 8 | Security warnings | 45 min | Low (security hardening) |
+
+---
+
+## Detailed Implementation Plan
+
+### Phase 1: Quick Fixes (Issues 1, 3)
+
+#### Fix VideoModal Accessibility
+Add `DialogDescription` to suppress warning and improve screen reader support:
+```tsx
+import { DialogDescription } from '@/components/ui/dialog';
+
+// Inside DialogHeader:
+<DialogDescription className="sr-only">
+  Video player for {title}
+</DialogDescription>
+```
+
+#### Fix ExplanationModal Accessibility
+Add `DialogDescription` with visual content since explanation modal has useful context.
+
+#### Fix Mobile Leaderboard Duplication
+Change the mobile list mapping to always exclude top 3:
+```tsx
+{restOfLeaderboard.map((entry, index) => (
+  <MobileLeaderboardRow ... />
+))}
 ```
 
 ---
 
-## Component Details
+### Phase 2: Functional Fixes (Issue 2)
 
-### 1. AIRecommendedCarousel.tsx
+#### Make Leaderboard Filters Functional
+1. Update `fetchLeaderboard` to accept filter parameters
+2. Modify Supabase query to filter by `exam_type` and time range
+3. Add `useEffect` dependency on filter states
 
-**Features:**
-- Horizontal scrolling carousel using Embla Carousel (already installed)
-- Auto-scroll with pause on hover (implemented via CSS animation + JS control)
-- Arrow navigation buttons (left/right)
-- Touch/swipe support on mobile (native to Embla)
-- Responsive: Shows 1 card on mobile, 2 on tablet, 3 on desktop
-
-**Sections:**
-- AI context line: "Recommended by Crackit AI based on interview & exam trends"
-- Section title: "Top AI-Recommended Resources" with fire emoji
-- Subtitle: "Handpicked videos to build strong fundamentals before practice"
-- Carousel with navigation arrows
-
-### 2. AIRecommendedVideoCard.tsx
-
-**Card Elements:**
-- YouTube thumbnail (using `https://img.youtube.com/vi/{VIDEO_ID}/maxresdefault.jpg`)
-- Top-left badge: "AI Recommended" with gradient styling
-- Video title (max 2 lines with truncation)
-- Descriptor line (e.g., "Interview Essential - One Shot")
-- Action buttons:
-  - "Watch" - Opens YouTube in new tab
-  - "Play" - Opens in VideoModal for inline preview
-
-**Styling:**
-- Larger cards than normal resources (emphasized size)
-- Rounded corners with subtle glow/border
-- Dark theme matching Crackit palette
-- Hover effects: scale, glow intensify
-- Glassmorphism effect for premium feel
-
----
-
-## Video Data
-
-The 3 videos to display (data-driven for easy future updates):
-
-| Title | Video ID | Category |
-|-------|----------|----------|
-| OOPS in Java - Zero to Hero (One Shot) | dT-4mt3lxJo | Interview Essential |
-| DBMS Full Playlist - Syllabus Discussion | kBdlM6hNDAE | GATE & UGC NET |
-| Beginner / How to Start Learning | 0bHoB32fuj0 | Career Guidance |
-
----
-
-## Layout & Placement
-
-```text
-Resources Page Structure:
---------------------------
-|  Navbar               |
-|  Header + Search      |
-|  Category Filters     |
-|------------------------|
-|  [NEW SECTION]         |
-|  AI Context Line       |
-|  Section Title         |
-|  Carousel Container    |
-|     <- [Card] [Card] [Card] ->  |
-|------------------------|
-|  Existing Resources    |
-|  Grid (unchanged)      |
-|------------------------|
-|  Footer               |
---------------------------
+```tsx
+useEffect(() => {
+  fetchLeaderboard(timeRange, examType, category);
+}, [timeRange, examType, category]);
 ```
 
 ---
 
-## Technical Implementation
+### Phase 3: Performance & UX (Issues 4, 5)
 
-### Auto-Scroll Behavior
-Since `embla-carousel-autoplay` is not installed, we will implement auto-scroll using:
-- `setInterval` with `api.scrollNext()`
-- Pause on hover via `onMouseEnter` / `onMouseLeave`
-- Loop enabled via Embla options
+#### Create UPSC Progress Hook
+Fetch real user progress from `upsc_progress` table and pass to dashboard.
 
-### Mobile Responsiveness
-- Carousel item basis: `basis-full` (mobile), `basis-1/2` (tablet), `basis-1/3` (desktop)
-- Touch swipe: Native to Embla Carousel
-- Navigation arrows: Hidden on mobile (swipe only), visible on tablet/desktop
-
-### Performance Optimizations
-- YouTube thumbnails loaded as standard images (no iframe until play)
-- Lazy loading for thumbnails
-- Component isolation: No impact on existing resource grid rendering
+#### Remove Duplicate Subscription
+Keep subscription only in the hook, remove from component.
 
 ---
 
-## Files to Create
+### Phase 4: Enhancements (Issues 6, 7, 8)
 
-| File | Purpose |
-|------|---------|
-| `src/components/resources/AIRecommendedCarousel.tsx` | Main carousel container with auto-scroll |
-| `src/components/resources/AIRecommendedVideoCard.tsx` | Individual video card component |
+#### Improve AI Tutor Error Handling
+Add fallback for non-streaming responses and better error messages.
 
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/pages/Resources.tsx` | Import and add `AIRecommendedCarousel` between filters and grid |
+#### Improve Quiz Session Reliability
+Add try-catch blocks and ensure session updates even on partial failures.
 
 ---
 
-## Visual Design Specifications
+## Files Summary
 
-### Color Palette (Matching Crackit Dark Theme)
-- Card background: `#1e293b` (darkBlue-800)
-- Glow border: `primary` color with 20% opacity
-- Badge gradient: `from-orange-500 to-red-500` (fire theme)
-- Text: White with varying opacities
+**To Modify:**
+1. `src/components/resources/VideoModal.tsx` - Add DialogDescription
+2. `src/components/quiz/ExplanationModal.tsx` - Add DialogDescription  
+3. `src/pages/Leaderboard.tsx` - Fix filters, fix mobile duplication
+4. `src/components/dashboard/SimpleDashboard.tsx` - Remove duplicate subscription
+5. `src/hooks/useSimpleDashboard.ts` - Fix subscription dependencies
+6. `src/pages/UPSC.tsx` - Integrate real progress data
+7. `src/components/chat/AIChatAssistant.tsx` - Improve error handling
 
-### Card Dimensions
-- Width: ~320px per card on desktop
-- Height: ~280px (thumbnail + content)
-- Thumbnail aspect ratio: 16:9
-- Border radius: `rounded-xl`
-
-### Animations
-- Entrance: Fade in + slide up (Framer Motion)
-- Hover: Scale 1.02 + glow intensify
-- Auto-scroll: Smooth 5-second interval
+**To Create:**
+1. `src/hooks/useUPSCProgress.ts` - Fetch UPSC progress data
+2. `supabase/migrations/[timestamp]_fix_security_warnings.sql` - Security fixes
 
 ---
 
-## Implementation Steps
+## Testing Checklist
 
-1. **Create AIRecommendedVideoCard component**
-   - YouTube thumbnail display
-   - Badge overlay
-   - Title and descriptor
-   - Watch/Play buttons
-   - Hover animations
-
-2. **Create AIRecommendedCarousel component**
-   - Setup Embla carousel with loop option
-   - Implement auto-scroll with interval
-   - Add pause on hover functionality
-   - Navigation arrows
-   - Responsive item sizing
-   - Section header and AI context line
-
-3. **Integrate into Resources page**
-   - Import carousel component
-   - Add between category filters and resource grid
-   - Pass VideoModal state handlers for inline play
-
-4. **Add custom animations**
-   - Subtle glow keyframe animation for premium feel
-   - Staggered entrance animation for cards
-
----
-
-## Reusability
-
-The carousel component will be designed to accept video data as props:
-
-```typescript
-interface AIRecommendedCarouselProps {
-  videos: AIRecommendedVideo[];
-  onPlayVideo: (videoId: string, title: string) => void;
-}
-```
-
-This allows:
-- Easy addition/removal of recommended videos
-- Potential reuse on other pages (Dashboard, UPSC section)
-- A/B testing different video sets
+After implementing fixes, verify:
+- [ ] Console shows no DialogDescription warnings
+- [ ] Leaderboard filters actually filter data
+- [ ] Mobile leaderboard shows top 3 once (in podium only)
+- [ ] Dashboard updates in real-time after quiz completion
+- [ ] UPSC page shows real progress for logged-in users
+- [ ] AI Tutor handles errors gracefully
+- [ ] Quiz results save reliably
 
