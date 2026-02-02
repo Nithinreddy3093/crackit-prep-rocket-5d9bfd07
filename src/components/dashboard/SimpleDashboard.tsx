@@ -37,30 +37,8 @@ const SimpleDashboard: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state]);
 
-  // Set up real-time subscription for quiz results (runs once on mount)
-  useEffect(() => {
-    const channel = supabase
-      .channel('quiz-results-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'quiz_results'
-        },
-        (payload) => {
-          console.log('[SimpleDashboard] New quiz result detected:', payload);
-          refetch();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-    // Only set up subscription once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Real-time subscription is now handled in useSimpleDashboard hook
+  // to avoid duplicate subscriptions and potential memory leaks
 
   if (loading) {
     return (

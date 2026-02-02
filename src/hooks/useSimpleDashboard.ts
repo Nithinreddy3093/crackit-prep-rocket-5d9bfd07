@@ -44,7 +44,6 @@ export const useSimpleDashboard = () => {
     setLastRefresh(Date.now());
   }, []);
 
-  // Calculate skill data for radar chart
   // Set up real-time subscription for quiz results
   useEffect(() => {
     if (!user) return;
@@ -69,7 +68,9 @@ export const useSimpleDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, refetchDashboardData]);
+
+  // Calculate skill data for radar chart
 
   const skillData: Record<string, { total: number; count: number }> = results.reduce((acc, result) => {
     if (!acc[result.topic]) {

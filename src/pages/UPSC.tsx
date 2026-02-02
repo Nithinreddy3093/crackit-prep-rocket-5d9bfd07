@@ -27,10 +27,12 @@ import UPSCQuickActions from '@/components/upsc/UPSCQuickActions';
 import UPSCProgressDashboard from '@/components/upsc/UPSCProgressDashboard';
 import { UPSC_SUBJECTS } from '@/data/upscData';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUPSCProgress } from '@/hooks/useUPSCProgress';
 
 const UPSC: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: upscProgress } = useUPSCProgress();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -143,7 +145,13 @@ const UPSC: React.FC = () => {
                 <h2 className="text-lg md:text-xl font-bold text-foreground">Your Progress</h2>
                 <p className="text-xs md:text-sm text-muted-foreground">Track your preparation journey</p>
               </motion.div>
-              <UPSCProgressDashboard userName={user.name || 'Aspirant'} />
+              <UPSCProgressDashboard 
+                userName={user.name || 'Aspirant'}
+                overallProgress={upscProgress.overallProgress}
+                subjectProgress={upscProgress.subjectProgress}
+                questionsToday={upscProgress.questionsToday}
+                streak={upscProgress.streak}
+              />
             </div>
           </section>
         )}

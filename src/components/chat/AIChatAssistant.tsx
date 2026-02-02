@@ -37,38 +37,63 @@ export const AIChatAssistant = () => {
 
       if (error) throw error;
 
-      const reader = data.body?.getReader();
-      const decoder = new TextDecoder();
-      let assistantMessage = '';
+      // Handle non-streaming response (JSON object)
+      if (data && typeof data === 'object' && !data.body) {
+        // Direct JSON response from edge function
+        const content = data.response || data.message || data.content || '';
+        if (content) {
+          setMessages([...newMessages, { role: 'assistant', content }]);
+        } else {
+          // Try to extract from choices format
+          const choicesContent = data.choices?.[0]?.message?.content;
+          if (choicesContent) {
+            setMessages([...newMessages, { role: 'assistant', content: choicesContent }]);
+          } else {
+            throw new Error('No response content received');
+          }
+        }
+        return;
+      }
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      // Handle streaming response
+      if (data?.body?.getReader) {
+        const reader = data.body.getReader();
+        const decoder = new TextDecoder();
+        let assistantMessage = '';
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const jsonStr = line.slice(6).trim();
-            if (jsonStr === '[DONE]') continue;
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
 
-            try {
-              const parsed = JSON.parse(jsonStr);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                assistantMessage += content;
-                setMessages([...newMessages, { role: 'assistant', content: assistantMessage }]);
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const jsonStr = line.slice(6).trim();
+              if (jsonStr === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(jsonStr);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  assistantMessage += content;
+                  setMessages([...newMessages, { role: 'assistant', content: assistantMessage }]);
+                }
+              } catch (e) {
+                // Incomplete JSON, continue
               }
-            } catch (e) {
-              // Incomplete JSON, continue
             }
           }
         }
+      } else {
+        throw new Error('Unexpected response format from AI tutor');
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error('Failed to get response from AI tutor');
+      toast.error('Failed to get response from AI tutor. Please try again.');
+      // Remove the user message if we failed to get a response
+      setMessages(messages);
     } finally {
       setIsLoading(false);
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle } from 'lucide-react';
 
@@ -37,6 +37,9 @@ const ExplanationModal: React.FC<ExplanationModalProps> = ({
               </>
             )}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {isCorrect ? 'You answered correctly.' : 'Your answer was incorrect.'} See the explanation below.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
