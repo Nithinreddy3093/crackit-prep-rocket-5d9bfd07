@@ -14,8 +14,8 @@ import { getRecentQuizResults } from '@/services/performance/quizResultsService'
 
 // Import custom components
 import StatCard from './performance-summary/StatCard';
-import StrengthAreas from './performance-summary/StrengthAreas';
-import ImprovementAreas from './performance-summary/ImprovementAreas';
+import DynamicStrengthAreas from './performance-summary/DynamicStrengthAreas';
+import DynamicImprovementAreas from './performance-summary/DynamicImprovementAreas';
 import AISummary from './performance-summary/AISummary';
 import QuizResultSummary from './QuizResultSummary';
 
@@ -195,13 +195,13 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ forceRefresh })
           {/* Latest Quiz Result */}
           <QuizResultSummary latestQuiz={latestQuiz} loading={isLoading} />
           
-          {/* Performance Insights */}
+          {/* Performance Insights - Using Dynamic Components */}
           <div className="space-y-4">
-            {/* Strengths */}
-            <StrengthAreas areas={strengthAreas} loading={isLoading} />
+            {/* Strengths - Now Data-Driven */}
+            <DynamicStrengthAreas forceRefresh={forceRefresh} />
             
-            {/* Areas to Improve */}
-            <ImprovementAreas areas={improvementAreas} loading={isLoading} />
+            {/* Areas to Improve - Now Data-Driven */}
+            <DynamicImprovementAreas forceRefresh={forceRefresh} />
           </div>
         </div>
         

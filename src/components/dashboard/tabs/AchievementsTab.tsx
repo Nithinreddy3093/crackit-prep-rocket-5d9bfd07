@@ -1,8 +1,6 @@
 
-import React, { useEffect, useState } from 'react';
-import { Trophy } from 'lucide-react';
-import Badges from '@/components/dashboard/Badges';
-import { Skeleton } from '@/components/ui/skeleton';
+import React from 'react';
+import PremiumBadges from '@/components/dashboard/PremiumBadges';
 
 interface AchievementsTabProps {
   forceRefresh?: boolean;
@@ -10,15 +8,9 @@ interface AchievementsTabProps {
 
 const AchievementsTab: React.FC<AchievementsTabProps> = ({ forceRefresh }) => {
   return (
-    <>
-      <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
-        <h3 className="section-title">
-          <Trophy className="section-icon" />
-          Your Badges & Achievements
-        </h3>
-        <Badges forceRefresh={forceRefresh} />
-      </div>
-    </>
+    <div className="space-y-6">
+      <PremiumBadges forceRefresh={forceRefresh} showCategories={true} />
+    </div>
   );
 };
 

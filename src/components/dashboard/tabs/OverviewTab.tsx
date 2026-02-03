@@ -1,12 +1,15 @@
 
 import React from 'react';
-import { MousePointerClick, ListChecks, Trophy } from 'lucide-react';
+import { MousePointerClick, ListChecks, Trophy, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import RecentActivity from '@/components/dashboard/RecentActivity';
 import { ActivityItem } from '@/types/dashboard';
 import UpcomingQuizzes from '@/components/dashboard/UpcomingQuizzes';
 import AiRecommendations from '@/components/dashboard/AiRecommendations';
 import PerformanceSummary from '@/components/dashboard/PerformanceSummary';
+import { useBadgeSystem } from '@/hooks/useBadgeSystem';
+import { BADGE_TIER_COLORS } from '@/services/badgeEngine';
 
 interface OverviewTabProps {
   activities: ActivityItem[];
@@ -24,6 +27,8 @@ const upcomingQuizzes = [
 ];
 
 const OverviewTab: React.FC<OverviewTabProps> = ({ activities, isLoading, setActiveTab, forceRefresh }) => {
+  const { stats, streak, loading: badgeLoading } = useBadgeSystem(forceRefresh);
+
   return (
     <>
       {/* Performance Summary */}
@@ -51,30 +56,56 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ activities, isLoading, setAct
         
         <div className="glass-card p-6 hover:shadow-blue-500/10 dashboard-card-hover">
           <h3 className="section-title">
-            <Trophy className="section-icon" />
+            <Sparkles className="section-icon text-yellow-400" />
             Your Achievements
           </h3>
           <div className="space-y-3">
+            {/* Badge Stats */}
             <div className="flex items-center justify-between">
-              <span className="text-white/80">Quizzes Completed</span>
-              <span className="font-bold text-primary">
-                {isLoading ? '...' : (activities.filter(a => a.type === 'quiz').length)}
+              <span className="text-white/80">Badges Earned</span>
+              <span className="font-bold text-yellow-400">
+                {badgeLoading ? '...' : (stats?.totalEarned || 0)}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white/80">Total Score</span>
-              <span className="font-bold text-primary">
-                {isLoading ? '...' : (() => {
-                  const quizzes = activities.filter(a => a.type === 'quiz');
-                  if (quizzes.length === 0) return '0%';
-                  const totalScore = quizzes.reduce((sum, quiz) => {
-                    const score = parseInt(quiz.score?.split('/')[0] || '0');
-                    return sum + score;
-                  }, 0);
-                  return Math.round(totalScore / quizzes.length) + '%';
-                })()}
-              </span>
-            </div>
+            
+            {/* Streak */}
+            {streak && streak.currentStreak > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-white/80">Current Streak</span>
+                <span className="font-bold text-orange-400">
+                  🔥 {streak.currentStreak} days
+                </span>
+              </div>
+            )}
+            
+            {/* Badge tier breakdown */}
+            {stats && stats.totalEarned > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {Object.entries(stats.byTier)
+                  .filter(([, count]) => count > 0)
+                  .map(([tier, count]) => (
+                    <span 
+                      key={tier}
+                      className={`text-xs px-2 py-1 rounded-full bg-gradient-to-r ${BADGE_TIER_COLORS[tier as keyof typeof BADGE_TIER_COLORS].bg} text-white`}
+                    >
+                      {count} {tier}
+                    </span>
+                  ))
+                }
+              </div>
+            )}
+            
+            {/* Progress to next badge */}
+            {stats && stats.lockedWithProgress.length > 0 && (
+              <div className="bg-white/5 rounded-lg p-2">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-white/60">Next: {stats.lockedWithProgress[0].name}</span>
+                  <span className="text-primary">{stats.lockedWithProgress[0].progress}%</span>
+                </div>
+                <Progress value={stats.lockedWithProgress[0].progress} className="h-1.5 bg-white/10" />
+              </div>
+            )}
+            
             <Button
               onClick={() => setActiveTab("achievements")}
               variant="outline"

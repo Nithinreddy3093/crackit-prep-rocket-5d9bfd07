@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Crown, Medal, Flame, Star, ChevronRight } from 'lucide-react';
+import { Crown, Medal, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import RankChangeIndicator from './RankChangeIndicator';
+import { CompactBadgeDisplay, StreakBadge } from '@/components/badges/CompactBadgeDisplay';
+import { BadgeTier } from '@/services/badgeEngine';
 
 interface LeaderboardEntry {
   id: string;
@@ -92,18 +94,19 @@ const MobileLeaderboardRow: React.FC<MobileLeaderboardRowProps> = ({
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-3 text-xs text-white/50 mt-0.5">
+        <div className="flex items-center gap-2 mt-0.5">
+          {/* Streak Badge */}
           {entry.streak_count > 0 && (
-            <span className="flex items-center gap-0.5 text-orange-400">
-              <Flame className="h-3 w-3" />
-              {entry.streak_count}
-            </span>
+            <StreakBadge streakCount={entry.streak_count} size="sm" />
           )}
+          
+          {/* Badges Earned */}
           {(entry.badges_earned?.length || 0) > 0 && (
-            <span className="flex items-center gap-0.5 text-yellow-400">
-              <Star className="h-3 w-3" />
-              {entry.badges_earned?.length}
-            </span>
+            <CompactBadgeDisplay 
+              badgeCount={entry.badges_earned?.length || 0} 
+              tier={entry.badges_earned && entry.badges_earned.length >= 10 ? 'gold' as BadgeTier : 'silver' as BadgeTier}
+              size="sm"
+            />
           )}
         </div>
       </div>
