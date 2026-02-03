@@ -97,6 +97,63 @@ const TOPIC_CONFIGS: Record<string, TopicConfig> = {
     description: 'Cognizant GenC and GenC Elevate pattern - Aptitude, Automata Fix, Hand Coding',
     keywords: ['quantitative aptitude', 'logical reasoning', 'automata fix', 'hand coding', 'Java', 'Python', 'SQL', 'verbal ability', 'Cognizant GenC pattern']
   },
+  // Product-Based Companies
+  'ibm-prep': {
+    name: 'IBM Interview Preparation',
+    questionCount: 15,
+    timeLimit: 45,
+    description: 'IBM hiring pattern - Cognitive Ability, Technical Assessment, Coding, System Design basics',
+    keywords: ['cognitive ability', 'numerical reasoning', 'verbal reasoning', 'Java', 'Python', 'data structures', 'algorithms', 'SQL', 'cloud computing', 'IBM pattern', 'problem solving']
+  },
+  'amazon-sde': {
+    name: 'Amazon SDE Preparation',
+    questionCount: 15,
+    timeLimit: 50,
+    description: 'Amazon SDE interview pattern - Leadership Principles, DSA, System Design, Behavioral',
+    keywords: ['leadership principles', 'data structures', 'algorithms', 'system design', 'scalability', 'AWS', 'OOP', 'dynamic programming', 'trees', 'graphs', 'Amazon LP', 'STAR method']
+  },
+  'microsoft-prep': {
+    name: 'Microsoft Interview Preparation',
+    questionCount: 15,
+    timeLimit: 50,
+    description: 'Microsoft hiring pattern - DSA, Problem Solving, System Design, Behavioral',
+    keywords: ['data structures', 'algorithms', 'problem solving', 'system design', 'Azure', 'C#', 'OOP', 'design patterns', 'coding', 'Microsoft interview', 'growth mindset']
+  },
+  'google-prep': {
+    name: 'Google Interview Preparation',
+    questionCount: 15,
+    timeLimit: 50,
+    description: 'Google hiring pattern - DSA, Algorithms, System Design, Googleyness',
+    keywords: ['data structures', 'algorithms', 'complexity analysis', 'system design', 'distributed systems', 'problem solving', 'coding', 'Google interview', 'Googleyness', 'leadership']
+  },
+  'capgemini-prep': {
+    name: 'Capgemini Interview Preparation',
+    questionCount: 15,
+    timeLimit: 40,
+    description: 'Capgemini hiring pattern - Game-based Assessment, Technical MCQs, Pseudo Coding',
+    keywords: ['aptitude', 'logical reasoning', 'pseudo code', 'Java', 'Python', 'SQL', 'behavioral', 'game-based assessment', 'Capgemini pattern', 'technical MCQs']
+  },
+  'deloitte-prep': {
+    name: 'Deloitte Interview Preparation',
+    questionCount: 15,
+    timeLimit: 40,
+    description: 'Deloitte hiring pattern - Aptitude, Case Studies, Technical, Group Discussion',
+    keywords: ['aptitude', 'verbal reasoning', 'case studies', 'consulting', 'technical MCQs', 'Java', 'SQL', 'group discussion', 'Deloitte pattern', 'business acumen']
+  },
+  'hcl-prep': {
+    name: 'HCL Interview Preparation',
+    questionCount: 15,
+    timeLimit: 40,
+    description: 'HCL TechBee and regular hiring pattern - Aptitude, Technical, Coding Assessment',
+    keywords: ['aptitude', 'logical reasoning', 'technical MCQs', 'Java', 'C programming', 'SQL', 'networking', 'operating systems', 'HCL pattern', 'coding']
+  },
+  'tech-mahindra-prep': {
+    name: 'Tech Mahindra Interview Preparation',
+    questionCount: 15,
+    timeLimit: 40,
+    description: 'Tech Mahindra hiring pattern - Aptitude, Essay, Technical, Coding',
+    keywords: ['aptitude', 'essay writing', 'technical MCQs', 'Java', 'Python', 'networking', 'DBMS', 'coding', 'Tech Mahindra pattern', 'verbal ability']
+  },
   'aptitude': {
     name: 'General Aptitude',
     questionCount: 15,
