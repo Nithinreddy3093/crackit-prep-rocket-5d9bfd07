@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
+import PremiumBadges from '@/components/dashboard/PremiumBadges';
 
 interface UserProfileData {
   userId: string;
@@ -465,42 +466,7 @@ const UserProfile = () => {
               </TabsContent>
 
               <TabsContent value="badges" className="mt-6">
-                <Card className="bg-white/5 border-white/10">
-                  <CardHeader>
-                    <CardTitle className="text-white flex items-center gap-2">
-                      <Award className="h-5 w-5 text-yellow-400" />
-                      Earned Badges ({badges.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {badges.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {badges.map((badge, index) => (
-                          <motion.div
-                            key={badge.id}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border border-yellow-500/30 rounded-xl p-4 text-center"
-                          >
-                            <div className="text-4xl mb-2">{badge.icon}</div>
-                            <h4 className="text-white font-semibold mb-1">{badge.badge_name}</h4>
-                            <p className="text-white/60 text-sm mb-2">{badge.badge_description}</p>
-                            <Badge variant="outline" className="text-xs border-yellow-500/50 text-yellow-400">
-                              {format(new Date(badge.earned_date), 'MMM d, yyyy')}
-                            </Badge>
-                          </motion.div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12">
-                        <Award className="h-16 w-16 text-white/20 mx-auto mb-4" />
-                        <p className="text-white/50 mb-2">No badges earned yet.</p>
-                        <p className="text-white/40 text-sm">Keep taking quizzes to unlock achievements!</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <PremiumBadges showCategories={true} />
               </TabsContent>
             </Tabs>
           </motion.div>
