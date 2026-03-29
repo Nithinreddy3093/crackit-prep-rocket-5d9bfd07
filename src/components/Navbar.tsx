@@ -231,6 +231,13 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <>
                   <Link
+                    to="/achievements"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Achievements
+                  </Link>
+                  <Link
                     to="/dashboard"
                     className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
                     onClick={() => setIsMenuOpen(false)}
