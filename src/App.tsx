@@ -36,6 +36,7 @@ import Features from "./pages/Features";
 import CookiePolicy from "./pages/CookiePolicy";
 import HRInterview from "./pages/HRInterview";
 import UPSC from "./pages/UPSC";
+import Achievements from "./pages/Achievements";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -126,6 +127,11 @@ const App = () => {
                 {/* HR Interview temporarily disabled - feature under development */}
                 {/* <Route path="/hr-interview" element={<HRInterview />} /> */}
                 <Route path="/faq" element={<FAQ />} />
+                <Route path="/achievements" element={
+                  <ProtectedRoute>
+                    <Achievements />
+                  </ProtectedRoute>
+                } />
                 <Route path="/support" element={<Support />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
