@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, Target, TrendingUp, Clock, RefreshCw } from 'lucide-react';
+import { Trophy, Target, TrendingUp, Clock, RefreshCw, Award } from 'lucide-react';
 import { useSimpleDashboard } from '@/hooks/useSimpleDashboard';
 import SkillRadarChart from './SkillRadarChart';
 import PerformanceTrendChart from './PerformanceTrendChart';
@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const SimpleDashboard: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { data, loading, refetch } = useSimpleDashboard();
   
   // Auto-refresh when navigating to dashboard (e.g., after quiz completion)
@@ -68,16 +69,27 @@ const SimpleDashboard: React.FC = () => {
           <h1 className="text-4xl font-bold mb-2 gradient-text">Your Learning Dashboard</h1>
           <p className="text-muted-foreground">Track your progress and keep learning</p>
         </div>
-        <Button
-          onClick={refetch}
-          variant="outline"
-          size="sm"
-          className="gap-2 ml-4"
-          disabled={loading}
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2 ml-4">
+          <Button
+            onClick={() => navigate('/achievements')}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Award className="h-4 w-4" />
+            Achievements
+          </Button>
+          <Button
+            onClick={refetch}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </motion.div>
 
       {/* Key Stats */}

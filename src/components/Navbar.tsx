@@ -80,6 +80,13 @@ const Navbar = () => {
                     Pricing
                   </Link>
                 </NavigationMenuItem>
+                {isAuthenticated && (
+                  <NavigationMenuItem>
+                    <Link to="/achievements" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
+                      Achievements
+                    </Link>
+                  </NavigationMenuItem>
+                )}
                 <NavigationMenuItem>
                   <Link to="/about" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
                     About
@@ -223,6 +230,13 @@ const Navbar = () => {
             <div className="px-2 space-y-2">
               {isAuthenticated ? (
                 <>
+                  <Link
+                    to="/achievements"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Achievements
+                  </Link>
                   <Link
                     to="/dashboard"
                     className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
