@@ -69,16 +69,27 @@ const SimpleDashboard: React.FC = () => {
           <h1 className="text-4xl font-bold mb-2 gradient-text">Your Learning Dashboard</h1>
           <p className="text-muted-foreground">Track your progress and keep learning</p>
         </div>
-        <Button
-          onClick={refetch}
-          variant="outline"
-          size="sm"
-          className="gap-2 ml-4"
-          disabled={loading}
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex gap-2 ml-4">
+          <Button
+            onClick={() => navigate('/achievements')}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <Award className="h-4 w-4" />
+            Achievements
+          </Button>
+          <Button
+            onClick={refetch}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </motion.div>
 
       {/* Key Stats */}
