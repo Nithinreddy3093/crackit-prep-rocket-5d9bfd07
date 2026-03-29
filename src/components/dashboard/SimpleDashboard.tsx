@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const SimpleDashboard: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { data, loading, refetch } = useSimpleDashboard();
   
   // Auto-refresh when navigating to dashboard (e.g., after quiz completion)
