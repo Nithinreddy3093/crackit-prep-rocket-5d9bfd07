@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trophy, Target, TrendingUp, Clock, RefreshCw } from 'lucide-react';
+import { Trophy, Target, TrendingUp, Clock, RefreshCw, Award } from 'lucide-react';
 import { useSimpleDashboard } from '@/hooks/useSimpleDashboard';
 import SkillRadarChart from './SkillRadarChart';
 import PerformanceTrendChart from './PerformanceTrendChart';
