@@ -12,7 +12,7 @@ const strategies = [
     bg: 'from-blue-500/10 to-indigo-500/10',
     tips: [
       'Focus on NCERT books (Class 6–12) for conceptual clarity',
-      'Solve last 10 years' PYQs — many questions repeat patterns',
+      'Solve last 10 years\u2019 PYQs — many questions repeat patterns',
       'Daily current affairs (newspaper + monthly compilation)',
       'Practice elimination technique for negative marking',
     ],
