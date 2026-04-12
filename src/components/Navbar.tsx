@@ -80,13 +80,11 @@ const Navbar = () => {
                     Pricing
                   </Link>
                 </NavigationMenuItem>
-                {isAuthenticated && (
-                  <NavigationMenuItem>
-                    <Link to="/achievements" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                      Achievements
-                    </Link>
-                  </NavigationMenuItem>
-                )}
+                <NavigationMenuItem>
+                  <Link to="/achievements" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
+                    Achievements
+                  </Link>
+                </NavigationMenuItem>
                 <NavigationMenuItem>
                   <Link to="/about" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
                     About
