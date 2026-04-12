@@ -252,19 +252,19 @@ export const UPSC_STATS = {
   qualifications: 'Graduate in any discipline from recognized university'
 };
 
-// UPSC Important Dates (Sample - can be updated annually)
+// UPSC Important Dates 2026 (Tentative)
 export const UPSC_IMPORTANT_DATES = [
-  { event: 'Notification Release', date: 'February', status: 'upcoming' },
-  { event: 'Application Deadline', date: 'March', status: 'upcoming' },
-  { event: 'Prelims Examination', date: 'May/June', status: 'upcoming' },
-  { event: 'Prelims Result', date: 'July', status: 'upcoming' },
-  { event: 'Mains Examination', date: 'September', status: 'upcoming' },
-  { event: 'Mains Result', date: 'December', status: 'upcoming' },
-  { event: 'Interview/Personality Test', date: 'Jan-April', status: 'upcoming' },
-  { event: 'Final Result', date: 'May', status: 'upcoming' }
+  { event: 'Notification Release', date: 'February 2026', status: 'upcoming' },
+  { event: 'Application Deadline', date: 'March 2026', status: 'upcoming' },
+  { event: 'Prelims Examination', date: '31 May 2026', status: 'upcoming' },
+  { event: 'Prelims Result', date: 'July 2026', status: 'upcoming' },
+  { event: 'Mains Examination', date: 'September 2026', status: 'upcoming' },
+  { event: 'Mains Result', date: 'December 2026', status: 'upcoming' },
+  { event: 'Interview / Personality Test', date: 'Jan–Apr 2027', status: 'upcoming' },
+  { event: 'Final Result', date: 'May 2027', status: 'upcoming' }
 ];
 
-// Previous Year Cutoffs (Sample data)
+// Previous Year Cutoffs (CSE 2024)
 export const UPSC_CUTOFFS = {
   general: { prelims: 92.51, mains: 745, interview: 914 },
   obc: { prelims: 84.29, mains: 706, interview: 865 },
