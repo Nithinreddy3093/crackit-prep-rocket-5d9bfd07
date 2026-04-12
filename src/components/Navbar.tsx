@@ -223,18 +223,18 @@ const Navbar = () => {
             >
               Contact
             </Link>
+            <Link 
+              to="/achievements" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Achievements
+            </Link>
           </div>
           <div className="pt-4 pb-3 border-t border-border">
             <div className="px-2 space-y-2">
               {isAuthenticated ? (
                 <>
-                  <Link
-                    to="/achievements"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Achievements
-                  </Link>
                   <Link
                     to="/dashboard"
                     className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
