@@ -127,11 +127,7 @@ const App = () => {
                 {/* HR Interview temporarily disabled - feature under development */}
                 {/* <Route path="/hr-interview" element={<HRInterview />} /> */}
                 <Route path="/faq" element={<FAQ />} />
-                <Route path="/achievements" element={
-                  <ProtectedRoute>
-                    <Achievements />
-                  </ProtectedRoute>
-                } />
+                <Route path="/achievements" element={<Achievements />} />
                 <Route path="/support" element={<Support />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
