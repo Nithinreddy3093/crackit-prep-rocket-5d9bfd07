@@ -1,90 +1,117 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Sparkles, Twitter, Linkedin, Github } from 'lucide-react';
+
+const cols = [
+  {
+    title: 'Product',
+    links: [
+      { to: '/topics', label: 'Topics' },
+      { to: '/upsc', label: 'UPSC' },
+      { to: '/ai-tutor', label: 'AI Tutor' },
+      { to: '/companies', label: 'Companies' },
+      { to: '/leaderboard', label: 'Leaderboard' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { to: '/about', label: 'About' },
+      { to: '/features', label: 'Features' },
+      { to: '/pricing', label: 'Pricing' },
+      { to: '/careers', label: 'Careers' },
+      { to: '/contact', label: 'Contact' },
+    ],
+  },
+  {
+    title: 'Resources',
+    links: [
+      { to: '/guides', label: 'Study Guides' },
+      { to: '/blog', label: 'Blog' },
+      { to: '/faq', label: 'FAQ' },
+      { to: '/achievements', label: 'Achievements' },
+      { to: '/support', label: 'Support' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { to: '/terms', label: 'Terms' },
+      { to: '/privacy', label: 'Privacy' },
+      { to: '/cookies', label: 'Cookies' },
+    ],
+  },
+];
 
 const Footer = () => {
   return (
-    <footer className="bg-darkBlue-900 py-12 border-t border-darkBlue-800">
-      <div className="container max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-white font-bold mb-4">TechPrep</h3>
-            <p className="text-blue-300 mb-4">
-              Preparing the next generation of software engineers for technical interviews.
+    <footer className="relative mt-16 border-t border-border/60 bg-background">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+          <div className="col-span-2">
+            <Link to="/" className="inline-flex items-center group">
+              <span className="w-9 h-9 rounded-xl bg-gradient-indigo flex items-center justify-center shadow-glow">
+                <span className="w-2 h-2 bg-white rounded-full" />
+              </span>
+              <span className="ml-2.5 text-xl font-bold font-display text-foreground">
+                Crack<span className="gradient-text">It</span>
+              </span>
+              <span className="ml-2.5 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary-glow">
+                <Sparkles className="h-3 w-3" /> AI
+              </span>
+            </Link>
+            <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
+              Know it. Crack it. AI-powered interview and UPSC preparation, built for ambitious learners.
             </p>
-            <div className="flex space-x-4">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                <i className="fab fa-twitter"></i>
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                <i className="fab fa-linkedin"></i>
-              </a>
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
-                <i className="fab fa-github"></i>
-              </a>
+            <div className="mt-5 flex items-center gap-2">
+              {[
+                { href: 'https://twitter.com', Icon: Twitter, label: 'Twitter' },
+                { href: 'https://linkedin.com', Icon: Linkedin, label: 'LinkedIn' },
+                { href: 'https://github.com', Icon: Github, label: 'GitHub' },
+              ].map(({ href, Icon, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-9 h-9 inline-flex items-center justify-center rounded-lg border border-border bg-card/60 text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-card transition-colors"
+                >
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
             </div>
           </div>
-          
-          <div>
-            <h3 className="text-white font-bold mb-4">Company</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/about" className="text-blue-400 hover:text-blue-300">About</Link>
-              </li>
-              <li>
-                <Link to="/features" className="text-blue-400 hover:text-blue-300">Features</Link>
-              </li>
-              <li>
-                <Link to="/pricing" className="text-blue-400 hover:text-blue-300">Pricing</Link>
-              </li>
-              <li>
-                <Link to="/careers" className="text-blue-400 hover:text-blue-300">Careers</Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-blue-400 hover:text-blue-300">Contact</Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="text-white font-bold mb-4">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/guides" className="text-blue-400 hover:text-blue-300">Study Guides</Link>
-              </li>
-              <li>
-                <Link to="/blog" className="text-blue-400 hover:text-blue-300">Blog</Link>
-              </li>
-              <li>
-                <Link to="/faq" className="text-blue-400 hover:text-blue-300">FAQ</Link>
-              </li>
-              <li>
-                <Link to="/companies" className="text-blue-400 hover:text-blue-300">Companies</Link>
-              </li>
-              <li>
-                <Link to="/support" className="text-blue-400 hover:text-blue-300">Support</Link>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="text-white font-bold mb-4">Legal</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/terms" className="text-blue-400 hover:text-blue-300">Terms of Service</Link>
-              </li>
-              <li>
-                <Link to="/privacy" className="text-blue-400 hover:text-blue-300">Privacy Policy</Link>
-              </li>
-              <li>
-                <Link to="/cookies" className="text-blue-400 hover:text-blue-300">Cookie Policy</Link>
-              </li>
-            </ul>
-          </div>
+
+          {cols.map((col) => (
+            <div key={col.title}>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground/90 mb-4">
+                {col.title}
+              </h3>
+              <ul className="space-y-2.5">
+                {col.links.map((l) => (
+                  <li key={l.to}>
+                    <Link
+                      to={l.to}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        
-        <div className="border-t border-darkBlue-800 mt-8 pt-8 text-center">
-          <p className="text-blue-400">&copy; {new Date().getFullYear()} TechPrep. All rights reserved.</p>
+
+        <div className="mt-12 pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} CrackIt. All rights reserved.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Crafted with intent. Powered by AI.
+          </p>
         </div>
       </div>
     </footer>

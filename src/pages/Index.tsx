@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
@@ -9,6 +8,7 @@ import CompaniesSection from '@/components/home/CompaniesSection';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { Sparkles, ArrowRight } from 'lucide-react';
 
 const Index = () => {
   const { isAuthenticated } = useAuth();
@@ -30,54 +30,40 @@ const Index = () => {
       <TopicsSection />
       <CompaniesSection />
 
-      {/* Quiz CTA Section */}
-      <section className="py-12 sm:py-16 bg-white dark:bg-darkBlue-800">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
-              Test Your Knowledge with AI-Powered Quizzes
-            </h2>
-            <p className="mt-4 text-xl text-muted-foreground">
-              Answer questions on multiple CS topics and get personalized AI feedback on your strengths and weaknesses.
-            </p>
-            <div className="mt-8 flex justify-center">
-              <Button
-                onClick={() => navigate(isAuthenticated ? '/topics' : '/login')}
-                size="lg"
-                className="bg-primary text-white hover:bg-primary/90"
-              >
-                Start Quiz Now
-              </Button>
+      {/* Unified premium CTA — calmer than the previous two stacked sections */}
+      <section className="relative py-20 sm:py-28 overflow-hidden">
+        <div className="absolute inset-0 bg-grid-soft opacity-40" />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[420px] w-[820px] rounded-full bg-primary/15 blur-3xl" />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative rounded-3xl glass-strong p-10 sm:p-14 text-center overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary-glow">
+              <Sparkles className="h-3.5 w-3.5" />
+              Ready when you are
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-12 sm:py-16 bg-gradient-to-br from-darkBlue-900 to-darkBlue-700">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-white sm:text-4xl">
-              Ready to crack your next interview?
+            <h2 className="mt-5 font-display text-3xl sm:text-5xl font-bold tracking-tight text-foreground">
+              Crack your next interview <br className="hidden sm:block" />
+              with an <span className="gradient-text">AI co-pilot</span>.
             </h2>
-            <p className="mt-4 text-xl text-blue-100">
-              Join thousands of students and professionals who are already using Crackit to prepare smarter.
+            <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+              Personalized study plans, instant feedback, and company-specific
+              practice — designed to make every minute of prep count.
             </p>
-            <div className="mt-8 flex justify-center gap-4 flex-col sm:flex-row">
+            <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
               <Button
-                onClick={() => navigate(isAuthenticated ? '/dashboard' : '/signup')}
                 size="lg"
-                className="bg-white text-darkBlue-700 hover:bg-gray-100"
+                variant="premium"
+                onClick={() => navigate(isAuthenticated ? '/dashboard' : '/signup')}
               >
-                {isAuthenticated ? 'Go to Dashboard' : 'Get Started for Free'}
+                {isAuthenticated ? 'Open Dashboard' : 'Get Started Free'}
+                <ArrowRight className="h-4 w-4" />
               </Button>
               <Button
-                onClick={() => navigate('/about')}
-                variant="outline"
                 size="lg"
-                className="border-white text-white hover:bg-darkBlue-800"
+                variant="outline"
+                onClick={() => navigate('/about')}
               >
-                Learn More
+                Why CrackIt
               </Button>
             </div>
           </div>
