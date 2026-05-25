@@ -1,0 +1,30 @@
+# CrackIt
+
+> AI-powered interview and UPSC preparation platform with quizzes, company-specific practice, and personalized feedback.
+
+CrackIt helps students and professionals prepare for technical interviews and the UPSC Civil Services Exam. The platform offers AI-generated quizzes across CS topics, company-specific question patterns, an AI tutor, UPSC syllabus coverage with previous-year cutoffs, and a leaderboard.
+
+## Pages
+
+- [Home](/): Overview of CrackIt's interview and exam prep tools.
+- [About](/about): Mission and team behind CrackIt.
+- [Features](/features): Platform capabilities and learning tools.
+- [Pricing](/pricing): Free and premium plans.
+- [Topics](/topics): Browse CS interview topics and start quizzes.
+- [Companies](/companies): Company-specific interview preparation.
+- [UPSC](/upsc): UPSC Civil Services preparation hub with subjects, cutoffs, and strategy.
+- [AI Tutor](/ai-tutor): Chat with an AI tutor for concept help.
+- [Blog](/blog): Articles on interview prep and strategy.
+- [Study Guides](/guides): Structured guides for interview topics.
+- [Leaderboard](/leaderboard): Top performers across topics and exams.
+- [Achievements](/achievements): Badge gallery and progress tracking.
+- [FAQ](/faq): Common questions about CrackIt.
+- [Contact](/contact): Get in touch with the team.
+
+## Optional
+
+- [Careers](/careers)
+- [Support](/support)
+- [Privacy Policy](/privacy)
+- [Terms of Service](/terms)
+- [Cookie Policy](/cookies)

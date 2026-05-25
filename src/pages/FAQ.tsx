@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -30,6 +31,24 @@ const faqs = [
 const FAQ = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>FAQ — Interview & UPSC Prep Questions | CrackIt</title>
+        <meta name="description" content="Answers to common questions about CrackIt: how to prepare for technical interviews, what topics to focus on, timelines, and what makes our platform different." />
+        <link rel="canonical" href="https://crackit-prep-rocket.lovable.app/faq" />
+        <meta property="og:title" content="CrackIt FAQ — Interview & UPSC Prep" />
+        <meta property="og:description" content="Common questions about interview preparation and the CrackIt platform." />
+        <meta property="og:url" content="https://crackit-prep-rocket.lovable.app/faq" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": faqs.map(f => ({
+            "@type": "Question",
+            "name": f.question,
+            "acceptedAnswer": { "@type": "Answer", "text": f.answer }
+          }))
+        })}</script>
+      </Helmet>
       <Navbar />
       <main className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">

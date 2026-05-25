@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { BookOpen, Clock, ArrowRight } from 'lucide-react';
@@ -33,6 +34,27 @@ const blogPosts = [
 const Blogs = () => {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Interview Prep Blog — Tips & Strategies | CrackIt</title>
+        <meta name="description" content="Expert articles on data structures, system design, behavioral interviews, and proven strategies to help you ace your next technical interview." />
+        <link rel="canonical" href="https://crackit-prep-rocket.lovable.app/blog" />
+        <meta property="og:title" content="CrackIt Blog — Interview Prep Insights" />
+        <meta property="og:description" content="Tips, strategies, and expert insights for cracking technical interviews." />
+        <meta property="og:url" content="https://crackit-prep-rocket.lovable.app/blog" />
+        <meta property="og:type" content="website" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": "CrackIt Blog",
+          "url": "https://crackit-prep-rocket.lovable.app/blog",
+          "blogPost": blogPosts.map(p => ({
+            "@type": "BlogPosting",
+            "headline": p.title,
+            "datePublished": p.date,
+            "description": p.description
+          }))
+        })}</script>
+      </Helmet>
       <Navbar />
       <main className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">

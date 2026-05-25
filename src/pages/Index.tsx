@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/home/HeroSection';
@@ -15,6 +16,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <Helmet>
+        <title>CrackIt — AI-Powered Interview & UPSC Prep Platform</title>
+        <meta name="description" content="Crack technical interviews and UPSC exams with AI-driven quizzes, company-specific practice questions, and personalized performance insights." />
+        <link rel="canonical" href="https://crackit-prep-rocket.lovable.app/" />
+        <meta property="og:title" content="CrackIt — AI-Powered Interview & UPSC Prep" />
+        <meta property="og:description" content="Test your knowledge, fix weak spots, and get job-ready with AI-driven quizzes." />
+        <meta property="og:url" content="https://crackit-prep-rocket.lovable.app/" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <Navbar />
       <HeroSection />
       <TopicsSection />
