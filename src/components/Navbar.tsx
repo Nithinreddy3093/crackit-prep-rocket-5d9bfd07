@@ -1,281 +1,205 @@
-
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogIn, LogOut, Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, User, LogIn, LogOut, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import MobileBottomNav from '@/components/MobileBottomNav';
-import { 
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import ThemeToggle from './ThemeToggle';
 
+const navLinks = [
+  { to: '/', label: 'Home' },
+  { to: '/topics', label: 'Topics' },
+  { to: '/upsc', label: 'UPSC' },
+  { to: '/ai-tutor', label: 'AI Tutor' },
+  { to: '/resources', label: 'Resources' },
+  { to: '/leaderboard', label: 'Leaderboard' },
+  { to: '/pricing', label: 'Pricing' },
+  { to: '/achievements', label: 'Achievements' },
+  { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
+];
+
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  const isActive = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
   return (
-    <nav className="sticky top-0 z-30 w-full bg-background/90 dark:bg-darkBlue-900/90 backdrop-blur-md shadow-sm border-b border-border">
+    <nav
+      className={cn(
+        'sticky top-0 z-30 w-full border-b transition-all duration-300',
+        scrolled
+          ? 'bg-background/75 backdrop-blur-xl border-border/80 shadow-soft'
+          : 'bg-background/40 backdrop-blur-md border-transparent'
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <div className="w-3 h-3 bg-white rounded-full animate-pulse-glow"></div>
-              </div>
-              <span className="ml-2 text-xl font-bold text-foreground">Crackit</span>
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex-shrink-0 flex items-center group">
+              <span className="relative w-9 h-9 rounded-xl bg-gradient-indigo flex items-center justify-center shadow-glow">
+                <span className="w-2 h-2 bg-white rounded-full animate-pulse-glow" />
+                <span className="absolute inset-0 rounded-xl ring-1 ring-white/10" />
+              </span>
+              <span className="ml-2.5 text-xl font-bold font-display tracking-tight text-foreground">
+                Crack<span className="gradient-text">It</span>
+              </span>
             </Link>
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary-glow">
+              <Sparkles className="h-3 w-3" />
+              AI
+            </span>
           </div>
-          
+
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <Link to="/" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    Home
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/topics" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    Topics
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/upsc" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    UPSC
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/ai-tutor" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    AI Tutor
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/resources" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    Resources
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/leaderboard" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    Leaderboard
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/pricing" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    Pricing
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/achievements" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    Achievements
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/about" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    About
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/contact" className="px-3 py-2 text-foreground opacity-80 hover:opacity-100 font-medium transition-colors">
-                    Contact
-                  </Link>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            
-            <div className="ml-4 flex items-center space-x-2">
+          <div className="hidden md:flex items-center">
+            <ul className="flex items-center gap-0.5">
+              {navLinks.map((link) => {
+                const active = isActive(link.to);
+                return (
+                  <li key={link.to}>
+                    <Link
+                      to={link.to}
+                      className={cn(
+                        'relative px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                        active
+                          ? 'text-foreground'
+                          : 'text-foreground/65 hover:text-foreground'
+                      )}
+                    >
+                      {link.label}
+                      {active && (
+                        <span className="absolute left-3 right-3 -bottom-0.5 h-px bg-gradient-indigo rounded-full" />
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="ml-4 flex items-center gap-2 pl-4 border-l border-border/60">
               <ThemeToggle />
-              
               {isAuthenticated ? (
-                <div className="flex items-center gap-4">
-                  <Button 
-                    onClick={() => navigate('/dashboard')}
-                    variant="ghost" 
-                    className="text-foreground opacity-80 hover:opacity-100 hover:bg-accent"
-                  >
+                <>
+                  <Button onClick={() => navigate('/dashboard')} variant="ghost" size="sm">
                     <User className="mr-1 h-4 w-4" />
-                    {user?.name || 'Profile'}
+                    {user?.name?.split(' ')[0] || 'Profile'}
                   </Button>
-                  <Button 
-                    onClick={handleLogout}
-                    variant="outline" 
-                    className="border-border text-foreground hover:bg-accent"
-                  >
+                  <Button onClick={handleLogout} variant="outline" size="sm">
                     <LogOut className="mr-1 h-4 w-4" />
                     Log Out
                   </Button>
-                </div>
+                </>
               ) : (
                 <>
-                  <Button asChild variant="ghost" className="text-foreground opacity-80 hover:opacity-100 hover:bg-accent">
+                  <Button asChild variant="ghost" size="sm">
                     <Link to="/login">
                       <LogIn className="mr-1 h-4 w-4" />
                       Log In
                     </Link>
                   </Button>
-                  <Button asChild className="bg-primary hover:bg-primary/90">
+                  <Button asChild variant="premium" size="sm">
                     <Link to="/signup">
-                      <User className="mr-1 h-4 w-4" />
-                      Sign Up
+                      <Sparkles className="mr-1 h-4 w-4" />
+                      Get Started
                     </Link>
                   </Button>
                 </>
               )}
             </div>
           </div>
-          
+
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-1">
             <ThemeToggle />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:text-primary focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:bg-card/60"
+              aria-label="Toggle menu"
             >
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
       </div>
-      
+
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-background dark:bg-darkBlue-800 shadow-lg">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link 
-              to="/" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/topics" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Topics
-            </Link>
-            <Link 
-              to="/upsc" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              UPSC
-            </Link>
-            <Link 
-              to="/ai-tutor" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              AI Tutor
-            </Link>
-            <Link 
-              to="/resources" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Resources
-            </Link>
-            <Link 
-              to="/leaderboard" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Leaderboard
-            </Link>
-            <Link 
-              to="/pricing" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Pricing
-            </Link>
-            <Link 
-              to="/about" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              About
-            </Link>
-            <Link 
-              to="/contact" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Contact
-            </Link>
-            <Link 
-              to="/achievements" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Achievements
-            </Link>
+        <div className="md:hidden glass-strong border-t border-border/60">
+          <div className="px-3 py-3 space-y-0.5">
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={cn(
+                  'block px-3 py-2.5 rounded-md text-base font-medium transition-colors',
+                  isActive(link.to)
+                    ? 'bg-primary/15 text-foreground'
+                    : 'text-foreground/75 hover:bg-card/60 hover:text-foreground'
+                )}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
-          <div className="pt-4 pb-3 border-t border-border">
-            <div className="px-2 space-y-2">
-              {isAuthenticated ? (
-                <>
-                  <Link
-                    to="/dashboard"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMenuOpen(false);
-                    }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-                  >
-                    Log Out
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/login"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-foreground opacity-80 hover:bg-accent hover:opacity-100"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Log In
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="block px-3 py-2 rounded-md text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-            </div>
+          <div className="pt-3 pb-4 px-3 border-t border-border/60 space-y-2">
+            {isAuthenticated ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:bg-card/60"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => { handleLogout(); setIsMenuOpen(false); }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:bg-card/60"
+                >
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:bg-card/60"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/signup"
+                  className="block px-3 py-2 rounded-md text-base font-medium bg-gradient-indigo text-primary-foreground text-center shadow-glow"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
-      
-      {/* Mobile Bottom Navigation */}
+
       <MobileBottomNav />
     </nav>
   );
