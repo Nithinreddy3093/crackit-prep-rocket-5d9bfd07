@@ -1,64 +1,59 @@
+# Plan: Premium AI Redesign — Midnight Indigo, Subtle & Refined
 
+## Direction (locked from your picks)
 
-# Upgrade Plan: UPSC Section, Contact Page, and Achievements
+- **Palette**: Midnight Indigo — deep navy `#0a0a1a` / `#141432` surfaces, `#1e1e5a` borders, `#4f46e5` electric indigo as the single bold accent. Soft `#a5b4fc` highlights for AI/glow moments.
+- **Typography**: Display in **Space Grotesk** (tight, modern, slight tech feel), body in **Inter**. Both via `display=swap`.
+- **Motion register**: Subtle — fades, micro-scales, gentle parallax glows. No particle storms.
+- **AI cues**: thin indigo glow rings, "AI"-pill badges with a pulsing dot, dotted-grid background at very low opacity, animated typewriter on the hero headline only.
 
-## Problems Identified
+## What changes (full site)
 
-### 1. Contact Page Issues
-- **Layout imbalance**: 4-column card grid looks cramped; cards have inconsistent heights due to "100% Online Platform" wrapping
-- **No visual hierarchy**: Plain cards with no gradient or visual appeal matching the dark theme
-- **Form section feels disconnected** from the info cards above
-- **Missing social links** (WhatsApp direct link, social media)
-- **No subject/category dropdown** for the contact form
+### 1. Design system foundation
+- Rewrite `src/index.css` tokens to the Midnight Indigo palette (HSL only).
+- Add gradient + shadow tokens: `--gradient-indigo`, `--gradient-aurora-subtle`, `--shadow-glow`, `--shadow-elevated`.
+- Add Space Grotesk to the Google Fonts import, set `--font-display` / `--font-body`, wire into `tailwind.config.ts`.
+- Add a `bg-grid-soft` utility (low-opacity dotted grid) for hero/section backdrops.
 
-### 2. UPSC Section Improvements
-- Hero section lacks the **motivational punch** needed for UPSC aspirants
-- Missing **Previous Year Cutoff data** display (data exists in `upscData.ts` but unused)
-- Important Dates show all as "upcoming" with no year-specific context
-- No **study strategy tips** or preparation methodology section
-- Quick Actions section could be more visually engaging with better icons and descriptions
-- Missing a **"Why CrackIt for UPSC"** section to build trust
+### 2. Global chrome
+- **Navbar**: glass with `backdrop-blur`, hairline indigo border, active link underline animation, "AI" pill next to the logo.
+- **Footer**: refined dark grid, gradient brand mark, link hover glow.
+- **MobileBottomNav**: same dark glass treatment.
 
-### 3. Achievements Page Issues
-- Page is **wrapped in ProtectedRoute** but earlier it was made visible to all users in navbar -- contradiction. Should allow unauthenticated users to see the page (it already handles auth state internally with a sign-in prompt)
-- Badge gallery cards use inline SVGs for icons which is messy
-- The page works functionally but needs the route protection removed since the page handles auth internally
+### 3. Landing page (`/`)
+- **Hero**: new `TypewriterHeadline` that cycles "Know it.", "Crack it.", "Ace it.", "AI-level it." after the static line; subtle indigo glow orb behind; dotted-grid backdrop; refined dual CTA.
+- **QuizPreview**: glass card, indigo accent for the active option, "AI-graded" micro-badge.
+- **TopicsSection / CompaniesSection**: cards get the new glass + glow-on-hover treatment, consistent radius/spacing.
+- Replace both CTA bands with a single, calmer "Ready to crack your next interview" section in the new palette.
 
----
+### 4. Product pages (UPSC, Companies, Resources, Topics, Achievements, Leaderboard, Pricing, Features, About, FAQ, Contact, Blog, Study Guides, AI Tutor, Support, Privacy/Terms/Cookies, Careers)
+- Swap the per-page orange/green/purple tints for the unified Midnight Indigo system.
+- Section headers: small uppercase eyebrow + display heading + muted subhead pattern, applied consistently.
+- Cards: unified `GlassCard` look (border `--border`, subtle inner glow, hover lift).
+- Buttons: refresh `buttonVariants` with `default`, `outline`, `ghost`, and a new `premium` variant (indigo gradient + soft glow).
 
-## Implementation Plan
+### 5. Dashboard + Quiz flow
+- Dashboard: unified card surfaces, refined stat tiles, badge displays in the new palette.
+- Quiz screens (intro, question, results): calmer typography, indigo correctness states (success/danger tokens kept semantic), subtle progress glow.
 
-### Step 1: Fix Achievements Route (remove double protection)
-- Remove `ProtectedRoute` wrapper from `/achievements` route in `App.tsx`
-- The page already shows a sign-in prompt for unauthenticated users internally
+### 6. New AI hero feature
+- `TypewriterHeadline` component (custom hook, no extra deps) used only in the landing hero.
+- Reduced-motion respected via `prefers-reduced-motion`.
 
-### Step 2: Redesign Contact Page
-- Add gradient hero header with icon
-- Redesign info cards with icon backgrounds, better spacing, and consistent heights
-- Add a "Subject" dropdown to the contact form (General, Technical Issue, Feedback, Partnership)
-- Add WhatsApp direct chat button
-- Add FAQ redirect link
-- Improve overall spacing and visual hierarchy to match the dark glassmorphism theme
+## Out of scope (won't change)
+- Routing, auth, data fetching, Supabase schema, badge logic.
+- The AI Tutor backend, quiz generation logic, leaderboard sync.
+- No new pages, no new features beyond the typewriter headline.
 
-### Step 3: Enhance UPSC Section
-- Add a **Previous Year Cutoffs** section using existing `UPSC_CUTOFFS` data with a clean table/card layout
-- Add a **"Why CrackIt for UPSC"** trust-building section with 3-4 feature highlights
-- Add a **Preparation Strategy** section with tips for Prelims, Mains, and Interview
-- Improve the hero section with aspirant-focused motivational copy and animated counter stats
-- Update Important Dates with 2026 context and more visual timeline feel
+## Technical notes
+- All colors as HSL in `index.css`; components use semantic Tailwind tokens (`bg-background`, `text-foreground`, `bg-primary`, `border-border`, etc.). No raw hex in components.
+- Keep `framer-motion` (already installed); no new animation libraries.
+- Keep existing SEO/Helmet work intact.
+- Files touched (high level): `src/index.css`, `tailwind.config.ts`, `src/components/ui/button.tsx`, `src/components/Navbar.tsx`, `src/components/Footer.tsx`, `src/components/MobileBottomNav.tsx`, all `src/pages/*.tsx`, hero/topics/companies sections, dashboard widgets, quiz components, UPSC subcomponents. New: `src/components/common/TypewriterHeadline.tsx`.
 
----
-
-## Technical Details
-
-### Files Modified
-1. `src/App.tsx` -- Remove ProtectedRoute wrapper from `/achievements`
-2. `src/pages/Contact.tsx` -- Complete redesign with better layout, subject dropdown, WhatsApp button
-3. `src/pages/UPSC.tsx` -- Add cutoffs section, preparation strategy, trust section
-4. `src/data/upscData.ts` -- Update dates to 2026, add preparation tips data
-5. `src/components/upsc/PreviousYearCutoffs.tsx` -- New component for cutoff display
-6. `src/components/upsc/PreparationStrategy.tsx` -- New component for strategy tips
-7. `src/components/upsc/WhyCrackIt.tsx` -- New trust-building component
-
-### No database changes required
-
+## Rollout
+1. Tokens + fonts + button variants (foundation).
+2. Navbar + Footer + landing hero (immediate visual lift).
+3. Landing sections + product pages.
+4. Dashboard + quiz flow.
+5. QA pass on mobile (1202px down to 360px).
