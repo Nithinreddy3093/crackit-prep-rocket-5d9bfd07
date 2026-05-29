@@ -50,6 +50,7 @@ const Navbar = () => {
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
+    <>
     <nav
       className={cn(
         'sticky top-0 z-30 w-full border-b transition-all duration-300',
