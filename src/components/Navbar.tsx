@@ -233,9 +233,9 @@ const Navbar = () => {
         </div>
       </div>
 
-
-      <MobileBottomNav />
     </nav>
+    <MobileBottomNav />
+    </>
   );
 };
 
