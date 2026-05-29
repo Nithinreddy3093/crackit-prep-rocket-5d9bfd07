@@ -1,21 +1,42 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import HeroSection from '@/components/home/HeroSection';
 import TopicsSection from '@/components/home/TopicsSection';
 import CompaniesSection from '@/components/home/CompaniesSection';
+import LogoAnimation from '@/components/LogoAnimation';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
+const INTRO_KEY = 'crackit_intro_shown';
+
 const Index = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [showIntro, setShowIntro] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return sessionStorage.getItem(INTRO_KEY) !== '1';
+  });
+
+  useEffect(() => {
+    if (!showIntro) return;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showIntro]);
+
+  const handleIntroDone = () => {
+    sessionStorage.setItem(INTRO_KEY, '1');
+    setShowIntro(false);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {showIntro && <LogoAnimation onAnimationComplete={handleIntroDone} />}
       <Helmet>
         <title>CrackIt — AI-Powered Interview & UPSC Prep Platform</title>
         <meta name="description" content="Crack technical interviews and UPSC exams with AI-driven quizzes, company-specific practice questions, and personalized performance insights." />
