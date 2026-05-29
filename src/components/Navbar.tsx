@@ -137,75 +137,101 @@ const Navbar = () => {
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center gap-1">
             <ThemeToggle />
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:bg-card/60"
-              aria-label="Toggle menu"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <button
+                  className="inline-flex items-center justify-center p-2 rounded-md text-foreground hover:bg-card/60 min-h-[44px] min-w-[44px]"
+                  aria-label="Open menu"
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-[85vw] max-w-sm p-0 bg-background/95 backdrop-blur-xl border-l border-border/60 flex flex-col"
+              >
+                <SheetHeader className="px-5 pt-5 pb-4 border-b border-border/60">
+                  <SheetTitle className="flex items-center gap-2 text-left">
+                    <span className="relative w-8 h-8 rounded-lg bg-gradient-indigo flex items-center justify-center shadow-glow">
+                      <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse-glow" />
+                    </span>
+                    <span className="font-display text-lg">
+                      Crack<span className="gradient-text">It</span>
+                    </span>
+                    <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary-glow">
+                      <Sparkles className="h-3 w-3" />
+                      AI
+                    </span>
+                  </SheetTitle>
+                </SheetHeader>
+
+                <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+                  {navLinks.map((link) => {
+                    const active = isActive(link.to);
+                    return (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        onClick={() => setIsMenuOpen(false)}
+                        className={cn(
+                          'flex items-center px-4 py-3 rounded-lg text-base font-medium min-h-[44px] transition-colors',
+                          active
+                            ? 'bg-primary/15 text-foreground border border-primary/20'
+                            : 'text-foreground/75 hover:bg-card/60 hover:text-foreground'
+                        )}
+                      >
+                        {link.label}
+                        {active && (
+                          <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary animate-pulse-glow" />
+                        )}
+                      </Link>
+                    );
+                  })}
+                </nav>
+
+                <div className="px-4 py-4 border-t border-border/60 space-y-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                  {isAuthenticated ? (
+                    <>
+                      <Button
+                        onClick={() => { navigate('/dashboard'); setIsMenuOpen(false); }}
+                        variant="outline"
+                        className="w-full justify-start"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        {user?.name?.split(' ')[0] || 'Profile'}
+                      </Button>
+                      <Button
+                        onClick={() => { handleLogout(); setIsMenuOpen(false); }}
+                        variant="ghost"
+                        className="w-full justify-start"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Log Out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button asChild variant="outline" className="w-full justify-start">
+                        <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                          <LogIn className="mr-2 h-4 w-4" />
+                          Log In
+                        </Link>
+                      </Button>
+                      <Button asChild variant="premium" className="w-full">
+                        <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Get Started
+                        </Link>
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden glass-strong border-t border-border/60">
-          <div className="px-3 py-3 space-y-0.5">
-            {navLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={cn(
-                  'block px-3 py-2.5 rounded-md text-base font-medium transition-colors',
-                  isActive(link.to)
-                    ? 'bg-primary/15 text-foreground'
-                    : 'text-foreground/75 hover:bg-card/60 hover:text-foreground'
-                )}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-          <div className="pt-3 pb-4 px-3 border-t border-border/60 space-y-2">
-            {isAuthenticated ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:bg-card/60"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => { handleLogout(); setIsMenuOpen(false); }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:bg-card/60"
-                >
-                  Log Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-foreground/80 hover:bg-card/60"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Log In
-                </Link>
-                <Link
-                  to="/signup"
-                  className="block px-3 py-2 rounded-md text-base font-medium bg-gradient-indigo text-primary-foreground text-center shadow-glow"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       <MobileBottomNav />
     </nav>
