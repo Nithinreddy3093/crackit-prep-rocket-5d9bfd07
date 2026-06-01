@@ -5,7 +5,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Index from "./pages/Index";
@@ -27,7 +26,6 @@ import Leaderboard from "./pages/Leaderboard";
 import UserProfile from "./pages/UserProfile";
 import FAQ from "./pages/FAQ";
 import Support from "./pages/Support";
-import LogoAnimation from "./components/LogoAnimation";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Careers from "./pages/Careers";
@@ -37,6 +35,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import HRInterview from "./pages/HRInterview";
 import UPSC from "./pages/UPSC";
 import Achievements from "./pages/Achievements";
+import PlacementPrep from "./pages/PlacementPrep";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,22 +66,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
-  const [showAnimation, setShowAnimation] = useState(true);
-
-  // Always show animation on every refresh
-  useEffect(() => {
-    // Reset animation state on page load
-    setShowAnimation(true);
-  }, []);
-
-  const handleAnimationComplete = () => {
-    setShowAnimation(false);
-  };
-
-  if (showAnimation) {
-    return <LogoAnimation onAnimationComplete={handleAnimationComplete} />;
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
@@ -107,6 +90,8 @@ const App = () => {
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/quiz/:topicId" element={<QuizPage />} />
                 <Route path="/upsc" element={<UPSC />} />
+                <Route path="/placement-prep" element={<PlacementPrep />} />
+                <Route path="/placement-prep/:branch" element={<PlacementPrep />} />
                 <Route path="/ai-tutor" element={<AITutor />} />
                 <Route path="/resources" element={
                   <ProtectedRoute>
