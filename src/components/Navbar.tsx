@@ -17,6 +17,7 @@ import {
 const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/topics', label: 'Topics' },
+  { to: '/placement-prep', label: 'Placement' },
   { to: '/upsc', label: 'UPSC' },
   { to: '/ai-tutor', label: 'AI Tutor' },
   { to: '/resources', label: 'Resources' },

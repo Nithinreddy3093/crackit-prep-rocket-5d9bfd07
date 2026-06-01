@@ -90,6 +90,8 @@ const App = () => {
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/quiz/:topicId" element={<QuizPage />} />
                 <Route path="/upsc" element={<UPSC />} />
+                <Route path="/placement-prep" element={<PlacementPrep />} />
+                <Route path="/placement-prep/:branch" element={<PlacementPrep />} />
                 <Route path="/ai-tutor" element={<AITutor />} />
                 <Route path="/resources" element={
                   <ProtectedRoute>
