@@ -35,6 +35,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import HRInterview from "./pages/HRInterview";
 import UPSC from "./pages/UPSC";
 import Achievements from "./pages/Achievements";
+import PlacementPrep from "./pages/PlacementPrep";
 
 const queryClient = new QueryClient({
   defaultOptions: {
