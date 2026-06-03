@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Twitter, Linkedin, Github } from 'lucide-react';
+import Logo from './Logo';
 
 const cols = [
   {
@@ -50,17 +51,12 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2">
-            <Link to="/" className="inline-flex items-center group">
-              <span className="w-9 h-9 rounded-xl bg-gradient-indigo flex items-center justify-center shadow-glow">
-                <span className="w-2 h-2 bg-white rounded-full" />
-              </span>
-              <span className="ml-2.5 text-xl font-bold font-display text-foreground">
-                Crack<span className="gradient-text">It</span>
-              </span>
-              <span className="ml-2.5 inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary-glow">
+            <div className="inline-flex items-center gap-2">
+              <Logo size="md" />
+              <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary-glow">
                 <Sparkles className="h-3 w-3" /> AI
               </span>
-            </Link>
+            </div>
             <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
               Know it. Crack it. AI-powered interview and UPSC preparation, built for ambitious learners.
             </p>
