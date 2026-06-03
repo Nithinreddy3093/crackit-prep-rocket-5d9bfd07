@@ -4,6 +4,7 @@ import { ArrowLeft, Briefcase, IndianRupee, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { CompanyData } from '@/data/companyData';
+import CompanyLogo from '@/components/CompanyLogo';
 
 interface CompanyHeroSectionProps {
   company: CompanyData;
@@ -48,9 +49,8 @@ const CompanyHeroSection: React.FC<CompanyHeroSectionProps> = ({ company }) => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.3 }}
-            className="w-24 h-24 lg:w-32 lg:h-32 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50 flex items-center justify-center text-5xl lg:text-6xl"
           >
-            {company.logo}
+            <CompanyLogo name={company.name} slug={company.shortName?.toLowerCase()} size="lg" className="w-24 h-24 lg:w-32 lg:h-32" />
           </motion.div>
 
           {/* Info */}
