@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { CompanyData } from '@/data/companyData';
 import CompanyLogo from '@/components/CompanyLogo';
-import { useParams } from 'react-router-dom';
 
 interface CompanyHeroSectionProps {
   company: CompanyData;
