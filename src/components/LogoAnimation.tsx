@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
+import logoImg from '@/assets/crackit-logo.png';
 
 interface LogoAnimationProps {
   onAnimationComplete: () => void;
@@ -58,21 +59,12 @@ const LogoAnimation: React.FC<LogoAnimationProps> = ({
                   transition={{ duration: 1.4, delay: 0.2, ease: 'easeOut' }}
                 />
               )}
-              <div className="relative w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-gradient-indigo shadow-glow flex items-center justify-center">
-                <span className="absolute inset-2 rounded-full ring-1 ring-white/20" />
-                <svg viewBox="0 0 100 100" className="w-14 h-14 sm:w-24 sm:h-24">
-                  <motion.path
-                    d="M50 12 L42 46 L58 50 L40 88"
-                    fill="none"
-                    stroke="hsl(0 0% 100%)"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    initial={{ pathLength: reduce ? 1 : 0, opacity: reduce ? 1 : 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 0.8, delay: 0.4, ease: 'easeInOut' }}
-                  />
-                </svg>
+              <div className="relative w-24 h-24 sm:w-36 sm:h-36 flex items-center justify-center">
+                <img
+                  src={logoImg}
+                  alt="CrackIt"
+                  className="w-full h-full object-contain drop-shadow-[0_0_30px_hsl(var(--primary)/0.7)]"
+                />
                 <motion.div
                   className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2"
                   initial={{ scale: 0, opacity: 0 }}

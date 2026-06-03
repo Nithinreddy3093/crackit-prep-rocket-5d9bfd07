@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { cn } from '@/lib/utils';
 import ThemeToggle from './ThemeToggle';
+import Logo from './Logo';
 import {
   Sheet,
   SheetContent,
@@ -63,15 +64,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex-shrink-0 flex items-center group">
-              <span className="relative w-9 h-9 rounded-xl bg-gradient-indigo flex items-center justify-center shadow-glow">
-                <span className="w-2 h-2 bg-white rounded-full animate-pulse-glow" />
-                <span className="absolute inset-0 rounded-xl ring-1 ring-white/10" />
-              </span>
-              <span className="ml-2.5 text-xl font-bold font-display tracking-tight text-foreground">
-                Crack<span className="gradient-text">It</span>
-              </span>
-            </Link>
+            <Logo size="md" />
             <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary-glow">
               <Sparkles className="h-3 w-3" />
               AI
