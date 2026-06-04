@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -12,24 +12,29 @@ import {
   Calendar,
   Trophy,
   ArrowLeft,
+  Users,
+  Award,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
 import {
   PLACEMENT_BRANCH_LIST,
   PLACEMENT_BRANCHES,
   TASK_TYPE_META,
-  HR_QUESTIONS,
+  WHY_BLURBS,
+  pickDailyHR,
   RESUME_ICON,
   type Branch,
   type BranchConfig,
 } from '@/data/placementData';
+import { usePlacementProgress } from '@/hooks/usePlacementProgress';
 import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'crackit_placement_branch';
-const TASKS_KEY_PREFIX = 'crackit_placement_tasks_';
+
 
 // ---------------- Landing ----------------
 const PlacementLanding: React.FC = () => {
