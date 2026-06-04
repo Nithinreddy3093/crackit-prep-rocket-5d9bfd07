@@ -147,27 +147,18 @@ const PlacementLanding: React.FC = () => {
 // ---------------- Branch dashboard ----------------
 const BranchDashboard: React.FC<{ config: BranchConfig }> = ({ config }) => {
   const navigate = useNavigate();
-  const tasksKey = TASKS_KEY_PREFIX + config.branch + '_' + new Date().toDateString();
-  const [done, setDone] = useState<Record<string, boolean>>({});
+  const progress = usePlacementProgress(config.branch);
+  const {
+    intensity, setIntensity, tasks, done, toggle, pct, completedCount,
+    streak, last7Days, resumeChecks, toggleResume,
+    hrAnswer, setHrAnswer, targetCompanies, toggleTargetCompany,
+  } = progress;
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(tasksKey);
-      if (raw) setDone(JSON.parse(raw));
-    } catch {}
-  }, [tasksKey]);
-
-  const toggle = (id: string) => {
-    setDone((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
-      localStorage.setItem(tasksKey, JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const completed = config.todaysPlan.filter((t) => done[t.id]).length;
-  const pct = Math.round((completed / config.todaysPlan.length) * 100);
   const Icon = config.icon;
+  const hrToday = useMemo(() => pickDailyHR(), []);
+  const resumeScore = config.resumeChecklist.length
+    ? Math.round((config.resumeChecklist.filter((i) => resumeChecks[i]).length / config.resumeChecklist.length) * 100)
+    : 0;
 
   return (
     <>
@@ -176,7 +167,7 @@ const BranchDashboard: React.FC<{ config: BranchConfig }> = ({ config }) => {
         <meta name="description" content={config.tagline} />
       </Helmet>
 
-      <section className="relative py-10 sm:py-14 overflow-hidden">
+      <section className="relative py-8 sm:py-14 overflow-hidden">
         <div className="absolute inset-0 bg-grid-soft opacity-30" />
         <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-[300px] w-[700px] rounded-full bg-primary/15 blur-3xl" />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -187,41 +178,58 @@ const BranchDashboard: React.FC<{ config: BranchConfig }> = ({ config }) => {
             <ArrowLeft className="h-4 w-4" /> All branches
           </button>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-            <div className="h-14 w-14 rounded-2xl bg-gradient-indigo flex items-center justify-center shadow-glow">
-              <Icon className="h-7 w-7 text-white" />
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-indigo flex items-center justify-center shadow-glow shrink-0">
+              <Icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
             </div>
-            <div className="flex-1">
-              <h1 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
+            <div className="flex-1 min-w-0">
+              <h1 className="font-display text-2xl sm:text-4xl font-bold text-foreground">
                 {config.label}
               </h1>
               <p className="mt-1 text-sm sm:text-base text-muted-foreground">
                 {config.tagline}
               </p>
             </div>
+            {/* Intensity picker */}
+            <div className="flex items-center gap-1 rounded-full border border-border/60 bg-card/40 p-1 self-start">
+              {([3, 5] as const).map((v) => (
+                <button
+                  key={v}
+                  onClick={() => setIntensity(v)}
+                  className={cn(
+                    'text-xs px-3 py-1.5 rounded-full font-medium transition-all',
+                    intensity === v
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {v} tasks/day
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 grid lg:grid-cols-3 gap-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24 md:pb-20 grid lg:grid-cols-3 gap-6">
         {/* Today's plan */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-2xl glass-strong p-5 sm:p-6">
+          <div className="rounded-2xl glass-strong p-4 sm:p-6">
             <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="font-display text-xl font-bold text-foreground flex items-center gap-2">
-                  <Target className="h-5 w-5 text-primary-glow" /> Today's Plan
+              <div className="min-w-0">
+                <h2 className="font-display text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary-glow shrink-0" /> Today's Plan
                 </h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {completed} of {config.todaysPlan.length} done · keep your streak alive
+                  {completedCount} of {tasks.length} done · keep your streak alive
                 </p>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold gradient-text">{pct}%</div>
+              <div className="text-right shrink-0">
+                <div className="text-2xl sm:text-3xl font-bold gradient-text">{pct}%</div>
               </div>
             </div>
             <Progress value={pct} className="mt-3 h-1.5" />
             <ul className="mt-5 space-y-2">
-              {config.todaysPlan.map((task) => {
+              {tasks.map((task) => {
                 const meta = TASK_TYPE_META[task.type];
                 const TIcon = meta.icon;
                 const isDone = !!done[task.id];
@@ -253,11 +261,15 @@ const BranchDashboard: React.FC<{ config: BranchConfig }> = ({ config }) => {
                         >
                           {task.title}
                         </div>
+                        <div className="mt-1 text-[11px] text-muted-foreground/80 hidden sm:block">
+                          Why: {WHY_BLURBS[task.type]}
+                        </div>
                       </div>
                       {task.topicId && (
                         <Button
                           size="sm"
                           variant="ghost"
+                          className="shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/quiz/${task.topicId}`);
@@ -273,9 +285,27 @@ const BranchDashboard: React.FC<{ config: BranchConfig }> = ({ config }) => {
             </ul>
           </div>
 
+          {/* HR practice */}
+          <div className="rounded-2xl glass-strong p-4 sm:p-6">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary-glow" />
+              <h3 className="font-display font-semibold text-foreground">Today's HR question</h3>
+            </div>
+            <p className="mt-3 text-sm sm:text-base font-medium text-foreground">"{hrToday}"</p>
+            <Textarea
+              value={hrAnswer}
+              onChange={(e) => setHrAnswer(e.target.value)}
+              placeholder="Type your answer in STAR format. Saved locally."
+              className="mt-3 min-h-[110px] bg-background/40"
+            />
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              {hrAnswer.trim().split(/\s+/).filter(Boolean).length} words · aim for 80–150 words.
+            </p>
+          </div>
+
           {/* Roadmap */}
-          <div className="rounded-2xl glass-strong p-5 sm:p-6">
-            <h2 className="font-display text-xl font-bold text-foreground">
+          <div className="rounded-2xl glass-strong p-4 sm:p-6">
+            <h2 className="font-display text-lg sm:text-xl font-bold text-foreground">
               90-day Roadmap
             </h2>
             <ol className="mt-5 relative border-l border-border/60 pl-5 space-y-5">
@@ -303,8 +333,8 @@ const BranchDashboard: React.FC<{ config: BranchConfig }> = ({ config }) => {
           </div>
 
           {/* Subjects */}
-          <div className="rounded-2xl glass-strong p-5 sm:p-6">
-            <h2 className="font-display text-xl font-bold text-foreground">
+          <div className="rounded-2xl glass-strong p-4 sm:p-6">
+            <h2 className="font-display text-lg sm:text-xl font-bold text-foreground">
               Subjects to master
             </h2>
             <div className="mt-5 grid sm:grid-cols-2 gap-3">
@@ -317,13 +347,13 @@ const BranchDashboard: React.FC<{ config: BranchConfig }> = ({ config }) => {
                     className="text-left flex items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4 hover:border-primary/40 transition-all"
                   >
                     <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-                      <SIcon className="h-4.5 w-4.5 text-primary-glow" />
+                      <SIcon className="h-4 w-4 text-primary-glow" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-foreground text-sm">{s.name}</div>
                       <div className="text-xs text-muted-foreground mt-0.5">{s.blurb}</div>
                     </div>
-                    {s.topicId && <ArrowRight className="h-4 w-4 text-muted-foreground mt-1" />}
+                    {s.topicId && <ArrowRight className="h-4 w-4 text-muted-foreground mt-1 shrink-0" />}
                   </button>
                 );
               })}
@@ -333,74 +363,125 @@ const BranchDashboard: React.FC<{ config: BranchConfig }> = ({ config }) => {
 
         {/* Side column */}
         <div className="space-y-6">
-          {/* Streak / progress */}
+          {/* Streak */}
           <div className="rounded-2xl glass-strong p-5">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Flame className="h-4 w-4 text-primary-glow" /> Daily streak
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Flame className="h-4 w-4 text-primary-glow" /> Daily streak
+              </div>
+              <div className="text-xs text-muted-foreground">Best: {streak.longestStreak}d</div>
             </div>
             <div className="mt-1 text-3xl font-bold gradient-text">
-              {completed === config.todaysPlan.length ? '🔥 1 day' : '0 days'}
+              {streak.currentStreak > 0 ? `🔥 ${streak.currentStreak} day${streak.currentStreak > 1 ? 's' : ''}` : '0 days'}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Finish today's plan to start your streak.
+            <div className="mt-4 flex items-center justify-between gap-1">
+              {last7Days.map((d) => (
+                <div key={d.date} className="flex flex-col items-center gap-1 flex-1">
+                  <div
+                    className={cn(
+                      'h-7 w-full rounded-md border',
+                      d.done
+                        ? 'bg-primary/40 border-primary/60'
+                        : 'bg-card/40 border-border/40'
+                    )}
+                    title={d.date}
+                  />
+                  <span className="text-[9px] text-muted-foreground">
+                    {new Date(d.date).toLocaleDateString('en', { weekday: 'narrow' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              {completedCount === tasks.length
+                ? '🎉 Day done! Come back tomorrow.'
+                : 'Finish all tasks to extend your streak.'}
             </p>
           </div>
 
-          {/* Resume kit */}
+          {/* Resume readiness */}
+          <div className="rounded-2xl glass-strong p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <RESUME_ICON className="h-4 w-4 text-primary-glow" />
+                <h3 className="font-semibold text-foreground">Resume readiness</h3>
+              </div>
+              <div className="text-sm font-bold gradient-text">{resumeScore}/100</div>
+            </div>
+            <Progress value={resumeScore} className="mt-2 h-1.5" />
+            <ul className="mt-4 space-y-2">
+              {config.resumeChecklist.map((item) => {
+                const checked = !!resumeChecks[item];
+                return (
+                  <li key={item}>
+                    <button
+                      onClick={() => toggleResume(item)}
+                      className="w-full flex items-start gap-2 text-left text-sm text-foreground/80 hover:text-foreground"
+                    >
+                      {checked ? (
+                        <CheckCircle2 className="h-4 w-4 text-primary-glow shrink-0 mt-0.5" />
+                      ) : (
+                        <Circle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                      )}
+                      <span className={cn(checked && 'line-through text-muted-foreground')}>
+                        {item}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* Target companies */}
           <div className="rounded-2xl glass-strong p-5">
             <div className="flex items-center gap-2">
-              <RESUME_ICON className="h-4 w-4 text-primary-glow" />
-              <h3 className="font-semibold text-foreground">Resume checklist</h3>
+              <Trophy className="h-4 w-4 text-primary-glow" />
+              <h3 className="font-semibold text-foreground">Pick 3 dream companies</h3>
             </div>
-            <ul className="mt-3 space-y-2">
-              {config.resumeChecklist.map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm text-foreground/80">
-                  <CheckCircle2 className="h-4 w-4 text-primary-glow shrink-0 mt-0.5" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {targetCompanies.length}/3 selected — we'll tune mocks to these.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {config.companies.map((c) => {
+                const selected = targetCompanies.includes(c);
+                return (
+                  <button
+                    key={c}
+                    onClick={() => toggleTargetCompany(c)}
+                    className={cn(
+                      'text-[11px] rounded-full border px-2.5 py-1 transition-all',
+                      selected
+                        ? 'border-primary/60 bg-primary/20 text-primary-glow'
+                        : 'border-border/60 bg-card/40 text-foreground/70 hover:border-primary/30'
+                    )}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Project ideas */}
           <div className="rounded-2xl glass-strong p-5">
-            <h3 className="font-semibold text-foreground">Project ideas</h3>
+            <div className="flex items-center gap-2">
+              <Award className="h-4 w-4 text-primary-glow" />
+              <h3 className="font-semibold text-foreground">Project ideas</h3>
+            </div>
             <ul className="mt-3 space-y-1.5">
               {config.projectIdeas.map((p) => (
                 <li key={p} className="text-sm text-foreground/80">• {p}</li>
               ))}
             </ul>
           </div>
-
-          {/* HR */}
-          <div className="rounded-2xl glass-strong p-5">
-            <h3 className="font-semibold text-foreground">HR practice questions</h3>
-            <ul className="mt-3 space-y-1.5">
-              {HR_QUESTIONS.slice(0, 5).map((q) => (
-                <li key={q} className="text-sm text-foreground/80">• {q}</li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Target companies */}
-          <div className="rounded-2xl glass-strong p-5">
-            <h3 className="font-semibold text-foreground">Target companies</h3>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {config.companies.map((c) => (
-                <span
-                  key={c}
-                  className="text-[11px] rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-primary-glow"
-                >
-                  {c}
-                </span>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </>
   );
 };
+
+
 
 // ---------------- Wrapper ----------------
 const PlacementPrep: React.FC = () => {
