@@ -249,3 +249,86 @@ export const TASK_TYPE_META: Record<TaskType, { label: string; icon: LucideIcon 
 };
 
 export const RESUME_ICON = FileText;
+
+// ---------------- Daily task pools (rotated) ----------------
+const CSE_POOL: PlacementTask[] = [
+  { id: 'c-arr', type: 'dsa', title: 'Arrays: 2 problems (1 easy + 1 medium)', estMinutes: 30, topicId: 'dsa' },
+  { id: 'c-str', type: 'dsa', title: 'Strings & sliding window: 2 problems', estMinutes: 30, topicId: 'dsa' },
+  { id: 'c-ll', type: 'dsa', title: 'Linked List: reverse + cycle detection', estMinutes: 25, topicId: 'dsa' },
+  { id: 'c-tree', type: 'dsa', title: 'Trees: traversals + 1 medium', estMinutes: 35, topicId: 'dsa' },
+  { id: 'c-graph', type: 'dsa', title: 'Graphs: BFS / DFS template revision', estMinutes: 30, topicId: 'dsa' },
+  { id: 'c-dp', type: 'dsa', title: 'DP: 1 classic problem (Knapsack/LCS)', estMinutes: 40, topicId: 'dsa' },
+  { id: 'c-os1', type: 'core', title: 'OS: Process vs Thread + 10 MCQs', estMinutes: 15, topicId: 'os' },
+  { id: 'c-os2', type: 'core', title: 'OS: Deadlocks & scheduling — 10 MCQs', estMinutes: 15, topicId: 'os' },
+  { id: 'c-db1', type: 'core', title: 'DBMS: Joins & normalisation — 10 MCQs', estMinutes: 15, topicId: 'dbms' },
+  { id: 'c-db2', type: 'core', title: 'SQL: write 5 queries (joins + aggregates)', estMinutes: 20, topicId: 'dbms' },
+  { id: 'c-cn1', type: 'core', title: 'Networks: TCP vs UDP + 10 MCQs', estMinutes: 15, topicId: 'networking' },
+  { id: 'c-cn2', type: 'core', title: 'HTTP, DNS, OSI model recap', estMinutes: 15, topicId: 'networking' },
+  { id: 'c-oop', type: 'core', title: 'OOP: SOLID principles + 10 MCQs', estMinutes: 15, topicId: 'oop' },
+  { id: 'c-apt1', type: 'aptitude', title: 'Quant: 15 problems (time-bound)', estMinutes: 20, topicId: 'aptitude' },
+  { id: 'c-apt2', type: 'aptitude', title: 'Logical reasoning: 15 problems', estMinutes: 20, topicId: 'aptitude' },
+  { id: 'c-mock', type: 'mock', title: 'Daily mixed mock quiz (10 Qs)', estMinutes: 12, topicId: 'dsa' },
+  { id: 'c-soft', type: 'soft', title: 'Practice "Tell me about yourself" out loud', estMinutes: 10 },
+  { id: 'c-soft2', type: 'soft', title: 'Write 1 STAR-format project story', estMinutes: 15 },
+];
+
+const ECE_POOL: PlacementTask[] = [
+  { id: 'e-dig1', type: 'core', title: 'Digital: K-map worksheet (10 Qs)', estMinutes: 20 },
+  { id: 'e-dig2', type: 'core', title: 'Digital: FSM design — 1 problem', estMinutes: 25 },
+  { id: 'e-ana', type: 'core', title: 'Analog: BJT biasing — 5 problems', estMinutes: 25 },
+  { id: 'e-mos', type: 'core', title: 'MOSFET small-signal model + 5 Qs', estMinutes: 25 },
+  { id: 'e-sig1', type: 'core', title: 'Signals: Fourier — 5 problems', estMinutes: 30 },
+  { id: 'e-sig2', type: 'core', title: 'Signals: Z-transform basics + 5 Qs', estMinutes: 25 },
+  { id: 'e-comm', type: 'core', title: 'Communication: AM/FM theory + 10 MCQs', estMinutes: 20 },
+  { id: 'e-emft', type: 'core', title: 'EMFT: Maxwell equations recap', estMinutes: 20 },
+  { id: 'e-embed', type: 'core', title: 'Embedded C: 1 small program + concepts', estMinutes: 30 },
+  { id: 'e-apt1', type: 'aptitude', title: 'Quant: 15 problems (time-bound)', estMinutes: 20, topicId: 'aptitude' },
+  { id: 'e-apt2', type: 'aptitude', title: 'Logical reasoning: 15 problems', estMinutes: 20, topicId: 'aptitude' },
+  { id: 'e-dsa1', type: 'dsa', title: 'DSA: Arrays — 2 easy problems', estMinutes: 25, topicId: 'dsa' },
+  { id: 'e-dsa2', type: 'dsa', title: 'DSA: Recursion — 2 problems', estMinutes: 30, topicId: 'dsa' },
+  { id: 'e-mock', type: 'mock', title: 'Daily 10-MCQ ECE mixed quiz', estMinutes: 12 },
+  { id: 'e-soft', type: 'soft', title: 'Practice 1-min self introduction', estMinutes: 10 },
+  { id: 'e-soft2', type: 'soft', title: 'Explain a core project in 90 seconds', estMinutes: 15 },
+];
+
+export const DAILY_POOLS: Record<Branch, PlacementTask[]> = {
+  cse: CSE_POOL,
+  ece: ECE_POOL,
+};
+
+export const WHY_BLURBS: Record<TaskType, string> = {
+  dsa: 'DSA shows up in 90%+ of product-company coding rounds.',
+  core: 'Core concepts are the #1 filter in technical interviews.',
+  aptitude: 'Every campus drive (TCS, Infy, Wipro) starts with aptitude.',
+  mock: 'Daily mocks build the muscle memory interviews demand.',
+  soft: 'HR rounds reject more candidates than tech rounds do.',
+};
+
+// Deterministic daily plan — same day = same plan, rotates across days
+export function getTodaysPlan(branch: Branch, intensity: 3 | 5 = 3, date: Date = new Date()): PlacementTask[] {
+  const pool = DAILY_POOLS[branch];
+  const dayNum = Math.floor(date.getTime() / 86400000); // days since epoch
+  const types: TaskType[] = ['dsa', 'core', 'aptitude', 'mock', 'soft'];
+  const pickFor = (type: TaskType, offset: number) => {
+    const candidates = pool.filter((t) => t.type === type);
+    if (candidates.length === 0) return null;
+    return candidates[(dayNum + offset) % candidates.length];
+  };
+  const picks: PlacementTask[] = [];
+  // Always include at least one DSA-ish + core + mock
+  const order: TaskType[] = intensity === 5
+    ? ['dsa', 'core', 'core', 'aptitude', 'mock']
+    : ['dsa', 'core', 'mock'];
+  // Branches with no real DSA pool fallback gracefully
+  order.forEach((t, i) => {
+    const task = pickFor(t, i) || pickFor('core', i) || pool[(dayNum + i) % pool.length];
+    if (task && !picks.find((p) => p.id === task.id)) picks.push(task);
+  });
+  return picks;
+}
+
+export function pickDailyHR(date: Date = new Date()): string {
+  const dayNum = Math.floor(date.getTime() / 86400000);
+  return HR_QUESTIONS[dayNum % HR_QUESTIONS.length];
+}
+

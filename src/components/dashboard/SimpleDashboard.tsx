@@ -57,24 +57,24 @@ const SimpleDashboard: React.FC = () => {
   }
 
   return (
-    <AnimatedPage className="max-w-7xl mx-auto p-6 space-y-8">
+    <AnimatedPage className="max-w-7xl mx-auto px-4 py-4 sm:p-6 pb-24 md:pb-6 space-y-6 sm:space-y-8">
       {/* Welcome Header */}
-      <motion.div 
-        className="flex items-center justify-between"
+      <motion.div
+        className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="text-center flex-1">
-          <h1 className="text-4xl font-bold mb-2 gradient-text">Your Learning Dashboard</h1>
-          <p className="text-muted-foreground">Track your progress and keep learning</p>
+        <div className="text-center md:text-left flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 gradient-text">Your Learning Dashboard</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your progress and keep learning</p>
         </div>
-        <div className="flex gap-2 ml-4">
+        <div className="flex gap-2 w-full md:w-auto justify-center md:justify-end">
           <Button
             onClick={() => navigate('/achievements')}
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="gap-2 flex-1 md:flex-none"
           >
             <Award className="h-4 w-4" />
             Achievements
@@ -83,7 +83,7 @@ const SimpleDashboard: React.FC = () => {
             onClick={refetch}
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="gap-2 flex-1 md:flex-none"
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -93,7 +93,7 @@ const SimpleDashboard: React.FC = () => {
       </motion.div>
 
       {/* Key Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <GlassCard className="hover-scale">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Quizzes</CardTitle>
@@ -171,24 +171,24 @@ const SimpleDashboard: React.FC = () => {
 
       {/* Analytics Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="topics">Topics</TabsTrigger>
-          <TabsTrigger value="time">Time</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="topics" className="text-xs sm:text-sm">Topics</TabsTrigger>
+          <TabsTrigger value="time" className="text-xs sm:text-sm">Time</TabsTrigger>
+          <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
           {/* Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <SkillRadarChart data={data.skillData} />
-            <PerformanceTrendChart data={data.performanceData} />
+            <div className="min-w-0 overflow-hidden"><SkillRadarChart data={data.skillData} /></div>
+            <div className="min-w-0 overflow-hidden lg:col-span-2"><PerformanceTrendChart data={data.performanceData} /></div>
           </div>
 
           {/* Heatmap and Recommendations */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <StudyHeatmap data={data.heatmapData} />
-            <ContinueLearning recommendations={data.recommendations} />
+            <div className="min-w-0 overflow-hidden"><StudyHeatmap data={data.heatmapData} /></div>
+            <div className="min-w-0 overflow-hidden"><ContinueLearning recommendations={data.recommendations} /></div>
           </div>
         </TabsContent>
 
@@ -233,12 +233,12 @@ const SimpleDashboard: React.FC = () => {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ x: 4 }}
               >
-                <div>
-                  <p className="font-medium">{quiz.topic}</p>
-                  <p className="text-sm text-muted-foreground">{quiz.date}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate">{quiz.topic}</p>
+                  <p className="text-sm text-muted-foreground truncate">{quiz.date}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">{quiz.score}%</p>
+                <div className="text-right shrink-0 ml-3">
+                  <p className="text-xl sm:text-2xl font-bold">{quiz.score}%</p>
                 </div>
               </motion.div>
             ))}

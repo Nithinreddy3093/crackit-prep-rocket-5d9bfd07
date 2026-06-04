@@ -1,114 +1,109 @@
-# CrackIt — Multi-phase Upgrade Plan
 
-A phased rollout. Each phase ships independently so you can review before the next.
+# Fixes & Upgrades Plan — Dashboard mobile + Placement Prep usefulness
 
----
-
-## Phase 1 — CrackIt Branding & Lovable Cleanup
-
-**What "Lovable" actually exists in the project today** (so expectations are clear):
-- `public/favicon.ico` → default Lovable icon (will be replaced).
-- `index.html` → `https://cdn.gpteng.co/gptengineer.js` script. **Required by Lovable runtime — must stay**, otherwise the editor preview breaks.
-- URLs like `https://crackit-prep-rocket.lovable.app/...` in canonical / OG tags. **This is your hosting subdomain**, not branding. It only goes away when you connect a custom domain (e.g. `crackit.in`). I'll keep these working but document how to swap them when you buy a domain.
-- No "Made with Lovable" badge in the UI — already clean.
-- Navbar / LogoAnimation already say "CrackIt", but use a generic spark/orb icon.
-
-**Work:**
-1. **Generate a CrackIt logo set** (premium imagegen): icon mark (transparent PNG), wordmark, favicon (32/180/512), and a 1200×630 OG image. Dark theme + purple accent to match design system.
-2. Wire it everywhere:
-   - `public/favicon.png` (delete old `.ico`) + `index.html` `<link rel="icon">` + `apple-touch-icon` + `og:image`.
-   - New `<Logo />` component used in `Navbar`, `Footer`, `LogoAnimation`, auth pages.
-3. Add a `SITE_URL` constant so every canonical/OG URL reads from one place — flipping to a custom domain becomes a 1-line change.
+No runtime/console errors are currently being thrown, so "errors" here means **layout + UX issues** the user is seeing. I'll address them in two focused phases plus a small polish pass.
 
 ---
 
-## Phase 2 — Company Logos Fix
+## Phase A — Dashboard mobile responsiveness
 
-**Problem:** `CompaniesList.tsx` uses Wikipedia/brandlogos hotlinks. Many 404, render off-color on dark bg, or have inconsistent sizes.
+**Problems found in `SimpleDashboard.tsx`:**
+1. Header is `flex items-center justify-between` with `text-4xl` heading + 2 buttons → on phones the title squashes and buttons overflow.
+2. `Tabs` use `grid-cols-4` with no wrap → labels clip on 360px screens.
+3. Root padding is `p-6` (24px) → too tight on mobile; charts get crammed.
+4. No bottom padding for the mobile bottom nav (`MobileBottomNav` overlaps the last card).
+5. Stat cards stack 1-col on mobile (fine) but `text-2xl` numbers look unbalanced — should be `text-3xl` and centered.
+6. Recent quiz rows: long topic names overflow without `truncate`.
 
-**Fix:**
-1. Replace hotlinks with **locally hosted SVG/PNG logos** in `src/assets/companies/` (uploaded via lovable-assets so the repo stays light).
-2. Create a `<CompanyLogo name="..." />` component: white-tinted background tile, consistent 48×48 render box, automatic dark-mode contrast for monochrome logos (Apple, Adobe etc.).
-3. Standardize the 9 existing companies (Infosys, TCS, Wipro, Accenture, Cognizant, IBM, Amazon, Microsoft, Google) and add 6 more high-demand ones: **Capgemini, HCL, Tech Mahindra, Deloitte, Flipkart, Zoho**.
-4. Update `CompaniesSection` (home) to use the same component.
+**Fix (frontend-only, `SimpleDashboard.tsx`):**
+- Header → `flex-col gap-3 md:flex-row md:items-center md:justify-between`, heading `text-2xl sm:text-3xl md:text-4xl`, button row `w-full md:w-auto justify-end`.
+- Root container → `px-4 py-4 sm:p-6 pb-24 md:pb-6` (bottom nav clearance).
+- Tabs → `grid-cols-2 sm:grid-cols-4`, tab labels `text-xs sm:text-sm`.
+- Stat numbers → `text-3xl`, add `truncate` on recent quiz topic.
+- Charts grid → already `lg:grid-cols-3` / `lg:grid-cols-2`, but force `min-w-0` on children so Recharts doesn't push overflow.
 
----
-
-## Phase 3 — Stripe Payments (Built-in, ₹500/year Pro)
-
-**Pricing model confirmed:** single yearly plan, **₹500/year**.
-
-I recommend keeping a tiny Free tier so the funnel still works:
-- **Free:** 3 quizzes/day, basic dashboard, no AI tutor.
-- **Pro — ₹500/year:** unlimited quizzes, AI Tutor, full Placement Prep, company mock tests, certificates, priority leaderboard badge.
-
-**Work:**
-1. Enable Lovable's built-in Stripe (`enable_stripe_payments`) — no API keys needed, test mode immediately.
-2. Create the Pro ₹500/yr product via `batch_create_product` (tax option: calculation only — Indian GST handled by you for now; we can upgrade later).
-3. Build a Pricing page redesign with one big "Go Pro" card + comparison table.
-4. Checkout flow: "Upgrade" button → Stripe Checkout session (edge function) → webhook updates `profiles.is_pro` + `pro_expires_at`.
-5. Add a `useProAccess()` hook + `<ProGate>` wrapper to lock premium features.
-6. "Manage subscription" link in user profile → Stripe customer portal.
+Also check `StreakCounter`, `SkillRadarChart`, `PerformanceTrendChart`, `StudyHeatmap` for any fixed widths and wrap them in `min-w-0 overflow-hidden` containers if needed.
 
 ---
 
-## Phase 4 — Daily-Use Engagement Engine
+## Phase B — Make Placement Prep genuinely useful (daily-driver)
 
-Goal: students open CrackIt **every day**. The mechanics that drive that:
+Today it's a **static page** with hardcoded `todaysPlan` and localStorage-only checkboxes. That's not enough for real students. Upgrade plan:
 
-1. **Daily Streak v2** — visible in navbar, breaks at midnight IST, freeze tokens earned by 7-day streaks.
-2. **Daily Goal** — 1 quiz + 1 placement task + 5 min AI Tutor. Progress ring on dashboard.
-3. **Today's Mission card** on Index + Dashboard: 1 quiz, 1 concept, 1 mock question — auto-rotated.
-4. **Push-style reminders** — browser Notification API at user-chosen time ("Your 10-min mission is ready").
-5. **Daily leaderboard** (already exists) — surface "you moved up 4 ranks today" toast at login.
-6. **Email digest** (Lovable Email) — weekly Monday summary: streak, accuracy delta, next week's plan.
-7. **Mini quizzes (60-sec format)** — quick 5-Q sprints for commute/break-time use.
+### B1. Daily-rotating plan (not the same 3 tasks every day)
+- Add a deterministic `getTodaysPlan(branch, dateString)` in `placementData.ts` that rotates through a pool of 30+ tasks per branch (DSA pattern of the day, core subject MCQs, aptitude drill, mock, soft-skill prompt).
+- Each day shows a fresh, themed mix (e.g. "Monday = DSA + DBMS", "Tuesday = OS + Aptitude").
 
----
+### B2. Real streak tracking (not "0 / 🔥 1")
+- New localStorage key `crackit_placement_streak_{branch}` storing `{ lastCompletedDate, currentStreak, longestStreak, completionLog: [dates] }`.
+- When all today's tasks are checked → increment streak, write today's date.
+- Show **current streak, longest streak, last-7-days dot calendar** in the side column.
 
-## Phase 5 — Section-by-Section Polish
-
-Walk every public section and bring it to "top ed-tech" bar:
-
-| Section | Upgrade |
-|---|---|
-| Hero | Replace generic illustration with animated CrackIt mascot; add live stats (users, quizzes attempted, avg score) |
-| Topics | Add difficulty filter chips, "Start in 30s" CTA, completion rings on cards |
-| Companies | Phase 2 fixes + add "Salary insights", "Recent interview experiences" tab per company |
-| Placement Prep | Wire to Supabase (Phase 4 prerequisite): persist progress per-branch, add weekly review modal |
-| UPSC | Add daily current-affairs card + PYQ-of-the-day |
-| Resources | Tag every resource Free/Pro; AI-curated "for you" rail per topic |
-| Leaderboard | Add filter by college/branch; weekly rewards (Pro coupon for top 3) |
-| Dashboard | Add "What to study next" AI block, weak-topic alerts, study-time heatmap export |
-| AI Tutor | Persistent chat history, code blocks, voice input (Pro) |
-| Profile | Public share link, downloadable progress certificate, GitHub-style activity grid |
-| Footer | Real social links, contact email, app store badges (placeholder until apps ship) |
-
----
-
-## Suggested ship order
-
-```text
-Phase 1  ─ Branding (½ day)
-Phase 2  ─ Company logos (½ day)
-Phase 3  ─ Stripe + Pricing (1 day, requires Pro Lovable plan)
-Phase 4  ─ Daily engagement (1–2 days, needs Supabase migrations)
-Phase 5  ─ Section polish (rolled out section-by-section over multiple sessions)
+### B3. Wire it to Supabase (so progress survives across devices)
+New table:
 ```
+public.placement_progress(
+  user_id uuid, branch text, date date,
+  tasks_done jsonb, completed boolean,
+  PRIMARY KEY (user_id, branch, date)
+)
+```
++ RLS (user can read/write only own rows) + GRANTs.
+Hook: `usePlacementProgress(branch)` — reads/writes via Supabase when logged in, falls back to localStorage when not.
+
+### B4. Useful additions for real students
+- **"Why this matters" mini-blurb per task** (1 line — e.g. "Sliding window shows up in 30% of FAANG screens").
+- **Resource links per subject** — open a drawer with 2 YouTube videos + 1 cheatsheet (reuse existing `VideoModal`).
+- **Mock-test launcher** — replace "Daily 10-MCQ" placeholder with a real call to `/quiz/:topicId` using the branch's rotated topic of the day.
+- **Resume score widget** — checklist becomes interactive: tick items → see a 0–100 readiness score.
+- **Company-target picker** — student picks 3 dream companies; we surface that company's `companyData` priority topics inline.
+- **Today's HR question** — 1 rotating question with a textarea ("Practice answer") saved locally so they actually rehearse.
+- **Weekly review card** (Sunday): shows hours done, tasks completed, streak — and 1 AI-style nudge.
+
+### B5. Make landing branch picker more useful
+- Add **"What you'll get"** bullet list under each branch card (5 short outcomes).
+- Add an **"I'm in Year ___" selector** (2nd / pre-final / final) → adjusts intensity ("3 tasks/day" vs "5 tasks/day").
+- Add **trust strip**: "Used by 1,200+ B.Tech students" (static social proof for now).
+
+### B6. Mobile polish for `/placement-prep/:branch`
+- Sticky top compact "Today's progress" bar on mobile (collapses streak + %).
+- Side column becomes a **stacked tabbed accordion** below main content on mobile, not 3-col grid.
+- Add `pb-24` on the page root for bottom-nav clearance.
 
 ---
 
-## Technical notes
-- New tables in Phase 3: extend `profiles` with `is_pro boolean`, `pro_expires_at timestamptz`, `stripe_customer_id text`.
-- New tables in Phase 4: `daily_missions`, `user_mission_progress`, `notification_prefs`.
-- Edge functions: `create-checkout`, `stripe-webhook`, `send-weekly-digest`.
-- All premium gating server-side (RLS + edge functions) — never client-only.
-- `SITE_URL` constant in `src/config/site.ts` to centralize the canonical domain.
+## Phase C — Small polish pass
+1. **Bottom-nav clearance** audit — add `pb-[calc(env(safe-area-inset-bottom)+64px)] md:pb-0` helper class globally to pages that overlap (`UPSC`, `PlacementPrep`, `Dashboard`, `Companies`).
+2. **Topics grid on mobile** — already 1-col, fine. Verify spacing.
+3. **Placement nav entry** — add "Placement" to `MobileBottomNav` (replace `UPSC` slot with a "Prep" hub that shows both UPSC + Placement) — OR keep both, ask user before changing.
 
 ---
 
-## What I need from you to start Phase 1
-- Confirm logo direction: **dark + purple "cracked-orb / rocket" mark** with "CrackIt" wordmark in display font? Or do you want a different metaphor (lightbulb, cracked code, etc.)?
-- OK to delete `public/favicon.ico` and replace with PNG set?
+## Technical details (for review)
 
-Reply "go" and I'll start with Phase 1.
+**Files to edit:**
+- `src/components/dashboard/SimpleDashboard.tsx` (mobile fixes)
+- `src/pages/PlacementPrep.tsx` (rewrite layout + wire to new hook)
+- `src/data/placementData.ts` (add task pool, rotation helper, year-of-study intensities)
+
+**Files to create:**
+- `src/hooks/usePlacementProgress.ts` — streak + tasks + Supabase sync
+- `src/components/placement/StreakWidget.tsx`
+- `src/components/placement/TodaysPlanCard.tsx`
+- `src/components/placement/ResumeScoreCard.tsx`
+- `src/components/placement/HRPracticeCard.tsx`
+
+**Migration:**
+- `placement_progress` table + RLS policies (`user_id = auth.uid()`) + GRANTs to `authenticated` + `service_role`.
+
+**No new dependencies needed.** Everything uses existing shadcn + framer-motion + Supabase.
+
+---
+
+## Open question before I build
+
+Want me to **ship all three phases in one go**, or split into:
+- **PR1 — Dashboard mobile fix only** (fast, ~10 min of changes), then
+- **PR2 — Placement Prep upgrade** (bigger, includes the Supabase migration)?
+
+Splitting lets you verify the dashboard fix on your phone before I touch the bigger placement work.
