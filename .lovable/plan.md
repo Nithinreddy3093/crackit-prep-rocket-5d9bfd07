@@ -1,109 +1,77 @@
+# Making CrackIt Indispensable
 
-# Fixes & Upgrades Plan — Dashboard mobile + Placement Prep usefulness
+## Why students currently leave for W3Schools / GFG
 
-No runtime/console errors are currently being thrown, so "errors" here means **layout + UX issues** the user is seeing. I'll address them in two focused phases plus a small polish pass.
+| They go there for | We currently offer | Gap |
+|---|---|---|
+| Reference & syntax lookup | Quizzes only | No quick lookup |
+| "What do I study today?" | Long topic lists | No daily push |
+| Practice problems | Quizzes, not coding | No code runner |
+| Company-wise questions | Static company pages | Not personalized |
+| Peer validation | Leaderboard exists | Not contextual |
 
----
+GFG/W3Schools are **encyclopedias**. CrackIt should be a **coach** — knows the student, picks the next move, holds them accountable, and ends in a job.
 
-## Phase A — Dashboard mobile responsiveness
+## The 5 "magic" pillars to add
 
-**Problems found in `SimpleDashboard.tsx`:**
-1. Header is `flex items-center justify-between` with `text-4xl` heading + 2 buttons → on phones the title squashes and buttons overflow.
-2. `Tabs` use `grid-cols-4` with no wrap → labels clip on 360px screens.
-3. Root padding is `p-6` (24px) → too tight on mobile; charts get crammed.
-4. No bottom padding for the mobile bottom nav (`MobileBottomNav` overlaps the last card).
-5. Stat cards stack 1-col on mobile (fine) but `text-2xl` numbers look unbalanced — should be `text-3xl` and centered.
-6. Recent quiz rows: long topic names overflow without `truncate`.
+### 1. Daily Mission (the hook)
+A single card on Dashboard + Home: *"Your 15-min mission today"* — 1 concept card + 5 MCQs + 1 coding snippet, picked from the student's weakest topic (we already track accuracy per topic). Streak + XP attached.
+**Why unique:** GFG shows you 10,000 articles. We show you the *one* thing to do right now.
 
-**Fix (frontend-only, `SimpleDashboard.tsx`):**
-- Header → `flex-col gap-3 md:flex-row md:items-center md:justify-between`, heading `text-2xl sm:text-3xl md:text-4xl`, button row `w-full md:w-auto justify-end`.
-- Root container → `px-4 py-4 sm:p-6 pb-24 md:pb-6` (bottom nav clearance).
-- Tabs → `grid-cols-2 sm:grid-cols-4`, tab labels `text-xs sm:text-sm`.
-- Stat numbers → `text-3xl`, add `truncate` on recent quiz topic.
-- Charts grid → already `lg:grid-cols-3` / `lg:grid-cols-2`, but force `min-w-0` on children so Recharts doesn't push overflow.
+### 2. Weakness Radar → Auto-Remediation
+After every quiz, instead of just a score, surface: *"You're 42% on Pointers. Here's a 5-min explainer + 3 targeted questions."* One-click "Fix this weakness" flow. Uses existing `useAdaptiveDifficulty` + Gemini.
+**Why unique:** GFG ends at the article. We close the loop.
 
-Also check `StreakCounter`, `SkillRadarChart`, `PerformanceTrendChart`, `StudyHeatmap` for any fixed widths and wrap them in `min-w-0 overflow-hidden` containers if needed.
+### 3. Concept Cards (the "lookup" replacement)
+A new lightweight `/learn/:topic` route — short, scannable concept cards (definition → example → gotcha → 1 MCQ). Searchable from the navbar (Cmd/Ctrl-K). Replaces the need to leave for W3Schools to "just check syntax."
+**Why unique:** Every card ends in a micro-quiz, so reading converts to retention.
 
----
+### 4. Placement Countdown + Accountability
+Top-of-dashboard banner: *"TCS NQT in 47 days · You're 61% ready · 3 weak areas left."* Pulled from existing placement progress + target companies. Weekly email/in-app nudge if streak breaks.
+**Why unique:** GFG doesn't know your placement date. We do.
 
-## Phase B — Make Placement Prep genuinely useful (daily-driver)
+### 5. Peer Pulse (social proof, contextual)
+On every topic page: *"312 students from your branch attempted this week · top scorer: 92%."* On quiz results: *"You beat 68% of CSE students."*
+**Why unique:** Anonymous, branch-scoped social proof — pressure without toxicity.
 
-Today it's a **static page** with hardcoded `todaysPlan` and localStorage-only checkboxes. That's not enough for real students. Upgrade plan:
+## Quality & simplicity passes (parallel)
 
-### B1. Daily-rotating plan (not the same 3 tasks every day)
-- Add a deterministic `getTodaysPlan(branch, dateString)` in `placementData.ts` that rotates through a pool of 30+ tasks per branch (DSA pattern of the day, core subject MCQs, aptitude drill, mock, soft-skill prompt).
-- Each day shows a fresh, themed mix (e.g. "Monday = DSA + DBMS", "Tuesday = OS + Aptitude").
+- **Home page rewrite**: replace generic "Master Tech" hero with the one-liner promise *"The only prep app that tells you exactly what to study today."* + live demo of Daily Mission.
+- **Navbar Cmd-K search**: instant jump to any topic / concept / company.
+- **Reduce cognitive load**: collapse Dashboard tabs from 4 → 2 (Today, Progress). Achievements move to profile.
+- **Empty states**: every blank screen gets a "do this next" CTA instead of "no data."
+- **Mobile polish**: Daily Mission card is the first thing on mobile, above stats grid.
 
-### B2. Real streak tracking (not "0 / 🔥 1")
-- New localStorage key `crackit_placement_streak_{branch}` storing `{ lastCompletedDate, currentStreak, longestStreak, completionLog: [dates] }`.
-- When all today's tasks are checked → increment streak, write today's date.
-- Show **current streak, longest streak, last-7-days dot calendar** in the side column.
+## Scope of this implementation
 
-### B3. Wire it to Supabase (so progress survives across devices)
-New table:
-```
-public.placement_progress(
-  user_id uuid, branch text, date date,
-  tasks_done jsonb, completed boolean,
-  PRIMARY KEY (user_id, branch, date)
-)
-```
-+ RLS (user can read/write only own rows) + GRANTs.
-Hook: `usePlacementProgress(branch)` — reads/writes via Supabase when logged in, falls back to localStorage when not.
+To keep this shippable in one pass, **Phase 1** delivers the differentiators with the highest perceived magic:
 
-### B4. Useful additions for real students
-- **"Why this matters" mini-blurb per task** (1 line — e.g. "Sliding window shows up in 30% of FAANG screens").
-- **Resource links per subject** — open a drawer with 2 YouTube videos + 1 cheatsheet (reuse existing `VideoModal`).
-- **Mock-test launcher** — replace "Daily 10-MCQ" placeholder with a real call to `/quiz/:topicId` using the branch's rotated topic of the day.
-- **Resume score widget** — checklist becomes interactive: tick items → see a 0–100 readiness score.
-- **Company-target picker** — student picks 3 dream companies; we surface that company's `companyData` priority topics inline.
-- **Today's HR question** — 1 rotating question with a textarea ("Practice answer") saved locally so they actually rehearse.
-- **Weekly review card** (Sunday): shows hours done, tasks completed, streak — and 1 AI-style nudge.
+1. **Daily Mission card** (Dashboard + Home) — picks weakest topic, generates a 3-step mission, streak-aware.
+2. **Weakness Radar panel** on quiz results — one-click remediation flow.
+3. **Concept Cards** route `/learn/:topicId` with Cmd-K search in Navbar.
+4. **Placement Countdown banner** on Dashboard (uses existing placement data + a date the user sets).
+5. **Peer Pulse stat strip** on topic + quiz-result pages (real counts from Supabase, branch-scoped).
+6. **Home hero rewrite** + simplified Dashboard tabs (Today / Progress only).
 
-### B5. Make landing branch picker more useful
-- Add **"What you'll get"** bullet list under each branch card (5 short outcomes).
-- Add an **"I'm in Year ___" selector** (2nd / pre-final / final) → adjusts intensity ("3 tasks/day" vs "5 tasks/day").
-- Add **trust strip**: "Used by 1,200+ B.Tech students" (static social proof for now).
+Phase 2 (later, if you approve): email nudges, full content library of concept cards, social peer challenges.
 
-### B6. Mobile polish for `/placement-prep/:branch`
-- Sticky top compact "Today's progress" bar on mobile (collapses streak + %).
-- Side column becomes a **stacked tabbed accordion** below main content on mobile, not 3-col grid.
-- Add `pb-24` on the page root for bottom-nav clearance.
+## Technical notes
 
----
+- **Daily Mission**: new `useDailyMission(userId)` hook → reads `user_performance` for lowest-accuracy topic, deterministically picks 5 questions seeded by `YYYY-MM-DD + userId`. New component `DailyMissionCard.tsx`.
+- **Weakness Radar**: extend `SimpleQuizResults` with a `<WeaknessRadar />` block; reuses `aiRecommendationsService`.
+- **Concept Cards**: new `src/data/conceptCards.ts` (seed with ~30 cards for top topics), `src/pages/Learn.tsx`, route added in `App.tsx`. Cmd-K via `cmdk` (already in shadcn `command.tsx`).
+- **Placement Countdown**: extend `usePlacementProgress` with `targetDate` (localStorage). New `PlacementCountdownBanner.tsx` on Dashboard.
+- **Peer Pulse**: new Supabase view/RPC `get_topic_pulse(topic_id, branch)` returning `attempts_this_week, top_score`. Component `PeerPulseStrip.tsx`. SECURITY DEFINER, branch read from `profiles`.
+- **Home rewrite**: edit `HeroSection.tsx` + add `DailyMissionPreview` for logged-in users.
+- **Dashboard tab collapse**: edit `SimpleDashboard.tsx` — merge Overview+Resources into Today, Progress+Achievements stay separate (Achievements link out to existing `/achievements`).
+- All new colors use existing semantic tokens (no hard-coded HSL).
+- No new dependencies needed.
 
-## Phase C — Small polish pass
-1. **Bottom-nav clearance** audit — add `pb-[calc(env(safe-area-inset-bottom)+64px)] md:pb-0` helper class globally to pages that overlap (`UPSC`, `PlacementPrep`, `Dashboard`, `Companies`).
-2. **Topics grid on mobile** — already 1-col, fine. Verify spacing.
-3. **Placement nav entry** — add "Placement" to `MobileBottomNav` (replace `UPSC` slot with a "Prep" hub that shows both UPSC + Placement) — OR keep both, ask user before changing.
+## Files touched (estimate)
+
+Created: `useDailyMission.ts`, `DailyMissionCard.tsx`, `WeaknessRadar.tsx`, `PlacementCountdownBanner.tsx`, `PeerPulseStrip.tsx`, `conceptCards.ts`, `Learn.tsx`, `CommandPalette.tsx`, 1 Supabase migration for `get_topic_pulse` RPC.
+Edited: `SimpleDashboard.tsx`, `HeroSection.tsx`, `Navbar.tsx`, `App.tsx`, `SimpleQuizResults.tsx`, `usePlacementProgress.ts`, `index.html` (meta).
 
 ---
 
-## Technical details (for review)
-
-**Files to edit:**
-- `src/components/dashboard/SimpleDashboard.tsx` (mobile fixes)
-- `src/pages/PlacementPrep.tsx` (rewrite layout + wire to new hook)
-- `src/data/placementData.ts` (add task pool, rotation helper, year-of-study intensities)
-
-**Files to create:**
-- `src/hooks/usePlacementProgress.ts` — streak + tasks + Supabase sync
-- `src/components/placement/StreakWidget.tsx`
-- `src/components/placement/TodaysPlanCard.tsx`
-- `src/components/placement/ResumeScoreCard.tsx`
-- `src/components/placement/HRPracticeCard.tsx`
-
-**Migration:**
-- `placement_progress` table + RLS policies (`user_id = auth.uid()`) + GRANTs to `authenticated` + `service_role`.
-
-**No new dependencies needed.** Everything uses existing shadcn + framer-motion + Supabase.
-
----
-
-## Open question before I build
-
-Want me to **ship all three phases in one go**, or split into:
-- **PR1 — Dashboard mobile fix only** (fast, ~10 min of changes), then
-- **PR2 — Placement Prep upgrade** (bigger, includes the Supabase migration)?
-
-Splitting lets you verify the dashboard fix on your phone before I touch the bigger placement work.
+**Approve to build Phase 1**, or tell me which of the 5 pillars to drop/reorder.

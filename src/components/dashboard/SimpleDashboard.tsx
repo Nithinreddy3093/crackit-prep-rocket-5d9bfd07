@@ -17,6 +17,8 @@ import AnimatedPage from '@/components/common/AnimatedPage';
 import GlassCard from '@/components/common/GlassCard';
 import { motion } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DailyMissionCard from './DailyMissionCard';
+import PlacementCountdownBanner from './PlacementCountdownBanner';
 
 const SimpleDashboard: React.FC = () => {
   const location = useLocation();
@@ -91,6 +93,10 @@ const SimpleDashboard: React.FC = () => {
           </Button>
         </div>
       </motion.div>
+
+      {/* Magic layer: Daily Mission + Placement Countdown */}
+      <DailyMissionCard weaknesses={data.weaknesses} currentStreak={data.currentStreak} />
+      <PlacementCountdownBanner readiness={data.averageScore} />
 
       {/* Key Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
