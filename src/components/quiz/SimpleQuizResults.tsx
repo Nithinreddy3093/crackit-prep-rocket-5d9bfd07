@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, XCircle, Trophy, Clock, Target, RotateCcw, Save, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Trophy, Clock, Target, RotateCcw, Save, RefreshCw, BookOpen, Sparkles } from 'lucide-react';
+import { CONCEPT_CARDS } from '@/data/conceptCards';
 import { QuizAnswerDetail } from '@/hooks/useSimpleQuiz';
 import { motion } from 'framer-motion';
 import ConfettiEffect from '@/components/common/ConfettiEffect';
@@ -138,7 +139,34 @@ const SimpleQuizResults: React.FC<SimpleQuizResultsProps> = ({
             </div>
           </div>
 
-          {/* Question Details */}
+          {/* Fix This Weakness — magic CTA when user underperforms */}
+          {!isPassed && (() => {
+            const t = (topicTitle || '').toLowerCase();
+            const match = CONCEPT_CARDS.find(
+              (c) => t.includes(c.topicId) || c.topicLabel.toLowerCase().includes(t) || t.includes(c.topicLabel.toLowerCase())
+            ) || CONCEPT_CARDS[0];
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="rounded-xl border border-primary/30 bg-primary/10 p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+              >
+                <div className="h-10 w-10 rounded-lg bg-gradient-indigo flex items-center justify-center shrink-0">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] uppercase tracking-wider text-primary-glow">Fix this weakness · 3 min read</div>
+                  <div className="font-semibold text-white truncate">{match.title}</div>
+                  <div className="text-xs text-white/70 line-clamp-1">{match.oneLiner}</div>
+                </div>
+                <Button onClick={() => window.location.assign(`/learn/${match.id}`)} variant="premium" size="sm" className="shrink-0">
+                  <BookOpen className="mr-1.5 h-4 w-4" />
+                  Open card
+                </Button>
+              </motion.div>
+            );
+          })()}
           <div className="space-y-3">
             <h3 className="text-lg font-semibold text-white">Question Review</h3>
             {questionDetails.map((detail, index) => (
