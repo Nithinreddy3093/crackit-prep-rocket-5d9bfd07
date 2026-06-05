@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import HeroSection from '@/components/home/HeroSection';
 import TopicsSection from '@/components/home/TopicsSection';
 import CompaniesSection from '@/components/home/CompaniesSection';
+import MagicStrip from '@/components/home/MagicStrip';
 import LogoAnimation from '@/components/LogoAnimation';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +49,7 @@ const Index = () => {
       </Helmet>
       <Navbar />
       <HeroSection />
+      <MagicStrip />
       <TopicsSection />
       <CompaniesSection />
 

@@ -36,6 +36,7 @@ import HRInterview from "./pages/HRInterview";
 import UPSC from "./pages/UPSC";
 import Achievements from "./pages/Achievements";
 import PlacementPrep from "./pages/PlacementPrep";
+import Learn from "./pages/Learn";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,6 +93,8 @@ const App = () => {
                 <Route path="/upsc" element={<UPSC />} />
                 <Route path="/placement-prep" element={<PlacementPrep />} />
                 <Route path="/placement-prep/:branch" element={<PlacementPrep />} />
+                <Route path="/learn" element={<Learn />} />
+                <Route path="/learn/:cardId" element={<Learn />} />
                 <Route path="/ai-tutor" element={<AITutor />} />
                 <Route path="/resources" element={
                   <ProtectedRoute>
