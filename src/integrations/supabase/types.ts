@@ -50,6 +50,172 @@ export type Database = {
         }
         Relationships: []
       }
+      company_blueprints: {
+        Row: {
+          created_at: string
+          cutoff_percentage: number
+          display_name: string
+          id: string
+          negative_marking: boolean
+          notes: string | null
+          sections: Json
+          test_name: string
+          total_duration_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cutoff_percentage?: number
+          display_name: string
+          id: string
+          negative_marking?: boolean
+          notes?: string | null
+          sections?: Json
+          test_name: string
+          total_duration_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cutoff_percentage?: number
+          display_name?: string
+          id?: string
+          negative_marking?: boolean
+          notes?: string | null
+          sections?: Json
+          test_name?: string
+          total_duration_minutes?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_mock_attempts: {
+        Row: {
+          company_id: string
+          correct_answers: number
+          created_at: string
+          id: string
+          mode: string
+          passed_cutoff: boolean
+          score_percentage: number
+          section_scores: Json
+          time_spent_ms: number
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          correct_answers?: number
+          created_at?: string
+          id?: string
+          mode?: string
+          passed_cutoff?: boolean
+          score_percentage?: number
+          section_scores?: Json
+          time_spent_ms?: number
+          total_questions?: number
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          correct_answers?: number
+          created_at?: string
+          id?: string
+          mode?: string
+          passed_cutoff?: boolean
+          score_percentage?: number
+          section_scores?: Json
+          time_spent_ms?: number
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      company_questions: {
+        Row: {
+          company_id: string
+          correct_answer: string
+          created_at: string
+          difficulty: string
+          explanation: string | null
+          id: string
+          options: Json
+          question_hash: string
+          question_text: string
+          section_id: string
+          times_correct: number
+          times_served: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          correct_answer: string
+          created_at?: string
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          question_hash: string
+          question_text: string
+          section_id: string
+          times_correct?: number
+          times_served?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          correct_answer?: string
+          created_at?: string
+          difficulty?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          question_hash?: string
+          question_text?: string
+          section_id?: string
+          times_correct?: number
+          times_served?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_questions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_blueprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_seen_questions: {
+        Row: {
+          id: string
+          question_id: string
+          seen_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          question_id: string
+          seen_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          question_id?: string
+          seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_seen_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "company_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           created_at: string
@@ -712,6 +878,21 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_company_section_questions: {
+        Args: {
+          p_company_id: string
+          p_limit?: number
+          p_section_id: string
+          p_user_id?: string
+        }
+        Returns: {
+          difficulty: string
+          id: string
+          options: Json
+          question_text: string
+          section_id: string
+        }[]
+      }
       get_secure_quiz_questions: {
         Args: { p_limit?: number; p_topic_id: string }
         Returns: {
@@ -773,6 +954,7 @@ export type Database = {
         Args: { check_user_id: string; session_id: string }
         Returns: boolean
       }
+      validate_company_answers: { Args: { p_answers: Json }; Returns: Json }
       validate_quiz_answer: {
         Args: { p_question_id: string; p_user_answer: string }
         Returns: Json
