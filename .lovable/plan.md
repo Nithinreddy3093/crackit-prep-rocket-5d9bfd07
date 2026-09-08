@@ -1,77 +1,84 @@
-# Making CrackIt Indispensable
+# Company-Wise Placement Prep (Real, Not Mock)
 
-## Why students currently leave for W3Schools / GFG
+## What you asked for
 
-| They go there for | We currently offer | Gap |
-|---|---|---|
-| Reference & syntax lookup | Quizzes only | No quick lookup |
-| "What do I study today?" | Long topic lists | No daily push |
-| Practice problems | Quizzes, not coding | No code runner |
-| Company-wise questions | Static company pages | Not personalized |
-| Peer validation | Leaderboard exists | Not contextual |
+A Placement Prep section where each company has its own preparation track — questions and details that match that company's actual hiring style, not one generic pool.
 
-GFG/W3Schools are **encyclopedias**. CrackIt should be a **coach** — knows the student, picks the next move, holds them accountable, and ends in a job.
+## One important note on IndiaBix
 
-## The 5 "magic" pillars to add
+We cannot copy questions from IndiaBix. Their question bank is copyrighted content and scraping it would expose CrackIt to takedown notices and would block any future monetisation. What we can legally do — and what actually produces better material — is use IndiaBix-style *patterns* (section names, timings, difficulty mix, question archetypes that are public knowledge) and generate original questions in that exact shape with AI. Every question is then stored permanently in your database, so students get a real, growing bank, never throwaway mock data.
 
-### 1. Daily Mission (the hook)
-A single card on Dashboard + Home: *"Your 15-min mission today"* — 1 concept card + 5 MCQs + 1 coding snippet, picked from the student's weakest topic (we already track accuracy per topic). Streak + XP attached.
-**Why unique:** GFG shows you 10,000 articles. We show you the *one* thing to do right now.
+## The model
 
-### 2. Weakness Radar → Auto-Remediation
-After every quiz, instead of just a score, surface: *"You're 42% on Pointers. Here's a 5-min explainer + 3 targeted questions."* One-click "Fix this weakness" flow. Uses existing `useAdaptiveDifficulty` + Gemini.
-**Why unique:** GFG ends at the article. We close the loop.
+Each of the first 6 companies gets a full "Test Blueprint" describing how that company actually hires:
 
-### 3. Concept Cards (the "lookup" replacement)
-A new lightweight `/learn/:topic` route — short, scannable concept cards (definition → example → gotcha → 1 MCQ). Searchable from the navbar (Cmd/Ctrl-K). Replaces the need to leave for W3Schools to "just check syntax."
-**Why unique:** Every card ends in a micro-quiz, so reading converts to retention.
+| Company | Test style captured |
+|---|---|
+| TCS | NQT: Numerical, Verbal, Reasoning, Programming Logic, Coding — adaptive, section-locked |
+| Infosys | Reasoning-heavy, Pseudocode, Puzzle Solving, no negative marking |
+| Wipro | Elite NTH: Aptitude, English, Coding, plus Written Communication essay |
+| Accenture | Cognitive + Technical + Coding, with Communication assessment |
+| Cognizant | GenC: Aptitude, Logical, Verbal, Automata Fix coding |
+| Capgemini | Game-based aptitude, Pseudocode, English comprehension, Behavioural |
 
-### 4. Placement Countdown + Accountability
-Top-of-dashboard banner: *"TCS NQT in 47 days · You're 61% ready · 3 weak areas left."* Pulled from existing placement progress + target companies. Weekly email/in-app nudge if streak breaks.
-**Why unique:** GFG doesn't know your placement date. We do.
+Each blueprint stores: section list, questions per section, minutes per section, difficulty mix, cut-off, negative marking, and the archetypes of question that show up.
 
-### 5. Peer Pulse (social proof, contextual)
-On every topic page: *"312 students from your branch attempted this week · top scorer: 92%."* On quiz results: *"You beat 68% of CSE students."*
-**Why unique:** Anonymous, branch-scoped social proof — pressure without toxicity.
+## What a student sees
 
-## Quality & simplicity passes (parallel)
+For a company page, two tabs:
 
-- **Home page rewrite**: replace generic "Master Tech" hero with the one-liner promise *"The only prep app that tells you exactly what to study today."* + live demo of Daily Mission.
-- **Navbar Cmd-K search**: instant jump to any topic / concept / company.
-- **Reduce cognitive load**: collapse Dashboard tabs from 4 → 2 (Today, Progress). Achievements move to profile.
-- **Empty states**: every blank screen gets a "do this next" CTA instead of "no data."
-- **Mobile polish**: Daily Mission card is the first thing on mobile, above stats grid.
+1. **Practice** — pick a section (e.g. "Pseudocode"), get untimed questions with explanations after each answer. Learn mode.
+2. **Full Mock Test** — the real thing: sections in order, real timers, real cut-off, no explanations until the end, then a section-wise scorecard showing where they'd have been rejected and what to fix.
 
-## Scope of this implementation
+Plus a per-company readiness score built from their real section accuracy, and a "next weakest section" nudge.
 
-To keep this shippable in one pass, **Phase 1** delivers the differentiators with the highest perceived magic:
+## Where the questions come from
 
-1. **Daily Mission card** (Dashboard + Home) — picks weakest topic, generates a 3-step mission, streak-aware.
-2. **Weakness Radar panel** on quiz results — one-click remediation flow.
-3. **Concept Cards** route `/learn/:topicId` with Cmd-K search in Navbar.
-4. **Placement Countdown banner** on Dashboard (uses existing placement data + a date the user sets).
-5. **Peer Pulse stat strip** on topic + quiz-result pages (real counts from Supabase, branch-scoped).
-6. **Home hero rewrite** + simplified Dashboard tabs (Today / Progress only).
-
-Phase 2 (later, if you approve): email nudges, full content library of concept cards, social peer challenges.
+- Question generation runs per company **and** per section, using the blueprint as the prompt context — so a TCS "Programming Logic" question genuinely looks different from an Infosys "Pseudocode" one.
+- Generated questions are **saved to the database**, tagged with company + section + difficulty. Nothing is regenerated on every visit.
+- A student never sees the same question twice until the bank for that section is exhausted.
+- Questions carry an explanation and a difficulty rating; duplicates are rejected on save by comparing question text.
 
 ## Technical notes
 
-- **Daily Mission**: new `useDailyMission(userId)` hook → reads `user_performance` for lowest-accuracy topic, deterministically picks 5 questions seeded by `YYYY-MM-DD + userId`. New component `DailyMissionCard.tsx`.
-- **Weakness Radar**: extend `SimpleQuizResults` with a `<WeaknessRadar />` block; reuses `aiRecommendationsService`.
-- **Concept Cards**: new `src/data/conceptCards.ts` (seed with ~30 cards for top topics), `src/pages/Learn.tsx`, route added in `App.tsx`. Cmd-K via `cmdk` (already in shadcn `command.tsx`).
-- **Placement Countdown**: extend `usePlacementProgress` with `targetDate` (localStorage). New `PlacementCountdownBanner.tsx` on Dashboard.
-- **Peer Pulse**: new Supabase view/RPC `get_topic_pulse(topic_id, branch)` returning `attempts_this_week, top_score`. Component `PeerPulseStrip.tsx`. SECURITY DEFINER, branch read from `profiles`.
-- **Home rewrite**: edit `HeroSection.tsx` + add `DailyMissionPreview` for logged-in users.
-- **Dashboard tab collapse**: edit `SimpleDashboard.tsx` — merge Overview+Resources into Today, Progress+Achievements stay separate (Achievements link out to existing `/achievements`).
-- All new colors use existing semantic tokens (no hard-coded HSL).
-- No new dependencies needed.
+**Database (new tables)**
+- `company_blueprints` — company id, display name, sections config (JSON), cut-off, negative marking, total duration. Publicly readable.
+- `company_questions` — company id, section, question text, options, correct answer, explanation, difficulty, times served, times answered correctly. Publicly readable; only the server writes.
+- `company_mock_attempts` — user id, company id, mode (practice/mock), section scores (JSON), total score, passed cut-off flag, time taken. Owner-only access.
+- `company_seen_questions` — user id, question id, so repeats are avoided. Owner-only.
+All tables get explicit grants plus row-level security scoped to `auth.uid()` where user-owned.
 
-## Files touched (estimate)
+**Edge functions**
+- `generate-company-questions` — takes company + section + count, loads the blueprint, calls Lovable AI (`openai/gpt-6-astra` via the Responses API, streaming) with a strict JSON schema, dedupes against existing rows, inserts. Runs on demand when a section's bank drops below a threshold, so the bank grows by itself as students use it.
+- `serve-company-questions` — returns questions for a section *without* the correct answers (mirroring the existing `get_secure_quiz_questions` approach), excluding ones the student already saw.
+- Answer checking reuses the existing server-side validation pattern so answers never reach the browser.
 
-Created: `useDailyMission.ts`, `DailyMissionCard.tsx`, `WeaknessRadar.tsx`, `PlacementCountdownBanner.tsx`, `PeerPulseStrip.tsx`, `conceptCards.ts`, `Learn.tsx`, `CommandPalette.tsx`, 1 Supabase migration for `get_topic_pulse` RPC.
-Edited: `SimpleDashboard.tsx`, `HeroSection.tsx`, `Navbar.tsx`, `App.tsx`, `SimpleQuizResults.tsx`, `usePlacementProgress.ts`, `index.html` (meta).
+**Frontend**
+- `src/data/companyBlueprints.ts` — the 6 blueprints, typed.
+- `src/pages/CompanyPrep.tsx` at `/placement-prep/company/:companyId` with Practice / Mock tabs.
+- `src/components/placement/` — `SectionPicker`, `MockTestRunner` (section timer + auto-advance), `SectionScorecard`, `CompanyReadinessCard`.
+- Company cards in Placement Prep and the existing Companies pages link into this.
+- Mobile-first: one question per screen, sticky timer, 44px tap targets, bottom-nav clearance.
 
----
+**Seeding**
+Before launch I run a seeding pass so every section of all 6 companies starts with a real bank (roughly 40–60 questions per section) — students never hit an empty section.
 
-**Approve to build Phase 1**, or tell me which of the 5 pillars to drop/reorder.
+## Build order
+
+1. Database tables + access rules
+2. Blueprints for the 6 companies
+3. Generation + serving edge functions, then seed the banks
+4. Practice mode UI
+5. Full mock test runner + scorecard
+6. Readiness score + wiring into Placement Prep and Companies pages
+
+## Options worth adding later (my recommendations, ranked)
+
+1. **Coding round with a real code editor** — the biggest gap vs. HackerRank; run test cases in-browser for TCS/Wipro/Cognizant coding sections.
+2. **Company cut-off predictor** — "you scored 62%, TCS cut-off is ~70% — here are the 3 sections costing you the marks."
+3. **Timed daily company drill** — 10 questions from your target company every morning, feeding the existing streak system.
+4. **Interview experience feed** — students submit what they were actually asked; moderated, and it feeds back into question generation. This is the moat IndiaBix doesn't have.
+5. **Company vs. you comparison** — percentile against everyone else prepping for the same company, using the existing leaderboard.
+6. **Resume-to-company fit check** — upload resume, get eligibility and gap analysis per company.
+
+Say the word and I'll fold any of these into the build.
